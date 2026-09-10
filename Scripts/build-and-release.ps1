@@ -105,7 +105,7 @@ $packArgs = @(
 )
 $packIcon = Join-Path $ProjectRoot "Assets\app.ico"
 if (Test-Path $packIcon) {
-    $packArgs += @("--packIcon", $packIcon)
+    $packArgs += @("--icon", $packIcon)
 }
 if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
     if (-not (Test-Path $ReleaseNotes)) { throw "Release notes file not found: $ReleaseNotes" }
