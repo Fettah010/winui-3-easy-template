@@ -23,11 +23,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  PLACEHOLDER CREDENTIALS — replace with your real project values.
-#    GitHubRepoUrl : the repo that will host releases
-#    GITHUB_TOKEN  : set via environment (recommended) or hardcode below
+#  PROJECT SETTINGS — the repo that hosts releases on GitHub.
+#    GITHUB_TOKEN : export as env var (recommended) or hardcode below.
+#                     https://github.com/settings/tokens  (repo scope)
 # ──────────────────────────────────────────────────────────────────────────────
-$GithubRepoUrl = "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY"
+$GithubRepoUrl = "https://github.com/Fettah010/winui-3-easy-template"
 $GithubToken   = $env:GITHUB_TOKEN      # <- export GITHUB_TOKEN=<token> first
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ $packArgs = @(
     "-r", $Runtime,
     "-e", $MainExe,
     "--packTitle", "DevTem-WinUI 3",
-    "--packAuthors", "YOUR_NAME_OR_ORG"
+    "--packAuthors", "Fettah"
 )
 if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
     if (-not (Test-Path $ReleaseNotes)) { throw "Release notes file not found: $ReleaseNotes" }

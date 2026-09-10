@@ -1,4 +1,4 @@
-# ------------------------------------------------------------------------------
+﻿# ------------------------------------------------------------------------------
 # Local smoke-test of Velopack WITHOUT GitHub.
 #
 # 1. Packs the app into Releases/ as an installable setup.exe + update feed.
@@ -37,7 +37,7 @@ $publishDir = Join-Path $ProjectRoot "bin\Release\net10.0-windows10.0.19041.0\$R
 & vpk pack -u $AppId -v 1.0.0 -p $publishDir `
     -o (Join-Path $ProjectRoot "Releases") `
     -c stable -r $Runtime -e $MainExe `
-    --packTitle "DevTem-WinUI 3" --packAuthors "YOUR_NAME_OR_ORG"
+    --packTitle "DevTem-WinUI 3" --packAuthors "Fettah"
 if ($LASTEXITCODE -ne 0) { throw "vpk pack v1.0.0 failed" }
 
 # --- v1.0.1 (update to demo Check-for-updates) ----------------------------
@@ -55,7 +55,7 @@ if ($LASTEXITCODE -ne 0) { throw "publish 1.0.1 failed" }
 & vpk pack -u $AppId -v 1.0.1 -p $publishDir `
     -o (Join-Path $ProjectRoot "ReleasesLocal") `
     -c stable -r $Runtime -e $MainExe `
-    --packTitle "DevTem-WinUI 3" --packAuthors "YOUR_NAME_OR_ORG"
+    --packTitle "DevTem-WinUI 3" --packAuthors "Fettah"
 if ($LASTEXITCODE -ne 0) { throw "vpk pack v1.0.1 failed" }
 
 Write-Host ""

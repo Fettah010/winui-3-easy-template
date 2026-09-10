@@ -4,6 +4,9 @@ obj/
 Releases/
 ReleasesLocal/
 
+# App runtime output (Serilog)
+Logs/
+
 # VS / user files
 .vs/
 *.user

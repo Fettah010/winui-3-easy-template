@@ -12,15 +12,12 @@ namespace DevTemWinUi3.Services;
 /// </summary>
 public sealed class UpdateService
 {
-    // ── PLACEHOLDER CREDENTIALS ────────────────────────────────────────────
-    // Replace these with your real values before publishing a release.
-    //   - Repository must have releases created via Scripts/publish-release.ps1
-    //   - Access token needs 'repo' scope for GitHub Releases. Generate at
-    //     https://github.com/settings/tokens  (classic or fine-grained PAT that
-    //     can read repo releases).
-    public const string GitHubRepoUrl = "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY";
-    private const string GitHubAuthToken = "YOUR_GITHUB_TOKEN";
-    // ────────────────────────────────────────────────────────────────────────
+    // GitHub Releases feed that hosts this app's updates. Releases are
+    // created with Scripts/build-and-release.ps1 (vpk upload github).
+    public const string GitHubRepoUrl = "https://github.com/Fettah010/winui-3-easy-template";
+
+    public const string NotInstalledMessage =
+        "Updates are only available for installed apps. Run setup.exe once, then check again.";
 
     public const string NoUpdateMessage =
         "You are running the latest version published on the selected release feed.";
@@ -33,6 +30,25 @@ public sealed class UpdateService
 
     private UpdateService()
     {
+    }
+
+    /// <summary>
+    /// Whether the app was installed through the Velopack installer.
+    /// Running straight from the build output or debugger, updates are unavailable.
+    /// </summary>
+    public bool IsInstalled
+    {
+        get
+        {
+            try
+            {
+                return Manager.IsInstalled;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 
     public string CurrentVersion
@@ -64,7 +80,19 @@ public sealed class UpdateService
                 if (_channel is not "stable")
                     options.ExplicitChannel = _channel;
 
-                var source = new GithubSource(GitHubRepoUrl, GitHubAuthToken, prerelease: false);
+                var token = ResolveToken();
+                LoggingService.Log.Information(
+                    "Update source: {RepoUrl} (channel {Channel}, token {HasToken})",
+                    GitHubRepoUrl, _channel, !string.IsNullOrWhiteSpace(token));
+
+                // accessToken is optional for public repos (unauthenticated
+                // GitHub is rate-limited to 60 requests/hour/IP). Set your PAT
+                // via GITHUB_TOKEN to avoid the limit.
+                var source = new GithubSource(
+                    GitHubRepoUrl,
+                    string.IsNullOrWhiteSpace(token) ? null : token,
+                    prerelease: false);
+
                 _manager = new UpdateManager(source, options, null);
                 return _manager;
             }
@@ -75,6 +103,9 @@ public sealed class UpdateService
         }
     }
 
+    private static string ResolveToken() =>
+        Environment.GetEnvironmentVariable("GITHUB_TOKEN") ?? string.Empty;
+
     public void SetChannel(string channel)
     {
         if (_channel == channel)
@@ -83,6 +114,7 @@ public sealed class UpdateService
         _managerLock.Wait();
         try
         {
+            LoggingService.Log.Information("Update channel set to {Channel}", channel);
             _channel = channel;
             _manager = null; // rebuilt lazily with the new channel
         }
@@ -97,5 +129,13 @@ public sealed class UpdateService
     public Task DownloadUpdatesAsync(UpdateInfo update, Action<int>? progress = null) =>
         Manager.DownloadUpdatesAsync(update, progress, CancellationToken.None);
 
-    public void ApplyUpdatesAndRestart(UpdateInfo update) => Manager.ApplyUpdatesAndRestart(update);
+    /// <summary>
+    /// Applies the update and restarts the app. WinUI apps must terminate the
+    /// current process so the updater can swap files safely.
+    /// </summary>
+    public void ApplyUpdatesAndRestart(UpdateInfo update)
+    {
+        Manager.ApplyUpdatesAndRestart(update);
+        Environment.Exit(0);
+    }
 }

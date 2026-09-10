@@ -12,6 +12,8 @@ public sealed partial class UpdatesPage : Page
 
     private static readonly string[] Channels = { "stable", "beta", "dev" };
 
+    private UpdateInfo? _pendingUpdate;
+
     public UpdatesPage()
     {
         this.InitializeComponent();
@@ -21,32 +23,48 @@ public sealed partial class UpdatesPage : Page
 
     private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
     {
+        _pendingUpdate = null;
         CheckProgress.IsActive = true;
         CheckUpdateButton.IsEnabled = false;
         UpToDateInfoBar.IsOpen = false;
         ErrorInfoBar.IsOpen = false;
+        NotInstalledInfoBar.IsOpen = false;
         UpdateAvailablePanel.Visibility = Visibility.Collapsed;
+
+        if (!UpdateService.IsInstalled)
+        {
+            NotInstalledInfoBar.Message = UpdateService.NotInstalledMessage;
+            NotInstalledInfoBar.IsOpen = true;
+            CheckProgress.IsActive = false;
+            CheckUpdateButton.IsEnabled = true;
+            return;
+        }
 
         try
         {
+            LoggingService.Log.Information("Manual update check requested");
             var update = await UpdateService.CheckForUpdatesAsync();
             if (update is null)
             {
+                LoggingService.Log.Information("No update available");
                 UpToDateInfoBar.Message = UpdateService.NoUpdateMessage;
                 UpToDateInfoBar.IsOpen = true;
             }
             else
             {
+                _pendingUpdate = update;
                 UpdateVersionTagText.Text = $"v{update.TargetFullRelease.Version}";
                 UpdateNotesText.Text = string.IsNullOrWhiteSpace(update.TargetFullRelease.NotesMarkdown)
                     ? $"Version {update.TargetFullRelease.Version} is ready to install."
                     : update.TargetFullRelease.NotesMarkdown;
                 UpdateAvailablePanel.Visibility = Visibility.Visible;
                 InstallUpdateButton.IsEnabled = true;
+                LoggingService.Log.Information("Update {Version} available", update.TargetFullRelease.Version);
             }
         }
         catch (Exception ex)
         {
+            LoggingService.Log.Error(ex, "Update check failed");
             ErrorInfoBar.Message = ex.Message;
             ErrorInfoBar.IsOpen = true;
         }
@@ -59,24 +77,21 @@ public sealed partial class UpdatesPage : Page
 
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_pendingUpdate is null)
+        {
+            CheckUpdateButton_Click(sender, e);
+            return;
+        }
+
         InstallUpdateButton.IsEnabled = false;
         DownloadProgress.IsActive = true;
         DownloadProgress.IsIndeterminate = true;
 
         try
         {
-            var update = await UpdateService.CheckForUpdatesAsync();
-            if (update is null)
+            await UpdateService.DownloadUpdatesAsync(_pendingUpdate, p =>
             {
-                UpToDateInfoBar.Message = UpdateService.NoUpdateMessage;
-                UpToDateInfoBar.IsOpen = true;
-                return;
-            }
-
-            await UpdateService.DownloadUpdatesAsync(update, p =>
-            {
-                var progress = DispatcherQueue;
-                progress.TryEnqueue(() =>
+                DispatcherQueue.TryEnqueue(() =>
                 {
                     if (p > 0)
                     {
@@ -87,10 +102,12 @@ public sealed partial class UpdatesPage : Page
             });
 
             DownloadProgress.IsActive = false;
-            UpdateService.ApplyUpdatesAndRestart(update);
+            LoggingService.Log.Information("Update downloaded - applying and restarting");
+            UpdateService.ApplyUpdatesAndRestart(_pendingUpdate);
         }
         catch (Exception ex)
         {
+            LoggingService.Log.Error(ex, "Update install failed");
             ErrorInfoBar.Message = ex.Message;
             ErrorInfoBar.IsOpen = true;
             DownloadProgress.IsActive = false;

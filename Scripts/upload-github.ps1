@@ -16,9 +16,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  PLACEHOLDER CREDENTIALS — replace with your real project values.
+#  PROJECT SETTINGS — the repo that hosts releases on GitHub.
 # ──────────────────────────────────────────────────────────────────────────────
-$GithubRepoUrl = "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY"
+$GithubRepoUrl = "https://github.com/Fettah010/winui-3-easy-template"
 $GithubToken   = $env:GITHUB_TOKEN      # <- export GITHUB_TOKEN=<token> first
 # ──────────────────────────────────────────────────────────────────────────────
 

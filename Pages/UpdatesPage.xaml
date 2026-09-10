@@ -152,6 +152,13 @@
                     Severity="Error"
                     Title="Update check failed"
                     IsClosable="True"/>
+
+                <InfoBar
+                    x:Name="NotInstalledInfoBar"
+                    IsOpen="False"
+                    Severity="Warning"
+                    Title="Updates need an installed app"
+                    IsClosable="True"/>
             </StackPanel>
 
         </StackPanel>
