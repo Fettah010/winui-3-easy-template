@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace MyWinUIApp.Services;
+namespace DevTemWinUi3.Services;
 
 public sealed class AppInfo
 {

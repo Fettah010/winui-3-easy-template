@@ -1,20 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window
-    x:Class="MyWinUIApp.MainWindow"
+    x:Class="DevTemWinUi3.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="MyWinUIApp">
+    Title="DevTem-WinUI 3">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar: content (and Mica) extends into the caption area,
+             so the top bar follows the app theme in both light and dark mode. -->
+        <Grid
+            x:Name="AppTitleBar"
+            Grid.Row="0"
+            Height="48"
+            Background="Transparent">
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="10"
+                Margin="20,0,0,0"
+                VerticalAlignment="Center">
+                <FontIcon
+                    Glyph="&#xE950;"
+                    FontSize="16"
+                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                <TextBlock
+                    Text="DevTem-WinUI 3"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    VerticalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
         <NavigationView
             x:Name="RootNavigationView"
+            Grid.Row="1"
             PaneDisplayMode="Left"
             IsSettingsVisible="False"
             IsBackButtonVisible="Collapsed"
-            IsTitleBarAutoPaddingEnabled="True"
+            IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavigationView_ItemInvoked"
             OpenPaneLength="240">
 

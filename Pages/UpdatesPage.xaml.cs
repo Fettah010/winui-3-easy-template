@@ -1,10 +1,10 @@
 using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using MyWinUIApp.Services;
+using DevTemWinUi3.Services;
 using Velopack;
 
-namespace MyWinUIApp.Pages;
+namespace DevTemWinUi3.Pages;
 
 public sealed partial class UpdatesPage : Page
 {

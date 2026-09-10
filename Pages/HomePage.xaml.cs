@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml.Controls;
-using MyWinUIApp.Services;
+using DevTemWinUi3.Services;
 
-namespace MyWinUIApp.Pages;
+namespace DevTemWinUi3.Pages;
 
 public sealed partial class HomePage : Page
 {

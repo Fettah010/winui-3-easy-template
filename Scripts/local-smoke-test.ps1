@@ -18,12 +18,12 @@ param(
     [string]$Runtime = "win-x64"
 )
 
-$AppId     = "MyWinUIApp"
-$MainExe   = "MyWinUIApp.exe"
+$AppId     = "DevTemWinUi3"
+$MainExe   = "DevTemWinUi3.exe"
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 # --- v1.0.0 (first install) ---------------------------------------------
-& dotnet publish (Join-Path $ProjectRoot "MyWinUIApp.csproj") `
+& dotnet publish (Join-Path $ProjectRoot "DevTemWinUi3.csproj") `
     -c Release -r $Runtime `
     --self-contained true `
     /p:PublishSingleFile=false `
@@ -37,12 +37,12 @@ $publishDir = Join-Path $ProjectRoot "bin\Release\net10.0-windows10.0.19041.0\$R
 & vpk pack -u $AppId -v 1.0.0 -p $publishDir `
     -o (Join-Path $ProjectRoot "Releases") `
     -c stable -r $Runtime -e $MainExe `
-    --packTitle "MyWinUIApp" --packAuthors "YOUR_NAME_OR_ORG"
+    --packTitle "DevTem-WinUI 3" --packAuthors "YOUR_NAME_OR_ORG"
 if ($LASTEXITCODE -ne 0) { throw "vpk pack v1.0.0 failed" }
 
 # --- v1.0.1 (update to demo Check-for-updates) ----------------------------
 # Simulate a changed version by bumping AssemblyVersion then re-packing.
-& dotnet publish (Join-Path $ProjectRoot "MyWinUIApp.csproj") `
+& dotnet publish (Join-Path $ProjectRoot "DevTemWinUi3.csproj") `
     -c Release -r $Runtime `
     --self-contained true `
     /p:PublishSingleFile=false `
@@ -55,7 +55,7 @@ if ($LASTEXITCODE -ne 0) { throw "publish 1.0.1 failed" }
 & vpk pack -u $AppId -v 1.0.1 -p $publishDir `
     -o (Join-Path $ProjectRoot "ReleasesLocal") `
     -c stable -r $Runtime -e $MainExe `
-    --packTitle "MyWinUIApp" --packAuthors "YOUR_NAME_OR_ORG"
+    --packTitle "DevTem-WinUI 3" --packAuthors "YOUR_NAME_OR_ORG"
 if ($LASTEXITCODE -ne 0) { throw "vpk pack v1.0.1 failed" }
 
 Write-Host ""

@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-# Dev launcher for MyWinUIApp.
+# Dev launcher for DevTem-WinUI 3.
 #
-# Double-click the "MyWinUIApp (Dev)" desktop shortcut (or run this file) to
+# Double-click the "DevTem-WinUI 3 (Dev)" desktop shortcut (or run this file) to
 # build the Debug configuration and launch the app window — no terminal typing
 # needed. Incremental builds are fast when nothing changed.
 #
@@ -16,10 +16,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$Exe = Join-Path $ProjectRoot "bin\x64\Debug\net10.0-windows10.0.19041.0\MyWinUIApp.exe"
+$Exe = Join-Path $ProjectRoot "bin\x64\Debug\net10.0-windows10.0.19041.0\DevTemWinUi3.exe"
 
 if (-not $NoBuild) {
-    Write-Host "==> Building MyWinUIApp (Debug/x64)..." -ForegroundColor Cyan
+    Write-Host "==> Building DevTem-WinUI 3 (Debug/x64)..." -ForegroundColor Cyan
     Push-Location $ProjectRoot
     try {
         & dotnet build -c Debug -p:Platform=x64

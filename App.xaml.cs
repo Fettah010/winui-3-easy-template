@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
 
-namespace MyWinUIApp;
+namespace DevTemWinUi3;
 
 public partial class App : Application
 {

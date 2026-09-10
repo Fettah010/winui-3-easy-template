@@ -31,8 +31,8 @@ $GithubRepoUrl = "https://github.com/YOUR_USERNAME/YOUR_REPOSITORY"
 $GithubToken   = $env:GITHUB_TOKEN      # <- export GITHUB_TOKEN=<token> first
 # ──────────────────────────────────────────────────────────────────────────────
 
-$AppId     = "MyWinUIApp"
-$MainExe   = "MyWinUIApp.exe"
+$AppId     = "DevTemWinUi3"
+$MainExe   = "DevTemWinUi3.exe"
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $PublishDir  = Join-Path $ProjectRoot "bin\Release\net10.0-windows10.0.19041.0\$Runtime\publish"
 $ReleasesDir = Join-Path $ProjectRoot "Releases"
@@ -48,7 +48,7 @@ Write-Host ""
 # 1) Publish a self-contained, unpackaged build (no trimming, no single-file).
 if (-not $SkipBuild) {
     Write-Host "==> dotnet publish (self-contained, WinUI + WinAppSDK bundled)" -ForegroundColor Cyan
-    & dotnet publish (Join-Path $ProjectRoot "MyWinUIApp.csproj") `
+    & dotnet publish (Join-Path $ProjectRoot "DevTemWinUi3.csproj") `
         -c Release -r $Runtime `
         --self-contained true `
         /p:PublishSingleFile=false `
@@ -74,7 +74,7 @@ $packArgs = @(
     "-c", $Channel,
     "-r", $Runtime,
     "-e", $MainExe,
-    "--packTitle", "MyWinUIApp",
+    "--packTitle", "DevTem-WinUI 3",
     "--packAuthors", "YOUR_NAME_OR_ORG"
 )
 if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
@@ -98,7 +98,7 @@ $uploadArgs = @(
     "--token", $GithubToken,
     "-o", $ReleasesDir,
     "-c", $Channel,
-    "--releaseName", "MyWinUIApp $Version"
+    "--releaseName", "DevTem-WinUI 3 $Version"
 )
 & vpk @uploadArgs
 if ($LASTEXITCODE -ne 0) { throw "vpk upload github failed with exit code $LASTEXITCODE" }

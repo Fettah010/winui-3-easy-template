@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Velopack;
 using Velopack.Sources;
 
-namespace MyWinUIApp.Services;
+namespace DevTemWinUi3.Services;
 
 /// <summary>
 /// Thin wrapper around the Velopack <see cref="UpdateManager"/> so pages

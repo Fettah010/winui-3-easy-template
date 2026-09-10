@@ -4,7 +4,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Velopack;
 
-namespace MyWinUIApp;
+namespace DevTemWinUi3;
 
 public static class Program
 {

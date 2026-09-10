@@ -12,8 +12,8 @@
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>MyWinUIApp</RootNamespace>
-    <AssemblyName>MyWinUIApp</AssemblyName>
+    <RootNamespace>DevTemWinUi3</RootNamespace>
+    <AssemblyName>DevTemWinUi3</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

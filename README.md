@@ -1,4 +1,4 @@
-## MyWinUIApp
+## DevTem-WinUI 3
 
 A modern **Windows 11** app built with **WinUI 3** (.NET 10) and shipped with
 **Velopack** auto-updates over **GitHub Releases**.
