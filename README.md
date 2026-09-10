@@ -41,23 +41,42 @@ executable (daily rolling, 14 days kept). Initialized in `Program.cs`.
 ### Releases
 
 The app is unpackaged (`WindowsPackageType=None`) and updated via Velopack.
-`Scripts/build-and-release.ps1` does the full publish → pack → upload flow.
+Publishing is automated with **GitHub Actions**: the simplest flow is to push a
+version tag — the pipeline builds, packs deltas and releases it to GitHub
+Releases, and your users get the update in-app.
 
 ```powershell
-# 1. Install the Velopack CLI once
-dotnet tool install --global vpk
-
-# 2. Export a GitHub token with repo scope (used for uploading releases)
-$env:GITHUB_TOKEN = "ghp_YOUR_TOKEN"
-
-# 3. Build, pack and upload (draft release by default)
-.\Scripts\build-and-release.ps1 -Version 1.0.1 -Channel stable
+# 1. Bump the version, commit, then tag and push a release
+git tag v1.0.2
+git push origin v1.0.2        # -> .github/workflows/release.yml runs, no PAT needed
 ```
 
-This publishes an installer (`setup.exe`) plus delta-enabled update packages to
-a **draft** GitHub Release on this repo (Fettah010/winui-3-easy-template).
-Add `-Publish` to upload, or use `.\Scripts\upload-github.ps1 -Publish`
-afterwards.
+Or run it manually from the **Actions** tab: *Run workflow* → enter the version
+(e.g. `1.0.2`) → optional *beta/alpha* channel or *pre-release* flag.
+
+The workflow uses the built-in `GITHUB_TOKEN` (no personal token required) and
+delegates all packaging to `Scripts/build-and-release.ps1`, so the exact same
+build can be reproduced locally:
+
+```powershell
+# Prereqs once
+dotnet tool install --global vpk
+$env:GITHUB_TOKEN = "ghp_YOUR_TOKEN"      # repo scope, for local uploads
+
+# Full local release (publish -> pack with deltas -> upload, published)
+.\Scripts\build-and-release.ps1 -Version 1.0.2 -Channel stable -Download -Publish
+
+# Local-only build & pack (no upload), ReleaseNotes.md optional
+.\Scripts\build-and-release.ps1 -Version 1.0.2 -SkipBuild -ReleaseNotes .\release-notes.md
+
+# Upload an already-packed Releases/ folder afterwards
+$env:GITHUB_TOKEN = "ghp_YOUR_TOKEN"
+.\Scripts\upload-github.ps1 -Channel stable -Publish
+```
+
+Signature: `-Download` fetches the previous release so delta packages are
+generated; without it users get a full (larger) package. Skip `-Publish` to
+keep the release as a draft and flip it in the GitHub UI later.
 
 Users install once via `setup.exe` and every later version installs through
 the in-app **Updates** view (check → download → restart).
@@ -89,9 +108,11 @@ Services/
   LoggingService.cs        # Serilog setup
   UpdateService.cs         # Velopack UpdateManager wrapper
 Scripts/
-  build-and-release.ps1    # publish + pack + upload
+  build-and-release.ps1    # publish + pack + upload (used by CI too)
   upload-github.ps1        # upload an already-packed Releases/ folder
   local-smoke-test.ps1     # local-only update demo
+.github/
+  workflows/release.yml    # automated release on tag push / manual dispatch
 ```
 
 ### License

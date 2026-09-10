@@ -6,7 +6,10 @@
 # Prerequisites:
 #   - .NET SDK 8+ (the project targets .NET 10)
 #   - `vpk` global tool:   dotnet tool install --global vpk
-#   - A GitHub PAT with `repo`/`write:packages` scope set in $env:GITHUB_TOKEN
+#   - A GitHub token with `repo` scope set in $env:GITHUB_TOKEN
+#
+# This script is the single source of truth for releases: it is used both
+# locally and by the GitHub Actions workflow (.github/workflows/release.yml).
 #
 # Output:
 #   Releases/  containing setup.exe, *.nupkg update packages and releases feed.
@@ -17,7 +20,11 @@ param(
     [string]$Channel = "stable",
     [string]$Runtime = "win-x64",
     [string]$ReleaseNotes = "",   # optional path to a markdown notes file
-    [switch]$SkipBuild            # SKIP the dotnet publish step
+    [switch]$SkipBuild,           # SKIP the dotnet publish step
+    [switch]$Download,            # fetch the previous release so deltas are generated
+    [switch]$Publish,             # create the GitHub release as published (not a draft)
+    [switch]$PreRelease,          # mark the GitHub release as a pre-release
+    [string]$Tag = ""             # git tag for the release (default: "v$Version")
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,8 +33,12 @@ $ErrorActionPreference = "Stop"
 #  PROJECT SETTINGS — the repo that hosts releases on GitHub.
 #    GITHUB_TOKEN : export as env var (recommended) or hardcode below.
 #                     https://github.com/settings/tokens  (repo scope)
+#    VPK_REPO_URL : override the release repo (used by the CI workflow / forks).
 # ──────────────────────────────────────────────────────────────────────────────
-$GithubRepoUrl = "https://github.com/Fettah010/winui-3-easy-template"
+$GithubRepoUrl = $env:VPK_REPO_URL
+if ([string]::IsNullOrWhiteSpace($GithubRepoUrl)) {
+    $GithubRepoUrl = "https://github.com/Fettah010/winui-3-easy-template"
+}
 $GithubToken   = $env:GITHUB_TOKEN      # <- export GITHUB_TOKEN=<token> first
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -61,6 +72,21 @@ if (-not $SkipBuild) {
 
 if (-not (Test-Path (Join-Path $PublishDir $MainExe))) {
     throw "Publish output not found at $PublishDir. Build did not produce $MainExe"
+}
+
+# 1.5) (Optional) download the previous release so `vpk pack` can build delta
+#      packages. Failure here only means a full (larger) update is shipped.
+if ($Download -and -not [string]::IsNullOrWhiteSpace($GithubToken)) {
+    Write-Host "`n==> vpk download github (previous release for delta generation)" -ForegroundColor Cyan
+    try {
+        & vpk download github --repoUrl $GithubRepoUrl --token $GithubToken -o $ReleasesDir -c $Channel
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "vpk download exited with $LASTEXITCODE - continuing without deltas."
+        }
+    }
+    catch {
+        Write-Warning "vpk download failed: $_ - continuing without deltas."
+    }
 }
 
 # 2) Pack the publish folder into a Velopack release (installer + deltas).
@@ -100,6 +126,10 @@ $uploadArgs = @(
     "-c", $Channel,
     "--releaseName", "DevTem-WinUI 3 $Version"
 )
+if ($Publish)    { $uploadArgs += "--publish" }
+if ($PreRelease) { $uploadArgs += "--pre" }
+if ([string]::IsNullOrWhiteSpace($Tag)) { $Tag = "v$Version" }
+$uploadArgs += @("--tag", $Tag)
 & vpk @uploadArgs
 if ($LASTEXITCODE -ne 0) { throw "vpk upload github failed with exit code $LASTEXITCODE" }
 
