@@ -105,15 +105,15 @@ jobs:
           CHANNEL: ${{ github.event_name == 'push' && 'stable' || inputs.channel }}
           PRERELEASE: ${{ inputs.prerelease }}
         run: |
-          $args = @(
-            "-Version", $env:VERSION,
-            "-Channel", $env:CHANNEL,
-            "-Runtime", "win-x64",
-            "-ReleaseNotes", "ReleaseNotes.md",
-            "-Download",
-            "-Publish",
-            "-Tag", $env:TAG
-          )
-          if ($env:PRERELEASE -eq "true") { $args += "-PreRelease" }
-          & ./Scripts/build-and-release.ps1 @args
+          $releaseArgs = @{
+            Version      = $env:VERSION
+            Channel      = $env:CHANNEL
+            Runtime      = "win-x64"
+            ReleaseNotes = "ReleaseNotes.md"
+            Download     = $true
+            Publish      = $true
+            Tag          = $env:TAG
+          }
+          if ($env:PRERELEASE -eq "true") { $releaseArgs["PreRelease"] = $true }
+          & ./Scripts/build-and-release.ps1 @releaseArgs
           if ($LASTEXITCODE -ne 0) { throw "Release script failed with exit code $LASTEXITCODE" }
