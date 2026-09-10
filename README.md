@@ -19,8 +19,10 @@ dotnet build -c Debug
 dotnet run
 ```
 
-The app window uses a native **Mica** backdrop + rounded corners. Open
-**Updates** in the left nav to use the manual *Check for Updates* button.
+The app window uses a native **Mica** backdrop + rounded corners. On startup
+it auto-checks the release feed in the background: when a new version exists it
+is downloaded silently, and the user is asked to restart once it is ready. Open
+**Updates** in the left nav to use the manual *Check for Updates* button instead.
 
 > Running from `dotnet run` (not installed), update checks are skipped with a
 > friendly warning - install once via `setup.exe` to test real updates.
