@@ -1,0 +1,18 @@
+# Build outputs
+bin/
+obj/
+Releases/
+ReleasesLocal/
+
+# VS / user files
+.vs/
+*.user
+*.suo
+
+# Secrets — never commit tokens
+.env
+*.secret
+
+# IDE
+.idea/
+.vscode/
