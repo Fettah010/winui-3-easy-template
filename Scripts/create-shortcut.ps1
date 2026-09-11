@@ -4,11 +4,10 @@
 $WshShell = New-Object -ComObject WScript.Shell
 $Desktop = [System.Environment]::GetFolderPath("Desktop")
 $Shortcut = $WshShell.CreateShortcut("$Desktop\DevTem-WinUI 3.lnk")
-$Shortcut.TargetPath = "dotnet"
-$Shortcut.Arguments = "run --project `"$PSScriptRoot\DevTemWinUi3.csproj`" -c Debug -p:Platform=x64"
-$Shortcut.WorkingDirectory = $PSScriptRoot
+$Shortcut.TargetPath = "C:\Code\projects\DevEcosystem\DevTem WinUI 3\RunDevTem.bat"
+$Shortcut.WorkingDirectory = "C:\Code\projects\DevEcosystem\DevTem WinUI 3"
 $Shortcut.Description = "DevTem-WinUI 3 Template App"
-$Shortcut.IconLocation = "$PSScriptRoot\Assets\app.ico"
+$Shortcut.IconLocation = "C:\Code\projects\DevEcosystem\DevTem WinUI 3\Assets\app.ico,0"
 $Shortcut.Save()
 
 Write-Host "Desktop shortcut created: $Desktop\DevTem-WinUI 3.lnk" -ForegroundColor Green
