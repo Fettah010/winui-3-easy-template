@@ -50,16 +50,14 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 
 ```
 main          ← Development branch (latest code)
-├── beta      ← Points to latest beta release commit
-├── stable    ← Points to latest stable release commit (currently empty)
-└── dev       ← Points to latest dev release commit
+└── beta      ← Points to latest beta release commit
 ```
 
 **IMPORTANT**: 
 - `main` is for development - always has latest code
-- `beta`/`stable`/`dev` are release channels - they point to specific release commits
-- Do NOT commit directly to `beta`/`stable`/`dev` - they are updated by the release process
-- `alpha` channel is not used - do not create alpha releases
+- `beta` points to the latest beta release commit
+- Do NOT commit directly to `beta` - it is updated by the release process
+- Only `beta` channel is used - do not create stable/dev/alpha releases
 
 ### Current state
 
@@ -67,20 +65,16 @@ main          ← Development branch (latest code)
 |--------|-----------|---------|
 | `main` | Latest commit | Development |
 | `beta` | v0.0.1-beta release | Beta channel |
-| `stable` | (empty) | Stable channel - no releases yet |
-| `dev` | (empty) | Dev channel - no releases yet |
 
 ### How releases work
 
 1. **Tag naming determines channel:**
    - `v0.0.1-beta` → beta channel
-   - `v0.0.1` → stable channel
-   - `v0.0.1-dev` → dev channel
 
 2. **Release process:**
    ```powershell
    # 1. Make changes on main, commit, push
-   git add -A && git commit -m "feat: ..." && git push origin main
+   git add -A; git commit -m "feat: ..."; git push origin main
    
    # 2. Bump version in DevTemWinUi3.csproj (Version, AssemblyVersion, FileVersion)
    
@@ -92,9 +86,9 @@ main          ← Development branch (latest code)
 3. **CI automatically:**
    - Detects channel from tag name
    - Builds, packs, uploads to GitHub Releases
-   - Creates `releases.<channel>.json` feed
+   - Creates `releases.beta.json` feed
 
-4. **After release, update the channel branch:**
+4. **After release, update the beta branch:**
    ```powershell
    git branch -f beta v0.0.2-beta
    git push origin beta --force
