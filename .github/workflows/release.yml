@@ -79,6 +79,12 @@ jobs:
           Write-Output "version=$version" >> $env:GITHUB_OUTPUT
           Write-Output "tag=v$version" >> $env:GITHUB_OUTPUT
 
+          # Detect channel from tag name (e.g., v0.0.1-beta -> beta)
+          $channel = "stable"
+          if ($version -match "-beta$") { $channel = "beta" }
+          elseif ($version -match "-alpha$") { $channel = "alpha" }
+          Write-Output "channel=$channel" >> $env:GITHUB_OUTPUT
+
       - name: Generate release notes
         shell: pwsh
         env:
@@ -102,7 +108,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
           TAG: ${{ steps.version.outputs.tag }}
-          CHANNEL: ${{ github.event_name == 'push' && 'stable' || inputs.channel }}
+          CHANNEL: ${{ github.event_name == 'push' && steps.version.outputs.channel || inputs.channel }}
           PRERELEASE: ${{ inputs.prerelease }}
         run: |
           $releaseArgs = @{
