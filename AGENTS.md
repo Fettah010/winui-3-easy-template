@@ -50,14 +50,15 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 
 ```
 main          ← Development branch (latest code)
-└── beta      ← Points to latest beta release commit
+├── beta      ← Points to latest beta release commit
+└── stable    ← Points to latest stable release commit (currently empty)
 ```
 
 **IMPORTANT**: 
 - `main` is for development - always has latest code
-- `beta` points to the latest beta release commit
-- Do NOT commit directly to `beta` - it is updated by the release process
-- Only `beta` channel is used - do not create stable/dev/alpha releases
+- `beta`/`stable` point to release commits
+- Do NOT commit directly to `beta`/`stable` - they are updated by the release process
+- Beta = testing releases, Stable = production releases
 
 ### Current state
 
@@ -65,33 +66,47 @@ main          ← Development branch (latest code)
 |--------|-----------|---------|
 | `main` | Latest commit | Development |
 | `beta` | v0.0.1-beta release | Beta channel |
+| `stable` | (empty) | Stable channel - no releases yet |
 
 ### How releases work
 
 1. **Tag naming determines channel:**
    - `v0.0.1-beta` → beta channel
+   - `v0.0.1` (no suffix) → stable channel
 
 2. **Release process:**
    ```powershell
    # 1. Make changes on main, commit, push
+   git checkout main
+   # ... edit files ...
    git add -A; git commit -m "feat: ..."; git push origin main
    
    # 2. Bump version in DevTemWinUi3.csproj (Version, AssemblyVersion, FileVersion)
    
-   # 3. Tag and push
-   git tag v0.0.2-beta
+   # 3. Tag and push (choose one):
+   git tag v0.0.2-beta        # for beta release
    git push origin v0.0.2-beta
+   
+   # OR
+   
+   git tag v1.0.0             # for stable release
+   git push origin v1.0.0
    ```
 
 3. **CI automatically:**
    - Detects channel from tag name
    - Builds, packs, uploads to GitHub Releases
-   - Creates `releases.beta.json` feed
+   - Creates `releases.<channel>.json` feed
 
-4. **After release, update the beta branch:**
+4. **After release, update the channel branch:**
    ```powershell
+   # For beta:
    git branch -f beta v0.0.2-beta
    git push origin beta --force
+   
+   # For stable:
+   git branch -f stable v1.0.0
+   git push origin stable --force
    ```
 
 ### Deleting old releases
