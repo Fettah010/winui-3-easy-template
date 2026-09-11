@@ -6,7 +6,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
+    xmlns:vm="using:DevTemWinUi3.ViewModels"
     mc:Ignorable="d">
+
+    <Page.DataContext>
+        <vm:UpdatesPageViewModel/>
+    </Page.DataContext>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
@@ -28,15 +33,14 @@
                 <ctk:SettingsCard Header="Current version">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE737;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="CurrentVersionText" VerticalAlignment="Center"/>
-                        <InfoBadge x:Name="CurrentVersionBadge" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                        <TextBlock Text="{x:Bind ViewModel.CurrentVersion, Mode=OneWay}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
                     Header="Update channel"
                     Description="The channel tags the app is packed with on GitHub Releases.">
-                    <ctk:Segmented x:Name="ChannelSegment" SelectedIndex="0" HorizontalAlignment="Right">
+                    <ctk:Segmented x:Name="ChannelSegment" SelectedIndex="{x:Bind ViewModel.SelectedChannelIndex, Mode=TwoWay}" HorizontalAlignment="Right">
                         <ctk:SegmentedItem Content="Stable"/>
                         <ctk:SegmentedItem Content="Beta"/>
                         <ctk:SegmentedItem Content="Dev"/>
@@ -48,14 +52,13 @@
                     Description="Manually query GitHub Releases for a newer version.">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <ProgressRing
-                            x:Name="CheckProgress"
-                            IsActive="False"
+                            IsActive="{x:Bind ViewModel.IsCheckInProgress, Mode=OneWay}"
                             Width="20" Height="20"
                             VerticalAlignment="Center"/>
                         <Button
                             x:Name="CheckUpdateButton"
                             Style="{ThemeResource AccentButtonStyle}"
-                            Click="CheckUpdateButton_Click"
+                            Command="{x:Bind ViewModel.CheckForUpdatesCommand}"
                             HorizontalAlignment="Right">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <FontIcon Glyph="&#xE72C;" FontSize="14"/>
@@ -74,8 +77,7 @@
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
                 <Border
-                    x:Name="UpdateAvailablePanel"
-                    Visibility="Collapsed"
+                    Visibility="{x:Bind ViewModel.IsUpdateAvailable, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
@@ -104,14 +106,14 @@
                                     Background="{ThemeResource AccentFillColorDefaultBrush}"
                                     HorizontalAlignment="Left">
                                     <TextBlock
-                                        x:Name="UpdateVersionTagText"
+                                        Text="{x:Bind ViewModel.UpdateVersionTag, Mode=OneWay}"
                                         Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                                         FontSize="12"
                                         FontWeight="SemiBold"/>
                                 </Border>
                             </StackPanel>
                             <TextBlock
-                                x:Name="UpdateNotesText"
+                                Text="{x:Bind ViewModel.UpdateNotes, Mode=OneWay}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap"
@@ -121,14 +123,13 @@
 
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                             <ProgressRing
-                                x:Name="DownloadProgress"
-                                IsActive="False"
-                                IsIndeterminate="False"
+                                IsActive="{x:Bind ViewModel.IsDownloadInProgress, Mode=OneWay}"
+                                IsIndeterminate="{x:Bind ViewModel.IsDownloadIndeterminate, Mode=OneWay}"
+                                Value="{x:Bind ViewModel.DownloadProgress, Mode=OneWay}"
                                 Width="20" Height="20"/>
                             <Button
-                                x:Name="InstallUpdateButton"
-                                IsEnabled="False"
-                                Click="InstallUpdateButton_Click">
+                                Command="{x:Bind ViewModel.DownloadAndInstallCommand}"
+                                IsEnabled="{x:Bind ViewModel.IsUpdateAvailable, Mode=OneWay}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE896;" FontSize="14"/>
                                     <TextBlock Text="Download &amp; Install"/>
@@ -139,25 +140,24 @@
                 </Border>
 
                 <InfoBar
-                    x:Name="UpToDateInfoBar"
-                    IsOpen="False"
+                    IsOpen="{x:Bind ViewModel.IsUpToDate, Mode=OneWay}"
                     Severity="Success"
                     Title="You're up to date"
-                    Message="No newer version was found on the release feed."
+                    Message="{x:Bind ViewModel.UpToDateMessage, Mode=OneWay}"
                     IsClosable="False"/>
 
                 <InfoBar
-                    x:Name="ErrorInfoBar"
-                    IsOpen="False"
+                    IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
                     Severity="Error"
                     Title="Update check failed"
+                    Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
                     IsClosable="True"/>
 
                 <InfoBar
-                    x:Name="NotInstalledInfoBar"
-                    IsOpen="False"
+                    IsOpen="{x:Bind ViewModel.IsNotInstalled, Mode=OneWay}"
                     Severity="Warning"
                     Title="Updates need an installed app"
+                    Message="{x:Bind ViewModel.NotInstalledMessage, Mode=OneWay}"
                     IsClosable="True"/>
             </StackPanel>
 
