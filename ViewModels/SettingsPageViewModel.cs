@@ -24,25 +24,31 @@ public partial class SettingsPageViewModel : ObservableObject
     {
         AppVersion = AppInfo.Current.Version;
 
-        // Load persisted theme
-        var theme = SettingsService.Current.Theme;
-        SelectedThemeIndex = theme switch
+        try
         {
-            "Light" => 1,
-            "Dark" => 2,
-            _ => 0
-        };
+            var theme = SettingsService.Current.Theme;
+            SelectedThemeIndex = theme switch
+            {
+                "Light" => 1,
+                "Dark" => 2,
+                _ => 0
+            };
+        }
+        catch { SelectedThemeIndex = 0; }
 
-        // Load persisted channel
-        var channel = SettingsService.Current.Channel;
-        SelectedChannelIndex = channel switch
+        try
         {
-            "beta" => 1,
-            "dev" => 2,
-            _ => 0
-        };
+            var channel = SettingsService.Current.Channel;
+            SelectedChannelIndex = channel switch
+            {
+                "beta" => 1,
+                "dev" => 2,
+                _ => 0
+            };
+        }
+        catch { SelectedChannelIndex = 0; }
 
-        AutoCheckOnStartup = true; // Default, could be persisted too
+        AutoCheckOnStartup = true;
     }
 
     partial void OnSelectedThemeIndexChanged(int value)
@@ -53,22 +59,29 @@ public partial class SettingsPageViewModel : ObservableObject
             2 => "Dark",
             _ => "System"
         };
-        SettingsService.Current.Theme = theme;
 
-        // Apply theme to the app
-        if (App.Current is App app && app.m_window is MainWindow mainWindow)
+        try { SettingsService.Current.Theme = theme; } catch { }
+
+        try
         {
-            var rootElement = mainWindow.Content as FrameworkElement;
-            if (rootElement is not null)
+            if (App.Current is App app && app.m_window is MainWindow mainWindow)
             {
-                rootElement.RequestedTheme = value switch
+                var rootElement = mainWindow.Content as FrameworkElement;
+                rootElement?.DispatcherQueue.TryEnqueue(() =>
                 {
-                    1 => ElementTheme.Light,
-                    2 => ElementTheme.Dark,
-                    _ => ElementTheme.Default
-                };
+                    if (rootElement is not null)
+                    {
+                        rootElement.RequestedTheme = value switch
+                        {
+                            1 => ElementTheme.Light,
+                            2 => ElementTheme.Dark,
+                            _ => ElementTheme.Default
+                        };
+                    }
+                });
             }
         }
+        catch { }
     }
 
     partial void OnSelectedChannelIndexChanged(int value)
@@ -79,7 +92,7 @@ public partial class SettingsPageViewModel : ObservableObject
             2 => "dev",
             _ => "stable"
         };
-        SettingsService.Current.Channel = channel;
-        UpdateService.Current.SetChannel(channel);
+        try { SettingsService.Current.Channel = channel; } catch { }
+        try { UpdateService.Current.SetChannel(channel); } catch { }
     }
 }

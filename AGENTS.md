@@ -6,12 +6,14 @@ first before making changes.
 ## What this is
 
 **DevTem-WinUI 3** — a ready-to-use template for **WinUI 3** desktop apps.
-It is a small starter app (a Home page + an Updates page) that demonstrates:
+It is a small starter app (a Home page + an Updates page + a Settings page) that demonstrates:
 
 - WinUI 3 / Windows App SDK on **.NET 10** (`net10.0-windows10.0.19041.0`)
 - Unpackaged app (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`)
 - **Velopack 1.2.0** auto-updates over **GitHub Releases**
 - **Serilog** logging (debugger console + rolling file, 14 days)
+- **CommunityToolkit.Mvvm** for MVVM pattern (ObservableProperty, RelayCommand)
+- **SettingsService** for persisted user preferences (theme, channel, etc.)
 - One-command release pipeline (local script + GitHub Actions, no PAT)
 
 Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows.
@@ -22,29 +24,49 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | --- | --- |
 | `Program.cs` | Entry point: `LoggingService.Initialize()`, `VelopackApp.Build()`, global exception handlers (AppDomain + TaskScheduler + try/catch around startup). |
 | `App.xaml` / `App.xaml.cs` | XAML app, UI-thread exception logging, **auto-update check on startup** (background check → silent download → restart prompt dialog). |
-| `MainWindow.xaml(.cs)` | Native Mica backdrop + custom title bar; NavigationView with Home/Updates pages. |
+| `MainWindow.xaml(.cs)` | Native Mica backdrop + custom title bar; NavigationView with Home/Updates/Settings pages. |
 | `Pages/HomePage.*` | Landing page. |
 | `Pages/UpdatesPage.*` | Manual "Check for Updates" with channel selector (`stable`/`beta`/`dev`), download progress, install/restart. |
+| `Pages/SettingsPage.*` | App settings: theme selector, update channel, app info. |
+| `Pages/DiagnosticsPage.*` | Live log viewer with copy/export functionality. |
+| `ViewModels/UpdatesPageViewModel.*` | MVVM ViewModel for Updates page using CommunityToolkit.Mvvm. |
+| `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager` (GitHub source, lazy per-channel manager, `IsInstalled`, download/apply). |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
+| `Services/SettingsService.cs` | Persisted settings via `Windows.Storage.ApplicationData` (theme, channel, last check time, pending version). |
 | `Services/AppInfo.cs` | Assembly-version accessors. |
 | `Assets/app.ico` | App icon; wired via `<ApplicationIcon>` and passed to vpk pack with `--icon`. |
 | `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release (used locally AND by CI). |
+| `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
+| `RunDevTem.vbs` | Silent launcher (hides terminal window). |
+| `RunDevTem.bat` | Batch launcher for the app. |
 | `.github/workflows/release.yml` | CI release pipeline (tag push `v*` or manual `workflow_dispatch`). |
 | `README.md` | User-facing docs/questions. |
 
 ## Build / run / verify
 
 ```powershell
-dotnet build -c Debug -p:Platform=x64        # primary local build check
+dotnet build -c Debug -p:Platform=x64        # primary local build check (must be 0 warnings)
 dotnet run                                   # runs unpackaged (updates disabled)
 ```
 
-- Project uses `<Platforms>x86;x64;ARM64`, XAML compiler runs only with a
-  platform specified — always pass `-p:Platform=x64` (or `win-x64`).
+- **IMPORTANT**: Always pass `-p:Platform=x64` (or `win-x64`). XAML compiler fails without it.
+- **IMPORTANT**: Build must have **0 warnings, 0 errors**. If you see MVVMTK0045 warnings, they're suppressed via `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>` in csproj.
+- **IMPORTANT**: When adding new ViewModels with `[ObservableProperty]`, the MVVM toolkit generates AOT-incompatible code for WinRT. This is expected and suppressed.
 - Update checks are only active for **installed** apps (`UpdateService.IsInstalled`);
   running from the build output logs "app is not installed" and skips. To test
   real updates, install via `setup.exe` from a release first.
+
+## Running the app
+
+- **Desktop shortcut**: Double-click `DevTem-WinUI 3` on desktop (uses `RunDevTem.vbs` to hide terminal)
+- **Batch file**: Run `RunDevTem.bat` directly
+- **Command line**: `dotnet run -c Debug -p:Platform=x64`
+
+## Desktop shortcut setup
+
+Run `Scripts\create-shortcut.ps1` to create the desktop shortcut. The shortcut
+uses `RunDevTem.vbs` which launches the app silently without showing a terminal window.
 
 ## Versioning & releases
 
@@ -126,6 +148,14 @@ with assets: `Setup.exe`, `Portable.zip`, `*-full.nupkg`, `*-delta.nupkg`,
 10. **CI upload token**: the workflow sets `GITHUB_TOKEN` from `${{ github.token }}`.
     Locally, `vpk upload` requires a personal token with `repo` scope in
     `GITHUB_TOKEN`. Without a token the script uploads nothing and prints a warning.
+11. **SettingsService requires runtime context.** `ApplicationData.Current` only
+    works when the app is running. Wrap all SettingsService access in try-catch
+    blocks to prevent crashes during initialization or in design-time contexts.
+12. **MVVM toolkit AOT warnings.** CommunityToolkit.Mvvm generates code that is
+    not AOT compatible with WinRT. Suppress with `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>`.
+13. **Desktop shortcut must use VBS launcher.** Using `.bat` or direct `dotnet run`
+    shows a terminal window. Use `RunDevTem.vbs` with `WshShell.Run ... 0, False`
+    to launch silently.
 
 ## Conventions
 
@@ -138,3 +168,5 @@ with assets: `Setup.exe`, `Portable.zip`, `*-full.nupkg`, `*-delta.nupkg`,
 - Add real value only: this repo deliberately avoids dependencies that aren't
   used (checked in: WindowsAppSDK, Velopack, Serilog + sinks, CommunityToolkit
   SettingsControls/Segmented/Helpers).
+- **MVVM pattern**: Use `[ObservableProperty]` and `[RelayCommand]` attributes
+  from CommunityToolkit.Mvvm. Wrap all external service calls in try-catch.

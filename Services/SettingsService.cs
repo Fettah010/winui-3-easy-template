@@ -9,8 +9,7 @@ namespace DevTemWinUi3.Services;
 /// </summary>
 public sealed class SettingsService
 {
-    private static readonly ApplicationDataContainer LocalSettings =
-        ApplicationData.Current.LocalSettings;
+    private static ApplicationDataContainer? _localSettings;
 
     private const string KeyTheme = "AppTheme";
     private const string KeyChannel = "UpdateChannel";
@@ -21,6 +20,16 @@ public sealed class SettingsService
 
     private SettingsService()
     {
+    }
+
+    private static ApplicationDataContainer LocalSettings
+    {
+        get
+        {
+            if (_localSettings is null)
+                _localSettings = ApplicationData.Current.LocalSettings;
+            return _localSettings;
+        }
     }
 
     /// <summary>
@@ -48,16 +57,24 @@ public sealed class SettingsService
     {
         get
         {
-            if (LocalSettings.Values.TryGetValue(KeyLastCheckTime, out var obj) && obj is long ticks)
-                return new DateTimeOffset(ticks, TimeSpan.Zero);
+            try
+            {
+                if (LocalSettings.Values.TryGetValue(KeyLastCheckTime, out var obj) && obj is long ticks)
+                    return new DateTimeOffset(ticks, TimeSpan.Zero);
+            }
+            catch { }
             return null;
         }
         set
         {
-            if (value.HasValue)
-                LocalSettings.Values[KeyLastCheckTime] = value.Value.UtcTicks;
-            else
-                LocalSettings.Values.Remove(KeyLastCheckTime);
+            try
+            {
+                if (value.HasValue)
+                    LocalSettings.Values[KeyLastCheckTime] = value.Value.UtcTicks;
+                else
+                    LocalSettings.Values.Remove(KeyLastCheckTime);
+            }
+            catch { }
         }
     }
 
@@ -73,19 +90,25 @@ public sealed class SettingsService
             if (value is not null)
                 WriteString(KeyPendingVersion, value);
             else
-                LocalSettings.Values.Remove(KeyPendingVersion);
+            {
+                try { LocalSettings.Values.Remove(KeyPendingVersion); } catch { }
+            }
         }
     }
 
     private string ReadString(string key, string? defaultValue)
     {
-        if (LocalSettings.Values.TryGetValue(key, out var obj) && obj is string s)
-            return s;
+        try
+        {
+            if (LocalSettings.Values.TryGetValue(key, out var obj) && obj is string s)
+                return s;
+        }
+        catch { }
         return defaultValue ?? string.Empty;
     }
 
     private void WriteString(string key, string value)
     {
-        LocalSettings.Values[key] = value;
+        try { LocalSettings.Values[key] = value; } catch { }
     }
 }
