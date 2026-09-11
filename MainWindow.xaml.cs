@@ -40,6 +40,9 @@ public sealed partial class MainWindow : Window
             case "updates":
                 ContentFrame.Navigate(typeof(UpdatesPage));
                 break;
+            case "settings":
+                ContentFrame.Navigate(typeof(SettingsPage));
+                break;
         }
     }
 }

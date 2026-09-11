@@ -99,5 +99,5 @@ public partial class App : Application
         }
     }
 
-    private Window? m_window;
+    internal Window? m_window;
 }
