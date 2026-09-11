@@ -6,7 +6,7 @@ first before making changes.
 ## What this is
 
 **DevTem-WinUI 3** — a ready-to-use template for **WinUI 3** desktop apps.
-It is a small starter app (a Home page + an Updates page + a Settings page) that demonstrates:
+It is a small starter app (a Home page + a Settings page) that demonstrates:
 
 - WinUI 3 / Windows App SDK on **.NET 10** (`net10.0-windows10.0.19041.0`)
 - Unpackaged app (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`)
@@ -22,26 +22,88 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 
 | Path | Purpose |
 | --- | --- |
-| `Program.cs` | Entry point: `LoggingService.Initialize()`, `VelopackApp.Build()`, global exception handlers (AppDomain + TaskScheduler + try/catch around startup). |
-| `App.xaml` / `App.xaml.cs` | XAML app, UI-thread exception logging, **auto-update check on startup** (background check → silent download → restart prompt dialog). |
-| `MainWindow.xaml(.cs)` | Native Mica backdrop + custom title bar; NavigationView with Home/Updates/Settings pages. |
+| `Program.cs` | Entry point: `LoggingService.Initialize()`, `VelopackApp.Build()`, global exception handlers. |
+| `App.xaml` / `App.xaml.cs` | XAML app, UI-thread exception logging, auto-update check on startup. |
+| `MainWindow.xaml(.cs)` | Native Mica backdrop + custom title bar; NavigationView with Home/Settings pages. |
 | `Pages/HomePage.*` | Landing page. |
-| `Pages/UpdatesPage.*` | Manual "Check for Updates" with channel selector (`stable`/`beta`/`dev`), download progress, install/restart. |
-| `Pages/SettingsPage.*` | App settings: theme selector, update channel, app info. |
+| `Pages/SettingsPage.*` | App settings: theme selector, update channel, auto-check toggle, app info. |
+| `Pages/UpdatesPage.*` | **DEPRECATED** - Do not use. Removed from navigation. Keep files for reference only. |
 | `Pages/DiagnosticsPage.*` | Live log viewer with copy/export functionality. |
-| `ViewModels/UpdatesPageViewModel.*` | MVVM ViewModel for Updates page using CommunityToolkit.Mvvm. |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
-| `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager` (GitHub source, lazy per-channel manager, `IsInstalled`, download/apply). |
+| `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager`. |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
-| `Services/SettingsService.cs` | Persisted settings via `Windows.Storage.ApplicationData` (theme, channel, last check time, pending version). |
+| `Services/SettingsService.cs` | Persisted settings via `Windows.Storage.ApplicationData`. |
 | `Services/AppInfo.cs` | Assembly-version accessors. |
-| `Assets/app.ico` | App icon; wired via `<ApplicationIcon>` and passed to vpk pack with `--icon`. |
-| `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release (used locally AND by CI). |
+| `Assets/app.ico` | App icon. |
+| `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release. |
 | `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
-| `RunDevTem.vbs` | Silent launcher (hides terminal window). |
-| `RunDevTem.bat` | Batch launcher for the app. |
+| `RunDevTem.vbs` | Silent launcher (hides terminal window). **Use this for desktop shortcut.** |
+| `RunDevTem.bat` | Batch launcher (shows terminal - avoid using). |
 | `.github/workflows/release.yml` | CI release pipeline (tag push `v*` or manual `workflow_dispatch`). |
+| `Tests/` | xunit test project. |
 | `README.md` | User-facing docs/questions. |
+| `AGENTS.md` | This file - guidance for AI agents. |
+
+## Branches & releases
+
+### Branch structure
+
+```
+main          ← Development branch (latest code)
+├── beta      ← Points to latest beta release commit
+├── stable    ← Points to latest stable release commit (currently empty)
+└── dev       ← Points to latest dev release commit
+```
+
+**IMPORTANT**: 
+- `main` is for development - always has latest code
+- `beta`/`stable`/`dev` are release channels - they point to specific release commits
+- Do NOT commit directly to `beta`/`stable`/`dev` - they are updated by the release process
+- `alpha` channel is not used - do not create alpha releases
+
+### Current state
+
+| Branch | Points to | Purpose |
+|--------|-----------|---------|
+| `main` | Latest commit | Development |
+| `beta` | v0.0.1-beta release | Beta channel |
+| `stable` | (empty) | Stable channel - no releases yet |
+| `dev` | (empty) | Dev channel - no releases yet |
+
+### How releases work
+
+1. **Tag naming determines channel:**
+   - `v0.0.1-beta` → beta channel
+   - `v0.0.1` → stable channel
+   - `v0.0.1-dev` → dev channel
+
+2. **Release process:**
+   ```powershell
+   # 1. Make changes on main, commit, push
+   git add -A && git commit -m "feat: ..." && git push origin main
+   
+   # 2. Bump version in DevTemWinUi3.csproj (Version, AssemblyVersion, FileVersion)
+   
+   # 3. Tag and push
+   git tag v0.0.2-beta
+   git push origin v0.0.2-beta
+   ```
+
+3. **CI automatically:**
+   - Detects channel from tag name
+   - Builds, packs, uploads to GitHub Releases
+   - Creates `releases.<channel>.json` feed
+
+4. **After release, update the channel branch:**
+   ```powershell
+   git branch -f beta v0.0.2-beta
+   git push origin beta --force
+   ```
+
+### Deleting old releases
+
+Go to https://github.com/Fettah010/winui-3-easy-template/releases and delete
+unwanted releases manually (click release → scroll down → Delete).
 
 ## Build / run / verify
 
@@ -51,16 +113,12 @@ dotnet run                                   # runs unpackaged (updates disabled
 ```
 
 - **IMPORTANT**: Always pass `-p:Platform=x64` (or `win-x64`). XAML compiler fails without it.
-- **IMPORTANT**: Build must have **0 warnings, 0 errors**. If you see MVVMTK0045 warnings, they're suppressed via `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>` in csproj.
-- **IMPORTANT**: When adding new ViewModels with `[ObservableProperty]`, the MVVM toolkit generates AOT-incompatible code for WinRT. This is expected and suppressed.
-- Update checks are only active for **installed** apps (`UpdateService.IsInstalled`);
-  running from the build output logs "app is not installed" and skips. To test
-  real updates, install via `setup.exe` from a release first.
+- **IMPORTANT**: Build must have **0 warnings, 0 errors**. MVVMTK0045 warnings are suppressed.
+- Update checks are only active for **installed** apps.
 
 ## Running the app
 
-- **Desktop shortcut**: Double-click `DevTem-WinUI 3` on desktop (uses `RunDevTem.vbs` to hide terminal)
-- **Batch file**: Run `RunDevTem.bat` directly
+- **Desktop shortcut**: Double-click `DevTem-WinUI 3` on desktop (uses `RunDevTem.vbs`)
 - **Command line**: `dotnet run -c Debug -p:Platform=x64`
 
 ## Desktop shortcut setup
@@ -68,105 +126,27 @@ dotnet run                                   # runs unpackaged (updates disabled
 Run `Scripts\create-shortcut.ps1` to create the desktop shortcut. The shortcut
 uses `RunDevTem.vbs` which launches the app silently without showing a terminal window.
 
-## Versioning & releases
+## Versioning
 
-Current version: **0.0.2** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.1** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync).
 
-### How to release (tag flow, recommended)
+## Known gotchas
 
-1. Bump all three version fields in the csproj (e.g. `0.0.3`).
-2. Commit + push `main`.
-3. `git tag v0.0.3 && git push origin v0.0.3`
-4. Workflow auto-runs: publish → `vpk download` (builds a delta from the
-   previous release) → `vpk pack` → `vpk upload` → publishes to GitHub Releases.
-
-Manual alternative: **Actions → Release → Run workflow** with a version/channel/
-pre-release inputs (CI uses `workflow_dispatch`).
-
-Release results land on https://github.com/Fettah010/winui-3-easy-template/releases
-with assets: `Setup.exe`, `Portable.zip`, `*-full.nupkg`, `*-delta.nupkg`,
-`releases.<channel>.json`.
-
-### Deliverables produced per release
-
-- `DevTemWinUi3-<v>-<channel>-full.nupkg` — full update package
-- `DevTemWinUi3-<v>-<channel>-delta.nupkg` — delta from previous release
-- `DevTemWinUi3-<channel>-Setup.exe` — installer
-- `DevTemWinUi3-<channel>-Portable.zip`
-- `releases.<channel>.json` — the update feed the app queries
-
-## Release pipeline details
-
-- `.github/workflows/release.yml`:
-  - Triggers: push tag `v*` **and** `workflow_dispatch` (inputs: `version`
-    required string, `channel` in `stable|beta|alpha`, `prerelease` boolean).
-  - `permissions: contents: write` + built-in `GITHUB_TOKEN` — no PAT anywhere.
-  - Steps: checkout (fetch-depth 0) → setup .NET 10 → install vpk → resolve
-    version (TrimStart `v`; from tag or input) → generate ReleaseNotes.md →
-    run `Scripts/build-and-release.ps1`.
-- `Scripts/build-and-release.ps1`:
-  - Params: `-Version`, `-Channel`, `-Runtime` (default `win-x64`),
-    `-ReleaseNotes`, `-SkipBuild`, `-Download` (delta), `-Publish` (publish vs
-    draft), `-PreRelease`, `-Tag`.
-  - Env: `VPK_REPO_URL` (fork override, defaults to this repo) and `GITHUB_TOKEN`.
-  - Does: `dotnet publish` (self-contained, trim/single-file off,
-    `WindowsAppSDKSelfContained=true`) → optional `vpk download github`
-    (non-fatal on failure) → `vpk pack` (passes `--icon` when present) →
-    `vpk upload github` (draft unless `-Publish`).
-
-## Known gotchas (important — these have caused real failures)
-
-1. **PowerShell array splats bind positionally, not by name.** When invoking a
-   PowerShell script with parameters built dynamically, use a **hashtable**
-   splat (`@{}`), never an array splat (`@(...)`). An array splat shifts every
-   argument by one (e.g. `-Runtime` receives `-Channel`) and fails confusingly.
-   Array splats to **native** commands (`vpk`, `dotnet`) are fine — native apps
-   don't do PowerShell named binding.
-2. **vpk v1.x (1.2.0) flag names differ from old guides/v0 CLI.** Icon flag is
-   `--icon` (NOT `--packIcon`); ids are `-u/--packId`, `-v/--packVersion`,
-   `-p/--packDir`, `-e/--mainExe`. Check `vpk pack --help` when unsure.
-3. **Velopack versions are global and must keep increasing.** The same version
-   can generally only be released to one channel; **promotion = ship a new
-   version to the target channel**, not a same-version copy.
-4. **Channels ≠ git branches.** Channels are separate feeds
-   (`releases.stable.json`, `releases.beta.json`, …). A user on the `beta`
-   channel only reads the beta feed. The channel is chosen at runtime in the
-   app AND at pack/upload time in the pipeline — two separate switches.
-5. **Channel-name mismatch to keep in mind:** the workflow input offers
-   `stable|beta|alpha`, but `UpdatesPage.xaml.cs` lets users pick
-   `stable|beta|dev`. A release to `alpha` cannot be seen by any client.
-6. **`--pre` is not a channel.** It only marks the GitHub Release as a
-   pre-release (UI badge); clients decide what to download by channel feed.
-7. **Velopack `0.0.x` versions**: plain `0.0.1` was rejected by vpk before
-   v0.0.610; fine on current vpk (1.2.0). No action needed.
-8. **GitHubSource token**: optional for public repos (`GithubSource(repo, null)`,
-   no OAuth) — GITHUB_TOKEN may be set to raise the 60 req/h rate limit.
-9. **Velopack 1.2 API**: use `VelopackApp.Build().OnFirstRun(...).OnRestarted(...)`
-   (there is no `WithFirstRun` anymore). Use `GithubSource` without `useOAuth:
-   true`.
-10. **CI upload token**: the workflow sets `GITHUB_TOKEN` from `${{ github.token }}`.
-    Locally, `vpk upload` requires a personal token with `repo` scope in
-    `GITHUB_TOKEN`. Without a token the script uploads nothing and prints a warning.
-11. **SettingsService requires runtime context.** `ApplicationData.Current` only
-    works when the app is running. Wrap all SettingsService access in try-catch
-    blocks to prevent crashes during initialization or in design-time contexts.
-12. **MVVM toolkit AOT warnings.** CommunityToolkit.Mvvm generates code that is
-    not AOT compatible with WinRT. Suppress with `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>`.
-13. **Desktop shortcut must use VBS launcher.** Using `.bat` or direct `dotnet run`
-    shows a terminal window. Use `RunDevTem.vbs` with `WshShell.Run ... 0, False`
-    to launch silently.
+1. **PowerShell array splats bind positionally, not by name.** Use hashtable splat `@{}`.
+2. **vpk v1.x flag names:** `--icon` (NOT `--packIcon`); `-u/--packId`, `-v/--packVersion`.
+3. **Velopack versions must keep increasing.** Same version can only go to one channel.
+4. **Channels ≠ git branches.** Channels are separate feeds. Branches track releases.
+5. **Tag naming determines channel:** `v0.0.1-beta` → beta, `v0.0.1` → stable.
+6. **SettingsService requires runtime context.** Wrap access in try-catch.
+7. **MVVM toolkit AOT warnings.** Suppressed via `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>`.
+8. **Desktop shortcut must use VBS launcher.** `.bat` shows terminal window.
+9. **UpdatesPage is deprecated.** Do not use or modify - kept for reference only.
 
 ## Conventions
 
-- Keep `Scripts/build-and-release.ps1` the single source of truth for release
-  logic; CI must delegate to it rather than duplicating commands.
-- `#` header comments in source files explain intent (the project's style);
-  keep them meaningful. Do not add noisy inline comments.
-- Use `MicaBackdrop` + extended-titlebar pattern for the window (don't revert
-  to the default title bar).
-- Add real value only: this repo deliberately avoids dependencies that aren't
-  used (checked in: WindowsAppSDK, Velopack, Serilog + sinks, CommunityToolkit
-  SettingsControls/Segmented/Helpers).
-- **MVVM pattern**: Use `[ObservableProperty]` and `[RelayCommand]` attributes
-  from CommunityToolkit.Mvvm. Wrap all external service calls in try-catch.
+- Keep `Scripts/build-and-release.ps1` as single source of truth for release logic.
+- Use `MicaBackdrop` + extended-titlebar pattern for the window.
+- **MVVM pattern**: Use `[ObservableProperty]` and `[RelayCommand]` from CommunityToolkit.Mvvm.
+- Wrap all external service calls in try-catch.
+- Build must always have 0 warnings before committing.
