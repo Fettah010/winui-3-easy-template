@@ -54,17 +54,15 @@
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Updates" Tag="updates">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Download"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <NavigationView.FooterMenuItems>
                 <NavigationViewItem Content="Settings" Tag="settings">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-            </NavigationView.MenuItems>
+            </NavigationView.FooterMenuItems>
 
             <Frame x:Name="ContentFrame"/>
         </NavigationView>

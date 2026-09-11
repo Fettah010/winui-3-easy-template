@@ -37,9 +37,6 @@ public sealed partial class MainWindow : Window
             case "home":
                 ContentFrame.Navigate(typeof(HomePage));
                 break;
-            case "updates":
-                ContentFrame.Navigate(typeof(UpdatesPage));
-                break;
             case "settings":
                 ContentFrame.Navigate(typeof(SettingsPage));
                 break;
