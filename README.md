@@ -2,14 +2,18 @@
 
 A modern **Windows 11** app built with **WinUI 3** (.NET 10) and shipped with
 **Velopack** auto-updates over **GitHub Releases**. It also ships with a
-ready-made **logging system** (Serilog) and one-command release scripts, so it
-works as a starting template for WinUI 3 apps.
+ready-made **logging system** (Serilog), **dependency injection**,
+**SQLite database**, and **typed HTTP client**, so it works as a
+complete starting template for WinUI 3 apps.
 
 ### Tech stack
 
 - .NET 10 · WinUI 3 / Microsoft.WindowsAppSDK 1.8
 - Velopack 1.2 — installer + delta auto-updates
 - Serilog 4 — console + rolling file logging
+- Microsoft.Extensions.DependencyInjection — IoC container
+- Microsoft.Data.Sqlite — local database
+- Microsoft.Extensions.Http — typed HTTP client
 - Community Toolkit (SettingsControls, Segmented, Helpers)
 
 ### Quick start (runs from source)
@@ -21,13 +25,22 @@ dotnet run
 
 The app window uses a native **Mica** backdrop + rounded corners. On startup
 it auto-checks the release feed in the background: when a new version exists it
-is downloaded silently, and the user is asked to restart once it is ready. Open
-**Updates** in the left nav to use the manual *Check for Updates* button instead.
+is downloaded silently, and the user is asked to restart once it is ready.
 
-> Running from `dotnet run` (not installed), update checks are skipped with a
-> friendly warning - install once via `setup.exe` to test real updates.
+### Features
 
-### Logging
+#### Auto-updates (Velopack)
+
+The app checks GitHub Releases on startup. When a new version is found, it
+downloads silently and prompts the user to restart.
+
+```powershell
+# Tag-based release
+git tag v0.0.2-beta
+git push origin v0.0.2-beta
+```
+
+#### Logging (Serilog)
 
 ```csharp
 using DevTemWinUi3.Services;
@@ -38,7 +51,48 @@ LoggingService.Log.Error(ex, "Something failed");
 ```
 
 Logs go to the debugger console and to `Logs/applog-YYYYMMDD.log` next to the
-executable (daily rolling, 14 days kept). Initialized in `Program.cs`.
+executable (daily rolling, 14 days kept).
+
+#### Dependency Injection
+
+```csharp
+// Register services in ServiceLocator.cs
+// Resolve anywhere:
+var db = ServiceLocator.GetRequiredService<DatabaseService>();
+var api = ServiceLocator.GetRequiredService<ApiService>();
+```
+
+All services are registered in `ServiceLocator.Initialize()` and available
+via `ServiceLocator.Services`.
+
+#### SQLite Database
+
+```csharp
+var db = ServiceLocator.GetRequiredService<DatabaseService>();
+await db.InitializeAsync();
+
+// Key-value settings
+await db.SetSettingAsync("theme", "dark");
+var theme = await db.GetSettingAsync("theme");
+
+// Raw SQL
+await db.ExecuteAsync("INSERT INTO Logs (Message) VALUES ($msg)",
+    new SqliteParameter("$msg", "Hello"));
+```
+
+Database file is created at `Data/app.db` next to the executable.
+
+#### Typed HTTP Client
+
+```csharp
+var api = ServiceLocator.GetRequiredService<ApiService>();
+api.BaseAddress = new Uri("https://api.example.com");
+
+var users = await api.GetAsync<List<User>>("/users");
+var result = await api.PostAsync<CreateUserRequest, CreateUserResponse>("/users", request);
+```
+
+Uses `IHttpClientFactory` for proper lifecycle management. No socket exhaustion.
 
 ### Releases
 
@@ -49,43 +103,12 @@ Releases, and your users get the update in-app.
 
 ```powershell
 # 1. Bump the version, commit, then tag and push a release
-git tag v1.0.2
-git push origin v1.0.2        # -> .github/workflows/release.yml runs, no PAT needed
+git tag v0.0.2-beta
+git push origin v0.0.2-beta        # -> .github/workflows/release.yml runs
 ```
 
 Or run it manually from the **Actions** tab: *Run workflow* → enter the version
-(e.g. `1.0.2`) → optional *beta/alpha* channel or *pre-release* flag.
-
-The workflow uses the built-in `GITHUB_TOKEN` (no personal token required) and
-delegates all packaging to `Scripts/build-and-release.ps1`, so the exact same
-build can be reproduced locally:
-
-```powershell
-# Prereqs once
-dotnet tool install --global vpk
-$env:GITHUB_TOKEN = "ghp_YOUR_TOKEN"      # repo scope, for local uploads
-
-# Full local release (publish -> pack with deltas -> upload, published)
-.\Scripts\build-and-release.ps1 -Version 1.0.2 -Channel stable -Download -Publish
-
-# Local-only build & pack (no upload), ReleaseNotes.md optional
-.\Scripts\build-and-release.ps1 -Version 1.0.2 -SkipBuild -ReleaseNotes .\release-notes.md
-
-# Upload an already-packed Releases/ folder afterwards
-$env:GITHUB_TOKEN = "ghp_YOUR_TOKEN"
-.\Scripts\upload-github.ps1 -Channel stable -Publish
-```
-
-Signature: `-Download` fetches the previous release so delta packages are
-generated; without it users get a full (larger) package. Skip `-Publish` to
-keep the release as a draft and flip it in the GitHub UI later.
-
-Users install once via `setup.exe` and every later version installs through
-the in-app **Updates** view (check → download → restart).
-
-> A `GITHUB_TOKEN` is optional for end users checking updates (GitHub's public
-> API limit is 60 requests/hour per IP). Set one to avoid the limit if you
-> have many users. The `vpk` CLI always needs `$env:GITHUB_TOKEN` to upload.
+(e.g. `0.0.2`) → select *beta* channel.
 
 ### Offline / local testing
 
@@ -93,28 +116,34 @@ the in-app **Updates** view (check → download → restart).
 .\Scripts\local-smoke-test.ps1   # packs v1.0.0 into Releases/ and v1.0.1 into ReleasesLocal/
 ```
 
-Run `Releases\setup.exe` to install v1.0.0, then point `UpdateService` at the
-local folder (`SimpleFileSource`/file path) to demo a real update.
-
 ### Repository layout
 
 ```
 Program.cs                 # Velopack bootstrap + logging init
-App.xaml(.cs)              # Application entry
+App.xaml(.cs)              # Application entry + DI initialization
 MainWindow.xaml(.cs)       # Shell: custom title bar + NavigationView
 Pages/
   HomePage.xaml            # Landing page
-  UpdatesPage.xaml         # Manual update UI (check → download → install)
+  AboutPage.xaml           # App info, version, links
+  SettingsPage.xaml        # Theme, update channel, auto-check
+  DiagnosticsPage.xaml     # Live log viewer
 Services/
   AppInfo.cs               # Version helpers
   LoggingService.cs        # Serilog setup
   UpdateService.cs         # Velopack UpdateManager wrapper
+  SettingsService.cs       # Persisted user preferences
+  WindowStateService.cs    # Window size/position persistence
+  FirstRunService.cs       # First-run detection + What's New dialog
+  DatabaseService.cs       # SQLite database access
+  ApiService.cs            # Typed HTTP client
+  ServiceLocator.cs        # Dependency injection container
+Tests/
+  Services/                # Unit tests (requires app runtime for DI tests)
 Scripts/
   build-and-release.ps1    # publish + pack + upload (used by CI too)
-  upload-github.ps1        # upload an already-packed Releases/ folder
-  local-smoke-test.ps1     # local-only update demo
+  create-shortcut.ps1      # creates desktop shortcut
 .github/
-  workflows/release.yml    # automated release on tag push / manual dispatch
+  workflows/release.yml    # automated release on tag push
 ```
 
 ### License

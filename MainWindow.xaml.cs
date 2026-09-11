@@ -1,13 +1,18 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using DevTemWinUi3.Pages;
+using DevTemWinUi3.Services;
 
 namespace DevTemWinUi3;
 
 public sealed partial class MainWindow : Window
 {
+    private readonly WindowStateService _windowState = WindowStateService.Current;
+
     public MainWindow()
     {
         this.InitializeComponent();
@@ -23,8 +28,122 @@ public sealed partial class MainWindow : Window
         this.AppWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
         this.AppWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
 
+        // Restore window state
+        RestoreWindowState();
+
+        // Save window state on close
+        this.Closed += MainWindow_Closed;
+
         ContentFrame.Navigate(typeof(HomePage));
         RootNavigationView.SelectedItem = RootNavigationView.MenuItems[0];
+
+        // Show first-run or what's-new dialog after window is shown
+        _ = ShowFirstRunDialogIfNeeded();
+    }
+
+    private void RestoreWindowState()
+    {
+        try
+        {
+            if (_windowState.HasSavedState)
+            {
+                this.AppWindow.Move(new Windows.Graphics.PointInt32(
+                    (int)_windowState.X,
+                    (int)_windowState.Y));
+
+                var presenter = this.AppWindow.Presenter as OverlappedPresenter;
+                if (presenter != null)
+                {
+                    if (_windowState.IsMaximized)
+                        presenter.Maximize();
+                    else
+                        presenter.Restore();
+                }
+            }
+        }
+        catch { }
+    }
+
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    {
+        try
+        {
+            var pos = this.AppWindow.Position;
+            _windowState.X = pos.X;
+            _windowState.Y = pos.Y;
+
+            var presenter = this.AppWindow.Presenter as OverlappedPresenter;
+            if (presenter != null)
+            {
+                _windowState.IsMaximized = presenter.State == OverlappedPresenterState.Maximized;
+                if (presenter.State == OverlappedPresenterState.Restored)
+                {
+                    _windowState.Width = this.AppWindow.Size.Width;
+                    _windowState.Height = this.AppWindow.Size.Height;
+                }
+            }
+        }
+        catch { }
+    }
+
+    private async Task ShowFirstRunDialogIfNeeded()
+    {
+        var firstRun = FirstRunService.Current;
+
+        // Wait for UI to be ready
+        await Task.Delay(500);
+
+        if (firstRun.IsFirstRun)
+        {
+            await ShowWelcomeDialog();
+            firstRun.MarkAsShown();
+        }
+        else if (firstRun.HasBeenUpdated)
+        {
+            await ShowWhatsNewDialog();
+            firstRun.MarkAsShown();
+        }
+    }
+
+    private async Task ShowWelcomeDialog()
+    {
+        try
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = this.Content.XamlRoot,
+                Title = "Welcome to DevTem-WinUI 3",
+                Content = "A ready-to-use template for WinUI 3 desktop apps.\n\n" +
+                          "This template includes:\n" +
+                          "• Settings with theme selector\n" +
+                          "• Auto-updates via GitHub Releases\n" +
+                          "• Logging system\n" +
+                          "• Desktop shortcut support\n\n" +
+                          "Get started by exploring the app!",
+                PrimaryButtonText = "Get Started",
+                DefaultButton = ContentDialogButton.Primary
+            };
+            await dialog.ShowAsync();
+        }
+        catch { }
+    }
+
+    private async Task ShowWhatsNewDialog()
+    {
+        try
+        {
+            var firstRun = FirstRunService.Current;
+            var dialog = new ContentDialog
+            {
+                XamlRoot = this.Content.XamlRoot,
+                Title = $"What's New in v{AppInfo.Current.Version}",
+                Content = firstRun.GetChangelog(),
+                PrimaryButtonText = "OK",
+                DefaultButton = ContentDialogButton.Primary
+            };
+            await dialog.ShowAsync();
+        }
+        catch { }
     }
 
     private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
@@ -36,6 +155,9 @@ public sealed partial class MainWindow : Window
         {
             case "home":
                 ContentFrame.Navigate(typeof(HomePage));
+                break;
+            case "about":
+                ContentFrame.Navigate(typeof(AboutPage));
                 break;
             case "settings":
                 ContentFrame.Navigate(typeof(SettingsPage));

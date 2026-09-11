@@ -23,8 +23,15 @@ public partial class App : Application
         };
     }
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Initialize DI container
+        ServiceLocator.Initialize();
+
+        // Initialize database
+        var db = ServiceLocator.GetRequiredService<DatabaseService>();
+        await db.InitializeAsync();
+
         m_window = new MainWindow();
         m_window.Activate();
 
