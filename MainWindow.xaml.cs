@@ -72,6 +72,33 @@ public sealed partial class MainWindow : Window
         Program.StartActivationListener(this.DispatcherQueue, BringToFront);
     }
 
+    /// <summary>
+    /// Fades in the main window content after splash screen transition.
+    /// Called by App after splash closes.
+    /// </summary>
+    public async Task PlayEntranceAnimation()
+    {
+        var fadeIn = new Microsoft.UI.Xaml.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 1,
+            Duration = new Duration(TimeSpan.FromMilliseconds(350)),
+            EasingFunction = new Microsoft.UI.Xaml.Media.Animation.CubicEase
+            {
+                EasingMode = Microsoft.UI.Xaml.Media.Animation.EasingMode.EaseOut
+            }
+        };
+
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTarget(fadeIn, RootGrid);
+        Microsoft.UI.Xaml.Media.Animation.Storyboard.SetTargetProperty(fadeIn, "Opacity");
+
+        var story = new Microsoft.UI.Xaml.Media.Animation.Storyboard();
+        story.Children.Add(fadeIn);
+        story.Begin();
+
+        await Task.Delay(350);
+    }
+
     private void SetTitleBarColors()
     {
         var titleBar = this.AppWindow.TitleBar;

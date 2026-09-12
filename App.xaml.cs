@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Animation;
 using DevTemWinUi3.Services;
 using Velopack;
 
@@ -29,17 +30,15 @@ public partial class App : Application
         _splash = new SplashScreen();
         _splash.Activate();
 
-        // Initialize services in background while splash is visible
+        // Initialize services while splash is visible
         await InitializeServicesAsync();
 
-        // Close splash and show main window
+        // Create main window (hidden initially)
         _mainWindow = new MainWindow();
         m_window = _mainWindow;
 
-        _splash.Close();
-        _splash = null;
-
-        _mainWindow.Activate();
+        // Animate transition: splash fades out, main window fades in
+        await TransitionToMainWindow();
 
         _ = CheckForUpdatesAsync();
     }
@@ -54,6 +53,26 @@ public partial class App : Application
 
         var db = ServiceLocator.GetRequiredService<DatabaseService>();
         await db.InitializeAsync();
+    }
+
+    private async Task TransitionToMainWindow()
+    {
+        if (_splash is null || _mainWindow is null) return;
+
+        // Close splash with animation
+        var splashCloseTask = _splash.CloseWithAnimation();
+
+        // Small overlap — start activating main window before splash fully closes
+        await Task.Delay(100);
+
+        _mainWindow.Activate();
+        _splash = null;
+
+        // Wait for splash close animation to finish
+        await splashCloseTask;
+
+        // Fade in main window content
+        await _mainWindow.PlayEntranceAnimation();
     }
 
     private async Task CheckForUpdatesAsync()

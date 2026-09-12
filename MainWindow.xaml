@@ -8,7 +8,7 @@
     mc:Ignorable="d"
     Title="DevTem-WinUI 3">
 
-    <Grid>
+    <Grid x:Name="RootGrid" Opacity="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>

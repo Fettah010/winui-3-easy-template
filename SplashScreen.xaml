@@ -8,51 +8,70 @@
     mc:Ignorable="d"
     Title="DevTem-WinUI 3">
 
-    <Grid Width="480" Height="320" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <!-- Root grid with entrance animation -->
+    <Grid x:Name="RootGrid" Opacity="0" RenderTransformOrigin="0.5,0.5">
+        <Grid.RenderTransform>
+            <CompositeTransform x:Name="RootTransform" ScaleX="0.96" ScaleY="0.96"/>
+        </Grid.RenderTransform>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Center content: icon, name, progress -->
+        <!-- Main content: icon + name -->
         <StackPanel
             Grid.Row="0"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Spacing="16">
+            Spacing="20">
 
-            <!-- App icon -->
-            <FontIcon
-                Glyph="&#xE950;"
-                FontSize="64"
-                HorizontalAlignment="Center"
-                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+            <!-- App icon with subtle accent glow -->
+            <Grid HorizontalAlignment="Center" Margin="0,0,0,4">
+                <FontIcon
+                    Glyph="&#xE950;"
+                    FontSize="56"
+                    HorizontalAlignment="Center"
+                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+            </Grid>
 
             <!-- App name -->
             <TextBlock
                 Text="DevTem-WinUI 3"
-                Style="{ThemeResource TitleLargeTextBlockStyle}"
+                FontSize="28"
                 FontWeight="SemiBold"
                 HorizontalAlignment="Center"
-                Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-
-            <!-- Progress ring -->
-            <ProgressRing
-                x:Name="LoadingProgress"
-                Width="32" Height="32"
-                HorizontalAlignment="Center"
-                IsActive="True"
-                IsIndeterminate="True"/>
+                Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                CharacterSpacing="20"/>
         </StackPanel>
 
-        <!-- Footer: version -->
-        <TextBlock
-            x:Name="VersionText"
+        <!-- Bottom: loading dots + version -->
+        <StackPanel
             Grid.Row="1"
-            Text="Version 0.0.1"
-            Style="{ThemeResource CaptionTextBlockStyle}"
             HorizontalAlignment="Center"
-            Margin="0,0,0,20"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            VerticalAlignment="Bottom"
+            Margin="0,0,0,36"
+            Spacing="14">
+
+            <!-- Pulsing dots loader -->
+            <StackPanel
+                x:Name="LoadingDots"
+                Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Spacing="8">
+                <Ellipse x:Name="Dot1" Width="5" Height="5" Fill="{ThemeResource TextFillColorSecondaryBrush}" Opacity="0.3"/>
+                <Ellipse x:Name="Dot2" Width="5" Height="5" Fill="{ThemeResource TextFillColorSecondaryBrush}" Opacity="0.3"/>
+                <Ellipse x:Name="Dot3" Width="5" Height="5" Fill="{ThemeResource TextFillColorSecondaryBrush}" Opacity="0.3"/>
+            </StackPanel>
+
+            <!-- Version -->
+            <TextBlock
+                x:Name="VersionText"
+                Text="Version 0.0.1"
+                FontSize="11"
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                CharacterSpacing="30"/>
+        </StackPanel>
     </Grid>
 </Window>
