@@ -98,10 +98,16 @@ Uninstall when done: `dotnet new uninstall .\Templates\Page`.
 parameters and feature flags (all flags default on):
 
 ```powershell
-dotnet new install .\Templates\Project
+dotnet new install .\Templates\Project     # from this repo, or:
+dotnet new install DevTem.Templates::<version>   # versioned NuGet package
 dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
     --repo "acme/desk-app" --scheme "acme://" --tray false --updates false --database false
 ```
+
+Releases of the package are cut with `templates-v*` tags (CI packs +
+pushes to NuGet); every push touching templates runs the scaffold matrix
+(`Scripts/test-templates.ps1`: all flag combos built with 0 warnings and
+tested).
 
 | Parameter | Replaces | Example |
 | --- | --- | --- |

@@ -1,0 +1,35 @@
+name: templates
+
+# Scaffold matrix: every push/PR touching templates runs test-templates.ps1
+# (all flag combos scaffolded, built with 0 warnings, tested).
+# Publishing lives in templates-publish.yml (tag-driven, no paths filter).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Templates/**"
+      - "Packaging/**"
+      - "Scripts/test-templates.ps1"
+      - ".github/workflows/templates.yml"
+      - "Tests/**"
+  pull_request:
+    paths:
+      - "Templates/**"
+      - "Packaging/**"
+      - "Scripts/test-templates.ps1"
+      - ".github/workflows/templates.yml"
+      - "Tests/**"
+  workflow_dispatch:
+
+jobs:
+  matrix:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Scaffold matrix (build + test every combo)
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-templates.ps1

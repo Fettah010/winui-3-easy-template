@@ -1,0 +1,28 @@
+name: templates-publish
+
+# Tag templates-vX.Y.Z (cut from green main) packs DevTem.Templates with
+# that version and pushes it to NuGet (NUGET_API_KEY secret).
+# Separate file on purpose: no paths filter, so the tag always publishes.
+
+on:
+  push:
+    tags: ["templates-v*"]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Pack DevTem.Templates
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".Replace("templates-v", "")
+          if ([string]::IsNullOrWhiteSpace($version)) { $version = "0.1.0" }
+          dotnet pack Packaging/DevTem.Templates -c Release -p:Version=$version -o nupkgs
+      - name: Push to NuGet
+        run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
