@@ -27,6 +27,8 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `MainWindow.xaml(.cs)` | Native Mica backdrop + custom title bar; NavigationView with Home/Settings pages. |
 | `Pages/HomePage.*` | Landing page. |
 | `Pages/SettingsPage.*` | App settings: theme selector, update channel, auto-check toggle, app info. |
+| `Controls/WrapPanel.cs` + `Controls/WrapLayout.cs` | Dependency-free wrap panel (button rows) with pure, unit-tested layout math. |
+| `Services/ResponsiveLayout.cs` | Breakpoints + DPI math: min window 720x540, compact pane <860, narrow page <700. |
 | `Pages/UpdatesPage.*` | **DEPRECATED** - Do not use. Removed from navigation. Keep files for reference only. |
 | `Pages/DiagnosticsPage.*` | Live log viewer with copy/export functionality. |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
@@ -34,6 +36,9 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/AppInfo.cs` | Assembly-version accessors. |
+| `Services/DesktopToastService.cs` | OS Action Center toasts (tray-minimize, not-installed); click reopens the app. |
+| `Services/LocalizationService.cs` | en-US/es-ES/fr-FR dictionaries, instant switch via LanguageChanged, persisted choice. |
+| `Services/NotificationService.cs` | In-app toast cards (bottom-right host). |
 | `Assets/app.ico` | App + installer + tray + shortcut icon (single source, `vpk --icon`). |
 | `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
 | `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release. |

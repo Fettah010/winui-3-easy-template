@@ -6,41 +6,16 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
+    xmlns:wrap="using:DevTemWinUi3.Controls"
     mc:Ignorable="d"
-    NavigationCacheMode="Enabled">
+    NavigationCacheMode="Enabled"
+    Loaded="AboutPage_Loaded"
+    SizeChanged="AboutPage_SizeChanged">
 
+    <!-- Narrow stacking is driven imperatively from code-behind
+         (UpdateResponsiveLayout): VisualState setters cannot reliably retarget
+         Grid columns/rows, which used to leave half-applied layouts. -->
     <Grid>
-        <!-- Responsive states: single-column below 860px (matches
-             ResponsiveLayout.CompactLayoutThreshold), two-column at/above. -->
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="LayoutStates">
-                <VisualState x:Name="NarrowState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0"/>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ContentPanel.Padding" Value="16,16,16,24"/>
-                        <Setter Target="HeroSideCol.Width" Value="0"/>
-                        <Setter Target="GlanceCard.(Grid.Row)" Value="1"/>
-                        <Setter Target="GlanceCard.(Grid.Column)" Value="0"/>
-                        <Setter Target="HeroLinks.Orientation" Value="Vertical"/>
-                        <Setter Target="HeroLinks.HorizontalAlignment" Value="Stretch"/>
-                        <Setter Target="TechCol.Width" Value="0"/>
-                        <Setter Target="TechPanel.(Grid.Row)" Value="1"/>
-                        <Setter Target="TechPanel.(Grid.Column)" Value="0"/>
-                        <Setter Target="LinksCol.Width" Value="0"/>
-                        <Setter Target="LinksPanel.(Grid.Row)" Value="1"/>
-                        <Setter Target="LinksPanel.(Grid.Column)" Value="0"/>
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="WideState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="860"/>
-                    </VisualState.StateTriggers>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 
@@ -88,8 +63,15 @@
                             </Border>
                             <StackPanel Spacing="4" VerticalAlignment="Center">
                                 <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <!-- Bounded grid (not an infinite-width row) so the
+                                     caption wraps instead of overflowing the card. -->
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
                                     <Border
+                                        Grid.Column="0"
                                         VerticalAlignment="Center"
                                         CornerRadius="10"
                                         Padding="8,2"
@@ -101,12 +83,13 @@
                                             VerticalAlignment="Center"/>
                                     </Border>
                                     <TextBlock
+                                        Grid.Column="1"
                                         Text=".NET 10 · WinUI 3 · Windows 11"
                                         Style="{ThemeResource CaptionTextBlockStyle}"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                         VerticalAlignment="Center"
                                         TextWrapping="Wrap"/>
-                                </StackPanel>
+                                </Grid>
                             </StackPanel>
                         </StackPanel>
 
@@ -117,7 +100,7 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap"/>
 
-                        <StackPanel x:Name="HeroLinks" Orientation="Horizontal" Spacing="8">
+                        <wrap:WrapPanel x:Name="HeroLinks" HorizontalSpacing="8" VerticalSpacing="8">
                             <HyperlinkButton
                                 x:Name="GithubLink"
                                 Content="GitHub Repository"
@@ -126,7 +109,7 @@
                                 x:Name="ReportIssueLink"
                                 Content="Report an issue"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"/>
-                        </StackPanel>
+                        </wrap:WrapPanel>
                     </StackPanel>
 
                     <!-- At a glance -->

@@ -5,46 +5,16 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:wrap="using:DevTemWinUi3.Controls"
     mc:Ignorable="d"
-    NavigationCacheMode="Enabled">
+    NavigationCacheMode="Enabled"
+    Loaded="HomePage_Loaded"
+    SizeChanged="HomePage_SizeChanged">
 
+    <!-- Narrow stacking is driven imperatively from code-behind
+         (UpdateResponsiveLayout): VisualState setters cannot reliably retarget
+         Grid columns/rows, which used to leave half-applied layouts. -->
     <Grid>
-        <!-- Responsive states: single-column below 860px (matches
-             ResponsiveLayout.CompactLayoutThreshold), two-column at/above. -->
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="LayoutStates">
-                <VisualState x:Name="NarrowState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0"/>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ContentPanel.Padding" Value="16,16,16,24"/>
-                        <Setter Target="HeroTextCol.Width" Value="0"/>
-                        <Setter Target="HeroText.(Grid.Row)" Value="1"/>
-                        <Setter Target="HeroText.(Grid.Column)" Value="0"/>
-                        <Setter Target="HeroText.(Grid.ColumnSpan)" Value="2"/>
-                        <Setter Target="HeroActions.Orientation" Value="Vertical"/>
-                        <Setter Target="HeroActions.HorizontalAlignment" Value="Stretch"/>
-                        <Setter Target="StatusCol1.Width" Value="0"/>
-                        <Setter Target="QuickCard.(Grid.Row)" Value="1"/>
-                        <Setter Target="QuickCard.(Grid.Column)" Value="0"/>
-                        <Setter Target="FeatureCol1.Width" Value="0"/>
-                        <Setter Target="FeatureCard2.(Grid.Row)" Value="1"/>
-                        <Setter Target="FeatureCard2.(Grid.Column)" Value="0"/>
-                        <Setter Target="FeatureCard3.(Grid.Row)" Value="2"/>
-                        <Setter Target="FeatureCard3.(Grid.Column)" Value="0"/>
-                        <Setter Target="FeatureCard4.(Grid.Row)" Value="3"/>
-                        <Setter Target="FeatureCard4.(Grid.Column)" Value="0"/>
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="WideState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="860"/>
-                    </VisualState.StateTriggers>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 
@@ -102,7 +72,7 @@
                             Style="{ThemeResource BodyTextBlockStyle}"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap"/>
-                        <StackPanel x:Name="HeroActions" Orientation="Horizontal" Spacing="8">
+                        <wrap:WrapPanel x:Name="HeroActions" HorizontalSpacing="8" VerticalSpacing="8">
                             <Button
                                 x:Name="CheckUpdatesQuickButton"
                                 Content="Check for updates"
@@ -116,7 +86,7 @@
                                 x:Name="ReleasesLinkButton"
                                 Content="How releases work"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"/>
-                        </StackPanel>
+                        </wrap:WrapPanel>
                     </StackPanel>
                 </Grid>
             </Border>

@@ -55,6 +55,7 @@ public sealed partial class SettingsPage : Page
         ThemeSystemItem.Content = loc.GetString("SettingsThemeSystem");
         ThemeLightItem.Content = loc.GetString("SettingsThemeLight");
         ThemeDarkItem.Content = loc.GetString("SettingsThemeDark");
+        RefreshThemeComboBoxDisplay();
 
         LanguageCard.Header = loc.GetString("SettingsLanguage");
         LanguageCard.Description = loc.GetString("SettingsLanguageDesc");
@@ -84,6 +85,25 @@ public sealed partial class SettingsPage : Page
 
         if (InstallUpdateButton.Visibility == Visibility.Visible && InstallUpdateButton.IsEnabled)
             InstallUpdateButton.Content = loc.GetString("SettingsInstall");
+    }
+
+    /// <summary>
+    /// The closed ComboBox caches its display box and does not refresh it when
+    /// the selected item's Content changes (i.e. on language switch). A
+    /// round-trip through -1 forces a re-render. The ViewModel ignores -1, so
+    /// the persisted theme is never touched.
+    /// </summary>
+    private void RefreshThemeComboBoxDisplay()
+    {
+        try
+        {
+            int current = ThemeComboBox.SelectedIndex;
+            if (current < 0)
+                return;
+            ThemeComboBox.SelectedIndex = -1;
+            ThemeComboBox.SelectedIndex = current;
+        }
+        catch { }
     }
 
     private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -190,6 +210,10 @@ public sealed partial class SettingsPage : Page
 
         if (!svc.IsInstalled)
         {
+            // Prefer the desktop toast over the inline card for this message;
+            // only fall back to the card when OS toasts are unavailable.
+            if (DesktopToastService.Current.TryShowNotInstalled())
+                return;
             ShowUpdateStatus(UpdateService.NotInstalledMessage, false);
             NotificationService.Current.Info(loc.GetString("NotifUpdates"), loc.GetString("SettingsNotInstalled"));
             return;

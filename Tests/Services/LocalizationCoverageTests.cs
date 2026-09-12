@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using DevTemWinUi3.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -6,11 +8,22 @@ namespace DevTemWinUi3.Tests.Services;
 [TestClass]
 public class LocalizationCoverageTests
 {
+    private string _storePath = string.Empty;
+
+    [TestInitialize]
+    public void Init()
+    {
+        _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+        LocalSettingsStore.SetTestPath(_storePath);
+    }
+
     [TestCleanup]
     public void Cleanup()
     {
         // Never leak a test language into other tests.
         LocalizationService.Current.SetLanguage("en-US");
+        LocalSettingsStore.SetTestPath(null);
+        try { File.Delete(_storePath); } catch { }
     }
 
     [TestMethod]
@@ -84,5 +97,16 @@ public class LocalizationCoverageTests
         loc.SetLanguage("es-ES");
         loc.SetLanguage("xx-XX");
         Assert.AreEqual("es-ES", loc.CurrentLanguage);
+    }
+
+    [TestMethod]
+    public void SetLanguage_PersistsChoice_ForNextLaunch()
+    {
+        var loc = LocalizationService.Current;
+        loc.SetLanguage("fr-FR");
+
+        // A fresh read (as Initialize does on next launch) sees the choice.
+        string? persisted = LocalSettingsStore.Shared.Get<string?>("AppLanguage", null);
+        Assert.AreEqual("fr-FR", persisted);
     }
 }

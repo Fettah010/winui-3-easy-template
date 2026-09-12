@@ -26,6 +26,23 @@ public sealed partial class SplashScreen : Window
         this.Title = string.Empty;
         this.SystemBackdrop = new MicaBackdrop();
 
+        // Honor the persisted app theme (System/Light/Dark) instead of always
+        // following Windows: otherwise a Light setting still shows a dark
+        // splash on every launch. Mirrors the MainWindow theme application.
+        try
+        {
+            if (Content is FrameworkElement themedRoot)
+            {
+                themedRoot.RequestedTheme = SettingsService.Current.Theme switch
+                {
+                    "Light" => ElementTheme.Light,
+                    "Dark" => ElementTheme.Dark,
+                    _ => ElementTheme.Default,
+                };
+            }
+        }
+        catch { }
+
         // Taskbar icon matches the app/installer icon
         try { this.AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico")); }
         catch { }

@@ -79,18 +79,11 @@ public sealed partial class MainWindow : Window
 
         // Apply localized strings (and keep them live: the nav pane listens
         // for language changes; cached pages refresh in OnNavigatedTo).
-        var loc = LocalizationService.Current;
-        NavHomeItem.Content = loc.GetString("NavHome");
-        NavAboutItem.Content = loc.GetString("NavAbout");
-        loc.LanguageChanged += (_, _) =>
-        {
-            try
-            {
-                NavHomeItem.Content = LocalizationService.Current.GetString("NavHome");
-                NavAboutItem.Content = LocalizationService.Current.GetString("NavAbout");
-            }
-            catch { }
-        };
+        // Note: the built-in Settings item keeps the OS label, so set it
+        // explicitly like the other nav items.
+        ApplyNavLocalization();
+        RootNavigationView.Loaded += (_, _) => ApplyNavLocalization();
+        LocalizationService.Current.LanguageChanged += (_, _) => ApplyNavLocalization();
 
         // Title bar setup
         this.ExtendsContentIntoTitleBar = true;
@@ -127,8 +120,13 @@ public sealed partial class MainWindow : Window
         SystemTrayService.Current.Initialize(this);
         SystemTrayService.Current.NavigationRequested += OnTrayNavigationRequested;
 
-        // Initialize notification service
+        // Initialize notification services (in-app cards + OS toasts)
         NotificationService.Current.Initialize(NotificationHost);
+        DesktopToastService.Current.Initialize();
+        DesktopToastService.Current.ActivationRequested += (_, _) =>
+        {
+            try { DispatcherQueue.TryEnqueue(ShowFromTray); } catch { }
+        };
 
         // Show first-run or what's-new dialog after window is shown
         _ = ShowFirstRunDialogIfNeeded();
@@ -291,6 +289,7 @@ public sealed partial class MainWindow : Window
         // Real exit: tear down the tray icon or Windows keeps a ghost
         // icon after the process dies.
         SystemTrayService.Current.Shutdown();
+        DesktopToastService.Current.Shutdown();
     }
 
     private void SaveWindowState()
@@ -311,6 +310,25 @@ public sealed partial class MainWindow : Window
                     _windowState.Height = this.AppWindow.Size.Height;
                 }
             }
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Applies localized labels to the nav pane items, including the built-in
+    /// settings item (which otherwise keeps the OS language label). Called at
+    /// startup, once the pane materializes (Loaded), and on every language
+    /// change — whichever runs last wins, so the footer can never stick.
+    /// </summary>
+    private void ApplyNavLocalization()
+    {
+        try
+        {
+            var loc = LocalizationService.Current;
+            NavHomeItem.Content = loc.GetString("NavHome");
+            NavAboutItem.Content = loc.GetString("NavAbout");
+            if (RootNavigationView.SettingsItem is NavigationViewItem settingsItem)
+                settingsItem.Content = loc.GetString("NavSettings");
         }
         catch { }
     }

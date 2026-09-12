@@ -16,7 +16,9 @@ namespace DevTemWinUi3.Services;
 public sealed class LocalizationService
 {
     private static readonly Dictionary<string, Dictionary<string, string>> _resources = new();
-    private string _currentLanguage = "en-US";
+    private const string PersistKey = "AppLanguage";
+    private const string DefaultLanguage = "en-US";
+    private string _currentLanguage = DefaultLanguage;
 
     public static LocalizationService Current { get; } = new();
 
@@ -143,6 +145,8 @@ public sealed class LocalizationService
             ["TrayCheckUpdates"] = "Check for updates",
             ["TraySettings"] = "Settings",
             ["TrayExit"] = "Exit",
+            ["TrayMinTitle"] = "Still running in the tray",
+            ["TrayMinBody"] = "DevTem-WinUI 3 was minimized. Click here to reopen it.",
             ["NotifUpdates"] = "Updates",
             ["FirstRunTitle"] = "Welcome to DevTem-WinUI 3",
             ["FirstRunButton"] = "Get Started",
@@ -254,6 +258,8 @@ public sealed class LocalizationService
             ["TrayCheckUpdates"] = "Buscar actualizaciones",
             ["TraySettings"] = "Configuración",
             ["TrayExit"] = "Salir",
+            ["TrayMinTitle"] = "Sigue en ejecución en la bandeja",
+            ["TrayMinBody"] = "DevTem-WinUI 3 se minimizó. Haz clic aquí para reabrirla.",
             ["NotifUpdates"] = "Actualizaciones",
             ["FirstRunTitle"] = "Bienvenido a DevTem-WinUI 3",
             ["FirstRunButton"] = "Empezar",
@@ -365,6 +371,8 @@ public sealed class LocalizationService
             ["TrayCheckUpdates"] = "Rechercher les mises à jour",
             ["TraySettings"] = "Paramètres",
             ["TrayExit"] = "Quitter",
+            ["TrayMinTitle"] = "Toujours actif dans la zone",
+            ["TrayMinBody"] = "DevTem-WinUI 3 a été réduit. Cliquez ici pour le rouvrir.",
             ["NotifUpdates"] = "Mises à jour",
             ["FirstRunTitle"] = "Bienvenue dans DevTem-WinUI 3",
             ["FirstRunButton"] = "Commencer",
@@ -383,19 +391,30 @@ public sealed class LocalizationService
 
     /// <summary>
     /// Initializes the localization service. Call once at startup.
+    /// Prefers our own persisted choice (reliable for unpackaged apps, where
+    /// the OS language override does not stick across restarts), then the OS
+    /// override, then English.
     /// </summary>
     public void Initialize()
     {
         try
         {
-            var lang = ApplicationLanguages.PrimaryLanguageOverride;
-            if (!string.IsNullOrEmpty(lang) && _resources.ContainsKey(lang))
-                _currentLanguage = lang;
+            var persisted = LocalSettingsStore.Shared.Get<string?>(PersistKey, null);
+            if (!string.IsNullOrEmpty(persisted) && _resources.ContainsKey(persisted))
+            {
+                _currentLanguage = persisted;
+            }
+            else
+            {
+                var lang = ApplicationLanguages.PrimaryLanguageOverride;
+                if (!string.IsNullOrEmpty(lang) && _resources.ContainsKey(lang))
+                    _currentLanguage = lang;
+            }
             Log.Information("Localization initialized. Language: {Language}", _currentLanguage);
         }
         catch
         {
-            _currentLanguage = "en-US";
+            _currentLanguage = DefaultLanguage;
         }
     }
 
@@ -438,6 +457,8 @@ public sealed class LocalizationService
             _currentLanguage = languageTag;
             try { ApplicationLanguages.PrimaryLanguageOverride = languageTag; }
             catch { }
+            try { LocalSettingsStore.Shared.Set(PersistKey, languageTag); }
+            catch { }
             Log.Information("Language changed to: {Language}", languageTag);
             LanguageChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -448,8 +469,10 @@ public sealed class LocalizationService
     /// </summary>
     public void ResetLanguage()
     {
-        _currentLanguage = "en-US";
+        _currentLanguage = DefaultLanguage;
         try { ApplicationLanguages.PrimaryLanguageOverride = string.Empty; }
+        catch { }
+        try { LocalSettingsStore.Shared.Remove(PersistKey); }
         catch { }
         Log.Information("Language reset to system default");
         LanguageChanged?.Invoke(this, EventArgs.Empty);

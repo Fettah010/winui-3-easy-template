@@ -44,6 +44,27 @@ public class ResponsiveLayoutTests
     }
 
     [TestMethod]
+    public void ShouldUseNarrowPage_BelowThreshold_ReturnsTrue()
+    {
+        Assert.IsTrue(ResponsiveLayout.ShouldUseNarrowPage(699));
+        Assert.IsTrue(ResponsiveLayout.ShouldUseNarrowPage(400));
+    }
+
+    [TestMethod]
+    public void ShouldUseNarrowPage_AtOrAboveThreshold_ReturnsFalse()
+    {
+        Assert.IsFalse(ResponsiveLayout.ShouldUseNarrowPage(700));
+        Assert.IsFalse(ResponsiveLayout.ShouldUseNarrowPage(1200));
+    }
+
+    [TestMethod]
+    public void ShouldUseNarrowPage_InvalidWidth_ReturnsFalse()
+    {
+        Assert.IsFalse(ResponsiveLayout.ShouldUseNarrowPage(0));
+        Assert.IsFalse(ResponsiveLayout.ShouldUseNarrowPage(-5));
+        Assert.IsFalse(ResponsiveLayout.ShouldUseNarrowPage(double.NaN));
+    }
+    [TestMethod]
     public void ScaleLogicalToPhysical_96Dpi_IsIdentity()
     {
         Assert.AreEqual(720, ResponsiveLayout.ScaleLogicalToPhysical(720, 96));

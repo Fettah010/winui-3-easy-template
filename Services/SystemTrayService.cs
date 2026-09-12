@@ -235,6 +235,9 @@ public sealed class SystemTrayService : IDisposable
             EnsureTrayIcon();
             _mainWindow.AppWindow.Hide();
             Log.Information("Window hidden to system tray");
+            // Tell the user where the app went; clicking the toast reopens it.
+            // Falls back silently when OS toasts are unavailable.
+            DesktopToastService.Current.TryShowMinimized();
         }
         catch (Exception ex)
         {

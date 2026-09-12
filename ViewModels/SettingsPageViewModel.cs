@@ -73,6 +73,11 @@ public partial class SettingsPageViewModel : ObservableObject
 
     partial void OnSelectedThemeIndexChanged(int value)
     {
+        // Guard against programmatic resets (e.g. ComboBox display refresh):
+        // only 0-2 are real themes, anything else must not write settings.
+        if (value is < 0 or > 2)
+            return;
+
         var theme = value switch
         {
             1 => "Light",

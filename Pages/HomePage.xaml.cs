@@ -21,6 +21,48 @@ public sealed partial class HomePage : Page
         // The page is cached: refresh strings in case the language changed
         // while the user was on another page.
         ApplyLocalization();
+        UpdateResponsiveLayout();
+    }
+
+    private void HomePage_Loaded(object sender, RoutedEventArgs e) => UpdateResponsiveLayout();
+
+    private void HomePage_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateResponsiveLayout();
+
+    /// <summary>
+    /// Switches between two-column and stacked layouts based on the page's own
+    /// width (not the window's, so the compact nav pane is accounted for).
+    /// Done in code because VisualState setters cannot reliably retarget Grid
+    /// columns/rows. Stacking zeroes the unused column and reuses the other
+    /// one as Star (never ColumnSpan: spanned children join Auto sizing with
+    /// unbounded measure and blow the grid past the card). Layout depends only
+    /// on width — never on language — so longer translations wrap instead of
+    /// shifting content.
+    /// </summary>
+    private void UpdateResponsiveLayout()
+    {
+        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+
+        ContentPanel.Padding = narrow
+            ? new Thickness(16, 16, 16, 24)
+            : new Thickness(32, 24, 32, 32);
+
+        HeroLogoCol.Width = narrow ? new GridLength(1, GridUnitType.Star) : GridLength.Auto;
+        HeroTextCol.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        Grid.SetRow(HeroText, narrow ? 1 : 0);
+        Grid.SetColumn(HeroText, narrow ? 0 : 1);
+        Grid.SetColumnSpan(HeroText, 1);
+
+        StatusCol1.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        Grid.SetRow(QuickCard, narrow ? 1 : 0);
+        Grid.SetColumn(QuickCard, narrow ? 0 : 1);
+
+        FeatureCol1.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        Grid.SetRow(FeatureCard2, narrow ? 1 : 0);
+        Grid.SetColumn(FeatureCard2, narrow ? 0 : 1);
+        Grid.SetRow(FeatureCard3, narrow ? 2 : 1);
+        Grid.SetColumn(FeatureCard3, 0);
+        Grid.SetRow(FeatureCard4, narrow ? 3 : 1);
+        Grid.SetColumn(FeatureCard4, narrow ? 0 : 1);
     }
 
     private void ApplyLocalization()
