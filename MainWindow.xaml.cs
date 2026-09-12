@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -11,7 +12,11 @@ namespace DevTemWinUi3;
 
 public sealed partial class MainWindow : Window
 {
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
     private readonly WindowStateService _windowState = WindowStateService.Current;
+    private readonly NavigationService _nav = NavigationService.Current;
 
     public MainWindow()
     {
@@ -23,15 +28,22 @@ public sealed partial class MainWindow : Window
         var loc = LocalizationService.Current;
         NavHomeItem.Content = loc.GetString("NavHome");
         NavAboutItem.Content = loc.GetString("NavAbout");
-        NavSettingsItem.Content = loc.GetString("NavSettings");
 
-        // Native-feeling, theme-aware title bar: the app content extends into the
-        // caption area, Mica shows through it, and the caption buttons (min/max/
-        // close) stay OS-drawn with automatic light/dark colors.
+        // Title bar setup
         this.ExtendsContentIntoTitleBar = true;
         this.SetTitleBar(AppTitleBar);
         this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
         SetTitleBarColors();
+
+        // Register routes
+        _nav.RegisterRoute("home", typeof(HomePage));
+        _nav.RegisterRoute("about", typeof(AboutPage));
+        _nav.RegisterRoute("settings", typeof(SettingsPage));
+        _nav.SetFrame(ContentFrame);
+        _nav.Navigated += OnNavigated;
+
+        // Navigate to initial page
+        _nav.NavigateTo("home");
 
         // Restore window state
         RestoreWindowState();
@@ -42,9 +54,6 @@ public sealed partial class MainWindow : Window
         // Refresh title bar colors when theme changes
         if (Content is FrameworkElement root)
             root.ActualThemeChanged += (_, _) => SetTitleBarColors();
-
-        ContentFrame.Navigate(typeof(HomePage));
-        RootNavigationView.SelectedItem = RootNavigationView.MenuItems[0];
 
         // Initialize system tray
         SystemTrayService.Current.Initialize(this);
@@ -62,13 +71,11 @@ public sealed partial class MainWindow : Window
         var titleBar = this.AppWindow.TitleBar;
         var isDark = (Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
 
-        // Active state
         titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
         titleBar.ButtonForegroundColor = isDark
             ? Microsoft.UI.Colors.White
             : Microsoft.UI.Colors.Black;
 
-        // Hover state
         titleBar.ButtonHoverBackgroundColor = isDark
             ? Microsoft.UI.ColorHelper.FromArgb(40, 255, 255, 255)
             : Microsoft.UI.ColorHelper.FromArgb(30, 0, 0, 0);
@@ -76,7 +83,6 @@ public sealed partial class MainWindow : Window
             ? Microsoft.UI.Colors.White
             : Microsoft.UI.Colors.Black;
 
-        // Pressed state
         titleBar.ButtonPressedBackgroundColor = isDark
             ? Microsoft.UI.ColorHelper.FromArgb(60, 255, 255, 255)
             : Microsoft.UI.ColorHelper.FromArgb(50, 0, 0, 0);
@@ -84,7 +90,6 @@ public sealed partial class MainWindow : Window
             ? Microsoft.UI.Colors.White
             : Microsoft.UI.Colors.Black;
 
-        // Inactive state
         titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
         titleBar.ButtonInactiveForegroundColor = isDark
             ? Microsoft.UI.ColorHelper.FromArgb(120, 255, 255, 255)
@@ -116,7 +121,6 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, WindowEventArgs args)
     {
-        // If tray is active and minimize-to-tray is on, intercept the close
         if (SystemTrayService.Current.HandleWindowClose())
         {
             args.Handled = true;
@@ -148,11 +152,77 @@ public sealed partial class MainWindow : Window
         catch { }
     }
 
+    private void OnNavigated(object? sender, string tag)
+    {
+        // Sync NavigationView selection to the navigated page
+        foreach (var item in RootNavigationView.MenuItems)
+        {
+            if (item is NavigationViewItem navItem && navItem.Tag is string t && t == tag)
+            {
+                RootNavigationView.SelectedItem = item;
+                return;
+            }
+        }
+
+        // Check footer items (if any)
+        foreach (var item in RootNavigationView.FooterMenuItems)
+        {
+            if (item is NavigationViewItem navItem && navItem.Tag is string t && t == tag)
+            {
+                RootNavigationView.SelectedItem = item;
+                return;
+            }
+        }
+    }
+
+    private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        // Settings is handled by NavigationView internally (IsSettingsVisible=true)
+        if (args.IsSettingsInvoked)
+        {
+            _nav.NavigateTo("settings");
+            return;
+        }
+
+        if (args.InvokedItemContainer?.Tag is not string tag)
+            return;
+
+        _nav.NavigateTo(tag);
+    }
+
+    private void NavigationView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    {
+        _nav.GoBack();
+    }
+
+    private void OnTrayNavigationRequested(object? sender, string target)
+    {
+        ShowFromTray();
+        _nav.NavigateTo(target);
+    }
+
+    private void ShowFromTray()
+    {
+        try
+        {
+            this.AppWindow.Show();
+            this.Activate();
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            SetWindowPos(hwnd, new IntPtr(-1), 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0040);
+            SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0040);
+        }
+        catch { }
+    }
+
+    private void TrayButton_Click(object sender, RoutedEventArgs e)
+    {
+        SystemTrayService.Current.HideToTray();
+    }
+
     private async Task ShowFirstRunDialogIfNeeded()
     {
         var firstRun = FirstRunService.Current;
-
-        // Wait for UI to be ready
         await Task.Delay(500);
 
         if (firstRun.IsFirstRun)
@@ -207,44 +277,5 @@ public sealed partial class MainWindow : Window
             await dialog.ShowAsync();
         }
         catch { }
-    }
-
-    private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
-    {
-        if (args.InvokedItemContainer?.Tag is not string tag)
-            return;
-
-        switch (tag)
-        {
-            case "home":
-                ContentFrame.Navigate(typeof(HomePage));
-                break;
-            case "about":
-                ContentFrame.Navigate(typeof(AboutPage));
-                break;
-            case "settings":
-                ContentFrame.Navigate(typeof(SettingsPage));
-                break;
-        }
-    }
-
-    private void TrayButton_Click(object sender, RoutedEventArgs e)
-    {
-        SystemTrayService.Current.HideToTray();
-    }
-
-    private void OnTrayNavigationRequested(object? sender, string target)
-    {
-        switch (target)
-        {
-            case "settings":
-                ContentFrame.Navigate(typeof(Pages.SettingsPage));
-                RootNavigationView.SelectedItem = RootNavigationView.FooterMenuItems[1];
-                break;
-            case "home":
-                ContentFrame.Navigate(typeof(Pages.HomePage));
-                RootNavigationView.SelectedItem = RootNavigationView.MenuItems[0];
-                break;
-        }
     }
 }

@@ -64,10 +64,11 @@
             x:Name="RootNavigationView"
             Grid.Row="1"
             PaneDisplayMode="Left"
-            IsSettingsVisible="False"
+            IsSettingsVisible="True"
             IsBackButtonVisible="Collapsed"
             IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavigationView_ItemInvoked"
+            BackRequested="NavigationView_BackRequested"
             OpenPaneLength="240">
 
             <NavigationView.MenuItems>
@@ -76,20 +77,12 @@
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-            </NavigationView.MenuItems>
-
-            <NavigationView.FooterMenuItems>
                 <NavigationViewItem x:Name="NavAboutItem" Content="About" Tag="about">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="NavSettingsItem" Content="Settings" Tag="settings">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE713;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.FooterMenuItems>
+            </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame"/>
         </NavigationView>

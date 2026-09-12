@@ -7,7 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
     xmlns:vm="using:DevTemWinUi3.ViewModels"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    NavigationCacheMode="Disabled">
 
     <Page.DataContext>
         <vm:SettingsPageViewModel/>
