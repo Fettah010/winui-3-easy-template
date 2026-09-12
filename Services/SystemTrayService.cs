@@ -33,7 +33,9 @@ public sealed class SystemTrayService : IDisposable
     private const uint TPM_RETURNCMD = 0x0100;
 
     private const int ID_TRAY_SHOW = 1001;
-    private const int ID_TRAY_EXIT = 1002;
+    private const int ID_TRAY_CHECK_UPDATES = 1002;
+    private const int ID_TRAY_SETTINGS = 1003;
+    private const int ID_TRAY_EXIT = 1004;
 
     private const uint IMAGE_ICON = 1;
     private const uint LR_LOADFROMFILE = 0x0010;
@@ -440,6 +442,9 @@ public sealed class SystemTrayService : IDisposable
 
         AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_SHOW, "Show DevTem-WinUI 3");
         AppendMenuW(hMenu, 0x0000, IntPtr.Zero, null);
+        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_CHECK_UPDATES, "Check for updates");
+        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_SETTINGS, "Settings");
+        AppendMenuW(hMenu, 0x0000, IntPtr.Zero, null);
         AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_EXIT, "Exit");
 
         SetForegroundWindow(_windowHandle);
@@ -449,11 +454,32 @@ public sealed class SystemTrayService : IDisposable
 
         DestroyMenu(hMenu);
 
-        if (cmd == ID_TRAY_SHOW)
-            ShowFromTray();
-        else if (cmd == ID_TRAY_EXIT)
-            ExitApp();
+        switch (cmd)
+        {
+            case ID_TRAY_SHOW:
+                ShowFromTray();
+                break;
+            case ID_TRAY_CHECK_UPDATES:
+                ShowFromTray();
+                _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    NavigationRequested?.Invoke(this, "settings");
+                });
+                break;
+            case ID_TRAY_SETTINGS:
+                ShowFromTray();
+                _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    NavigationRequested?.Invoke(this, "settings");
+                });
+                break;
+            case ID_TRAY_EXIT:
+                ExitApp();
+                break;
+        }
     }
+
+    public event EventHandler<string>? NavigationRequested;
 
     private void ExitApp()
     {

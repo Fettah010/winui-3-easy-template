@@ -79,6 +79,7 @@ public sealed partial class SettingsPage : Page
         if (!svc.IsInstalled)
         {
             ShowUpdateStatus(UpdateService.NotInstalledMessage, false);
+            NotificationService.Current.Info("Updates", UpdateService.NotInstalledMessage);
             return;
         }
 
@@ -91,17 +92,20 @@ public sealed partial class SettingsPage : Page
             if (update is null)
             {
                 ShowUpdateStatus(UpdateService.NoUpdateMessage, false);
+                NotificationService.Current.Success("Updates", UpdateService.NoUpdateMessage);
             }
             else
             {
                 _pendingUpdate = update;
                 var version = update.TargetFullRelease.Version;
                 ShowUpdateStatus($"v{version} available", true);
+                NotificationService.Current.Info("Updates", $"Version {version} is available. Click Install to update.");
             }
         }
         catch (Exception ex)
         {
             ShowUpdateStatus($"Check failed: {ex.Message}", false);
+            NotificationService.Current.Error("Update check failed", ex.Message);
         }
         finally
         {
@@ -122,6 +126,7 @@ public sealed partial class SettingsPage : Page
             await UpdateService.Current.DownloadUpdatesAsync(_pendingUpdate);
             UpdateStatusText.Text = "Installing\u2026";
             InstallUpdateButton.Visibility = Visibility.Collapsed;
+            NotificationService.Current.Success("Updates", "Update downloaded. Restarting\u2026");
 
             await Task.Delay(300);
             UpdateService.Current.ApplyUpdatesAndRestart(_pendingUpdate);
@@ -131,6 +136,7 @@ public sealed partial class SettingsPage : Page
             UpdateStatusText.Text = $"Install failed: {ex.Message}";
             InstallUpdateButton.IsEnabled = true;
             InstallUpdateButton.Content = "Install";
+            NotificationService.Current.Error("Update failed", ex.Message);
         }
     }
 

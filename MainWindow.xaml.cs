@@ -45,6 +45,10 @@ public sealed partial class MainWindow : Window
 
         // Initialize system tray
         SystemTrayService.Current.Initialize(this);
+        SystemTrayService.Current.NavigationRequested += OnTrayNavigationRequested;
+
+        // Initialize notification service
+        NotificationService.Current.Initialize(NotificationHost);
 
         // Show first-run or what's-new dialog after window is shown
         _ = ShowFirstRunDialogIfNeeded();
@@ -190,5 +194,20 @@ public sealed partial class MainWindow : Window
     private void TrayButton_Click(object sender, RoutedEventArgs e)
     {
         SystemTrayService.Current.HideToTray();
+    }
+
+    private void OnTrayNavigationRequested(object? sender, string target)
+    {
+        switch (target)
+        {
+            case "settings":
+                ContentFrame.Navigate(typeof(Pages.SettingsPage));
+                RootNavigationView.SelectedItem = RootNavigationView.FooterMenuItems[1];
+                break;
+            case "home":
+                ContentFrame.Navigate(typeof(Pages.HomePage));
+                RootNavigationView.SelectedItem = RootNavigationView.MenuItems[0];
+                break;
+        }
     }
 }

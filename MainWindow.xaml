@@ -56,7 +56,7 @@
                 ToolTipService.ToolTip="Minimize to tray"
                 Click="TrayButton_Click"
                 Background="Transparent">
-                <FontIcon Glyph="&#xEA8E;" FontSize="14"/>
+                <FontIcon Glyph="&#xE96E;" FontSize="14"/>
             </Button>
         </Grid>
 
@@ -93,5 +93,16 @@
 
             <Frame x:Name="ContentFrame"/>
         </NavigationView>
+
+        <!-- Toast notification host: bottom-right corner -->
+        <Canvas
+            x:Name="NotificationHost"
+            Grid.Row="1"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="0,0,0,16"
+            IsHitTestVisible="False"
+            Canvas.Left="0"
+            Canvas.Top="0"/>
     </Grid>
 </Window>
