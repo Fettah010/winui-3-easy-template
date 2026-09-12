@@ -38,7 +38,7 @@ public sealed class LocalSettingsStore
 
     internal static string DefaultPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "DevTemWinUi3",
+        AppMetadata.AppDataFolder,
         "settings.json");
 
     /// <summary>

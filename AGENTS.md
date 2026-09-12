@@ -29,8 +29,7 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Pages/SettingsPage.*` | App settings: theme selector, update channel, auto-check toggle, app info. |
 | `Controls/WrapPanel.cs` + `Controls/WrapLayout.cs` | Dependency-free wrap panel (button rows) with pure, unit-tested layout math. |
 | `Services/ResponsiveLayout.cs` | Breakpoints + DPI math: min window 720x540, compact pane <860, narrow page <700. |
-| `Pages/UpdatesPage.*` | **DEPRECATED** - Do not use. Removed from navigation. Keep files for reference only. |
-| `Pages/DiagnosticsPage.*` | Live log viewer with copy/export functionality. |
+| `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager`. |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
@@ -43,8 +42,7 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
 | `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release. |
 | `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
-| `RunDevTem.vbs` | Silent launcher (hides terminal window). **Use this for desktop shortcut.** |
-| `RunDevTem.bat` | Batch launcher (shows terminal - avoid using). |
+| `run-dev.vbs` / `run-dev.bat` | Dev-only `dotnet run` launchers (repo-relative paths). The desktop shortcut targets the built exe directly (fast cold start). |
 | `.github/workflows/release.yml` | CI release pipeline (tag push `v*` or manual `workflow_dispatch`). |
 | `Tests/` | xunit test project. |
 | `README.md` | User-facing docs/questions. |
@@ -133,13 +131,13 @@ dotnet run                                   # runs unpackaged (updates disabled
 
 ## Running the app
 
-- **Desktop shortcut**: Double-click `DevTem-WinUI 3` on desktop (uses `RunDevTem.vbs`)
-- **Command line**: `dotnet run -c Debug -p:Platform=x64`
+- **Desktop shortcut**: Double-click `DevTem-WinUI 3` on desktop (targets the built exe)
+- **Command line**: `dotnet run -c Debug -p:Platform=x64` (or `run-dev.bat`)
 
 ## Desktop shortcut setup
 
 Run `Scripts\create-shortcut.ps1` to create the desktop shortcut. The shortcut
-targets the built exe directly (fast cold start). `RunDevTem.vbs` / `.bat`
+targets the built exe directly (fast cold start). `run-dev.vbs` / `.bat`
 run `dotnet run` (handy for dev, but adds seconds to every launch) — the app
 is WinExe so it never shows a terminal window on its own.
 
@@ -164,7 +162,8 @@ default to the beta channel; stable releases use the plain version).
 8. **Desktop shortcut targets the built exe directly.** The app is WinExe (no
    console), so no VBS wrapper is needed; `.bat`/VBS run `dotnet run` and add
    seconds to launch.
-9. **UpdatesPage is deprecated.** Do not use or modify - kept for reference only.
+9. **Retired code lives in `docs/archive/`** (excluded from build). Do not
+   resurrect it into `Pages/`; treat it as a reading reference only.
 
 ## Conventions
 

@@ -2,7 +2,6 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DevTemWinUi3.Services;
-using Microsoft.UI.Xaml;
 
 namespace DevTemWinUi3.ViewModels;
 
@@ -79,28 +78,8 @@ public partial class SettingsPageViewModel : ObservableObject
             _ => "System"
         };
 
-        try { SettingsService.Current.Theme = theme; } catch { }
-
-        try
-        {
-            if (App.Current is App app && app.m_window is MainWindow mainWindow)
-            {
-                var rootElement = mainWindow.Content as FrameworkElement;
-                rootElement?.DispatcherQueue.TryEnqueue(() =>
-                {
-                    if (rootElement is not null)
-                    {
-                        rootElement.RequestedTheme = value switch
-                        {
-                            1 => ElementTheme.Light,
-                            2 => ElementTheme.Dark,
-                            _ => ElementTheme.Default
-                        };
-                    }
-                });
-            }
-        }
-        catch { }
+        ThemeService.Current.SetTheme(theme);
+        ThemeService.Current.ApplyToMainWindow();
     }
 
     partial void OnSelectedChannelIndexChanged(int value)

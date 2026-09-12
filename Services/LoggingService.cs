@@ -30,7 +30,7 @@ public static class LoggingService
         }
         catch
         {
-            logPath = Path.Combine(Path.GetTempPath(), "DevTemWinUi3", LogDirectory);
+            logPath = Path.Combine(Path.GetTempPath(), AppMetadata.AppDataFolder, LogDirectory);
             Directory.CreateDirectory(logPath);
         }
 

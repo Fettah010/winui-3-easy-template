@@ -1,11 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 using DevTemWinUi3.Services;
 
 namespace DevTemWinUi3.Pages;
 
-public sealed partial class HomePage : Page
+public sealed partial class HomePage : Page, INavigationAware
 {
     public AppInfo AppInfo { get; } = AppInfo.Current;
 
@@ -15,13 +14,17 @@ public sealed partial class HomePage : Page
         ApplyLocalization();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    public void OnNavigatedTo(object? parameter)
     {
-        base.OnNavigatedTo(e);
         // The page is cached: refresh strings in case the language changed
         // while the user was on another page.
         ApplyLocalization();
         UpdateResponsiveLayout();
+    }
+
+    public void OnNavigatedFrom()
+    {
+        // Nothing to tear down on leave.
     }
 
     private void HomePage_Loaded(object sender, RoutedEventArgs e) => UpdateResponsiveLayout();

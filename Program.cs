@@ -59,7 +59,7 @@ public static class Program
             .OnRestarted(_ => LoggingService.Log.Information("Restarted after update"))
             .Run();
 
-        LoggingService.Log.Information("DevTem-WinUI 3 starting");
+        LoggingService.Log.Information("{AppName} starting", AppMetadata.AppName);
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Application.Start(p =>
@@ -77,8 +77,8 @@ public static class Program
     /// </summary>
     private static bool TryEnforceSingleInstance()
     {
-        const string mutexName = "Global\\DevTemWinUi3_SingleInstance_Mutex";
-        const string eventName = "Global\\DevTemWinUi3_Activate_Event";
+        var mutexName = AppMetadata.SingleInstanceMutexName;
+        var eventName = AppMetadata.SingleInstanceEventName;
 
         _mutex = new Mutex(true, mutexName, out bool createdNew);
         if (!createdNew)
@@ -96,8 +96,7 @@ public static class Program
     {
         try
         {
-            const string eventName = "Global\\DevTemWinUi3_Activate_Event";
-            using var evt = EventWaitHandle.OpenExisting(eventName);
+            using var evt = EventWaitHandle.OpenExisting(AppMetadata.SingleInstanceEventName);
             evt.Set();
         }
         catch
@@ -122,7 +121,7 @@ public static class Program
                 try
                 {
                     using var evt = EventWaitHandle.OpenExisting(
-                        "Global\\DevTemWinUi3_Activate_Event");
+                        AppMetadata.SingleInstanceEventName);
                     evt.WaitOne();
                     dispatcher.TryEnqueue(() => { try { onActivate(); } catch { } });
                 }
@@ -136,7 +135,7 @@ public static class Program
         })
         {
             IsBackground = true,
-            Name = "DevTemSingleInstanceActivation",
+            Name = "SingleInstanceActivation",
         };
         thread.Start();
     }

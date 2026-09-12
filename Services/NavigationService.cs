@@ -4,6 +4,18 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace DevTemWinUi3.Services;
 
+/// <summary>
+/// Implemented by pages that want navigation callbacks without overriding
+/// <c>Frame.OnNavigatedTo</c>. The <see cref="NavigationService"/> invokes
+/// these for every service-initiated navigation (tray, buttons, deep links),
+/// which is the single pattern new pages should follow.
+/// </summary>
+public interface INavigationAware
+{
+    void OnNavigatedTo(object? parameter);
+    void OnNavigatedFrom();
+}
+
 public sealed class NavigationService
 {
     private readonly Dictionary<string, Type> _routes = new(StringComparer.OrdinalIgnoreCase);
@@ -62,11 +74,14 @@ public sealed class NavigationService
                 _forwardStack.Clear();
             }
 
+            (_frame.Content as INavigationAware)?.OnNavigatedFrom();
+
             var success = _frame.Navigate(pageType, parameter);
             if (success)
             {
                 _currentTag = tag;
                 Navigated?.Invoke(this, tag);
+                (_frame.Content as INavigationAware)?.OnNavigatedTo(parameter);
             }
             return success;
         }
@@ -96,6 +111,7 @@ public sealed class NavigationService
             _frame.GoBack();
             _currentTag = entry.Tag;
             Navigated?.Invoke(this, entry.Tag);
+            (_frame.Content as INavigationAware)?.OnNavigatedTo(null);
             return true;
         }
         finally
@@ -118,6 +134,7 @@ public sealed class NavigationService
             _frame.GoForward();
             _currentTag = entry.Tag;
             Navigated?.Invoke(this, entry.Tag);
+            (_frame.Content as INavigationAware)?.OnNavigatedTo(null);
             return true;
         }
         finally

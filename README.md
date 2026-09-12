@@ -158,7 +158,6 @@ Pages/
   HomePage.xaml            # Landing page
   AboutPage.xaml           # App info, version, links
   SettingsPage.xaml        # Theme, update channel, auto-check
-  DiagnosticsPage.xaml     # Live log viewer
 Services/
   AppInfo.cs               # Version helpers
   LoggingService.cs        # Serilog setup

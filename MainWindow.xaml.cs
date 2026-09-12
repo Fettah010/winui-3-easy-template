@@ -55,26 +55,22 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         this.InitializeComponent();
-        this.Title = "DevTem-WinUI 3";
+        this.Title = AppMetadata.AppName;
         this.SystemBackdrop = new MicaBackdrop();
 
-        // Apply the persisted theme on launch (Settings only applies it on change).
+        // Apply the persisted theme on launch (single source: ThemeService).
+        if (Content is FrameworkElement themedRoot)
+            ThemeService.Current.ApplyTo(themedRoot);
+
+        // Taskbar/titlebar icon matches the app/installer icon.
+        // Guard File.Exists: SetIcon with a missing file can blank the taskbar
+        // icon instead of throwing (seen on installed builds).
         try
         {
-            if (Content is FrameworkElement themedRoot)
-            {
-                themedRoot.RequestedTheme = SettingsService.Current.Theme switch
-                {
-                    "Light" => ElementTheme.Light,
-                    "Dark" => ElementTheme.Dark,
-                    _ => ElementTheme.Default,
-                };
-            }
+            var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
+            if (System.IO.File.Exists(iconPath))
+                this.AppWindow.SetIcon(iconPath);
         }
-        catch { }
-
-        // Taskbar/titlebar icon matches the app/installer icon
-        try { this.AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico")); }
         catch { }
 
         // Apply localized strings (and keep them live: the nav pane listens

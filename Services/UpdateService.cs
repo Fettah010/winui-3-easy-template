@@ -14,7 +14,8 @@ public sealed class UpdateService
 {
     // GitHub Releases feed that hosts this app's updates. Releases are
     // created with Scripts/build-and-release.ps1 (vpk upload github).
-    public const string GitHubRepoUrl = "https://github.com/Fettah010/winui-3-easy-template";
+    // Single source of truth: Services/AppMetadata.cs (rewritten per app).
+    public static string GitHubRepoUrl => AppMetadata.RepoUrl;
 
     public const string NotInstalledMessage =
         "Updates are only available for installed apps. Run setup.exe once, then check again.";

@@ -4,20 +4,21 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
 
 namespace DevTemWinUi3.Pages;
 
-public sealed partial class SettingsPage : Page
+public sealed partial class SettingsPage : Page, INavigationAware
 {
     public SettingsPageViewModel ViewModel { get; }
 
     public SettingsPage()
     {
         this.InitializeComponent();
-        ViewModel = (SettingsPageViewModel)DataContext;
+        // ViewModel comes from the container (transient per page), never new.
+        ViewModel = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
+        DataContext = ViewModel;
 
         ApplyLocalization();
 
@@ -122,17 +123,15 @@ public sealed partial class SettingsPage : Page
     private bool _autoCheckArmed;
     private CancellationTokenSource? _autoCheckCts;
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    public void OnNavigatedTo(object? parameter)
     {
-        base.OnNavigatedTo(e);
         ApplyLocalization();
-        if (TrayNavigationRequest.ShouldAutoCheck(e.Parameter))
+        if (TrayNavigationRequest.ShouldAutoCheck(parameter))
             _autoCheckArmed = true;
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    public void OnNavigatedFrom()
     {
-        base.OnNavigatedFrom(e);
         // The page is gone: cancel any pending auto-check so it can never
         // touch a detached visual tree.
         _autoCheckArmed = false;

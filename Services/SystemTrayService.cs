@@ -307,12 +307,12 @@ public sealed class SystemTrayService : IDisposable
             if (enabled)
             {
                 var exePath = Environment.ProcessPath ?? string.Empty;
-                key.SetValue("DevTemWinUi3", $"\"{exePath}\"");
+                key.SetValue(AppMetadata.AutoStartRegistryName, $"\"{exePath}\"");
                 Log.Information("Auto-start enabled");
             }
             else
             {
-                key.DeleteValue("DevTemWinUi3", false);
+                key.DeleteValue(AppMetadata.AutoStartRegistryName, false);
                 Log.Information("Auto-start disabled");
             }
         }
@@ -328,7 +328,7 @@ public sealed class SystemTrayService : IDisposable
         {
             using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
                 @"Software\Microsoft\Windows\CurrentVersion\Run", false);
-            return key?.GetValue("DevTemWinUi3") is not null;
+            return key?.GetValue(AppMetadata.AutoStartRegistryName) is not null;
         }
         catch
         {
@@ -401,7 +401,7 @@ public sealed class SystemTrayService : IDisposable
             uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP,
             uCallbackMessage = WM_TRAYICON,
             hIcon = _iconHandle,
-            szTip = "DevTem-WinUI 3",
+            szTip = AppMetadata.TrayTooltip,
             uTimeoutOrVersion = NOTIFYICON_VERSION_4,
         };
 

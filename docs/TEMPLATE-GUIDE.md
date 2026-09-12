@@ -1,0 +1,82 @@
+# Template Guide — building YOUR app on DevTem-WinUI 3
+
+This is a starting template, not a finished app. Follow the recipes below and
+you keep every feature (updates, tray, i18n, logging) working.
+
+## 1. Rename the template (do this first)
+
+Identity lives in two layers. Code surfaces read `Services/AppMetadata.cs`
+— change the values there. Text/XAML surfaces are replaced by
+`Scripts/init-template.ps1`, which also verifies zero leftovers.
+
+| Token | Meaning | Example |
+| --- | --- | --- |
+| `DevTemWinUi3` | Namespace, mutex/event names, registry key, settings folder | `AcmeDesk` |
+| `DevTem-WinUI 3` | Display name (titles, toasts, installer) | `Acme Desk` |
+| `Fettah010/winui-3-easy-template` | GitHub repo (feeds, links, CI) | `acme/desk-app` |
+| `Fettah` | Pack author | `Acme` |
+
+```powershell
+.\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" -RepoUrl "https://github.com/acme/desk-app"
+```
+
+The script also renames `DevTemWinUi3[.Tests].csproj` to match, and fails if
+any template identity remains. Frozen on purpose: `docs/archive/` (reference)
+and this guide (it documents the tokens).
+
+Manual spots the script cannot do: regenerate `Assets/app.ico` + `Logo*.png`
+with your art, then run `Scripts/create-shortcut.ps1` again.
+
+## 2. Add a page (6 steps, all required)
+
+1. **XAML + code-behind** in `Pages/` following `HomePage`: root `Grid` →
+   `ScrollViewer` (horizontal scrollbar `Disabled`) → viewport `Grid` →
+   content `StackPanel` with `MaxWidth` (see "Layout" below).
+2. **ViewModel** in `ViewModels/` (transient, `[ObservableProperty]` /
+   `[RelayCommand]`), registered in `ServiceLocator.Initialize()`, resolved
+   in the page via `ServiceLocator.GetRequiredService<T>()` — never `new`.
+3. **Navigation awareness**: implement `INavigationAware`
+   (`Services/NavigationService.cs`) instead of overriding `OnNavigatedTo` —
+   the service calls it with the navigation parameter.
+4. **Strings**: add `HomeTitle`-style keys to all three dictionaries in
+   `LocalizationService`, `x:Name` every user-facing element, apply them in
+   one `ApplyLocalization()` method called from constructor, `OnNavigatedTo`,
+   and (Settings-style) after `SetLanguage`.
+5. **Route**: `NavigationService.RegisterRoute("orders", typeof(OrdersPage))`
+   in `MainWindow`, plus a `NavigationViewItem` (menu or footer) and a
+   selection-sync case (note: the built-in Settings item needs the explicit
+   branch in `OnNavigated`).
+6. **Responsive**: drive two-column → stacked switching from
+   `ResponsiveLayout.ShouldUseNarrowPage(ActualWidth)` in code-behind
+   (`SizeChanged` + `Loaded` + `OnNavigatedTo`); never `ColumnSpan` for
+   stacking (spanned children join Auto sizing and blow the grid past the
+   card); button rows go in `Controls/WrapPanel`.
+
+## 3. Add a setting
+
+1. Key + property in `Services/SettingsService.cs` (backed by
+   `LocalSettingsStore`, JSON file — never `ApplicationData.LocalSettings`,
+   which does not persist unpackaged).
+2. `[ObservableProperty]` in the page ViewModel with a guarded change handler
+   (see `SettingsPageViewModel`: load without side effects, ignore invalid
+   values so programmatic refreshes never corrupt persisted state).
+3. `SettingsCard` in `SettingsPage.xaml` with localized header/description.
+
+## 4. Layout rules (learned the hard way)
+
+- Page content width must NEVER depend on content length, or translations
+  shift the layout: viewport `Grid` → `StackPanel` with `MaxWidth`.
+- Text always `TextWrapping="Wrap"`; horizontal rows either fit provably or
+  use `WrapPanel`; `ScrollViewer` horizontal scrollbar stays `Disabled`.
+- Breakpoints live in `Services/ResponsiveLayout.cs` (single source) and are
+  unit-tested; the nav pane compacts below 860px window width.
+- Verify with screenshots: switch EN ↔ ES at 900px and at 1920px; card edges
+  must be pixel-identical (see `Tests/` ABA approach in git history).
+
+## 5. Releases
+
+Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
+`<InformationalVersion>` (`-beta` suffix on beta releases so fresh installs
+default to the beta channel). Commit, push, tag (`v0.0.3-beta`), push the tag
+(CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
+is in `AGENTS.md` ("Branches & releases").

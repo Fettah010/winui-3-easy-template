@@ -2,12 +2,12 @@
 # Run this script once to create the shortcut
 #
 # NOTE: the shortcut targets the built exe directly. Do NOT point it at
-# RunDevTem.vbs/.bat (those run `dotnet run`, which re-evaluates the build and
+# run-dev.vbs/.bat (those run `dotnet run`, which re-evaluates the build and
 # adds several seconds to every launch). The app is WinExe: it never shows a
 # terminal window on its own.
 
+$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ExeRelative = "bin\x64\Debug\net10.0-windows10.0.19041.0\DevTemWinUi3.exe"
-$ProjectRoot = "C:\Code\projects\DevEcosystem\DevTem WinUI 3"
 $ExePath = Join-Path $ProjectRoot $ExeRelative
 
 if (-not (Test-Path $ExePath)) {
@@ -20,7 +20,7 @@ $Shortcut = $WshShell.CreateShortcut("$Desktop\DevTem-WinUI 3.lnk")
 $Shortcut.TargetPath = $ExePath
 $Shortcut.WorkingDirectory = Split-Path $ExePath
 $Shortcut.Description = "DevTem-WinUI 3 Template App"
-$Shortcut.IconLocation = "C:\Code\projects\DevEcosystem\DevTem WinUI 3\Assets\app.ico,0"
+$Shortcut.IconLocation = (Join-Path $ProjectRoot "Assets\app.ico") + ",0"
 $Shortcut.Save()
 
 Write-Host "Desktop shortcut created: $Desktop\DevTem-WinUI 3.lnk" -ForegroundColor Green

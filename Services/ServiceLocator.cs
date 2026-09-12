@@ -37,18 +37,29 @@ public static class ServiceLocator
 
             var services = new ServiceCollection();
 
-            // Singleton services
+            // Singleton services (process-lifetime objects expose Current;
+            // the container owns the registration so there is one composition
+            // root instead of scattered news).
             services.AddSingleton<DatabaseService>(DatabaseService.Current);
             services.AddSingleton<WindowStateService>(WindowStateService.Current);
             services.AddSingleton<FirstRunService>(FirstRunService.Current);
             services.AddSingleton<LocalizationService>(LocalizationService.Current);
+            services.AddSingleton<AppInfo>(AppInfo.Current);
+            services.AddSingleton<ThemeService>(ThemeService.Current);
+            services.AddSingleton<UpdateService>(UpdateService.Current);
+            services.AddSingleton<SystemTrayService>(SystemTrayService.Current);
+            services.AddSingleton<NavigationService>(NavigationService.Current);
+            services.AddSingleton<DesktopToastService>(DesktopToastService.Current);
+
+            // ViewModels are transient: each page gets a fresh instance.
+            services.AddTransient<ViewModels.SettingsPageViewModel>();
 
             // HTTP client (transient by default)
-            services.AddHttpClient<ApiService>(client =>
-            {
-                client.Timeout = TimeSpan.FromSeconds(30);
-                client.DefaultRequestHeaders.Add("User-Agent", "DevTem-WinUI3/1.0");
-            });
+                    services.AddHttpClient<ApiService>(client =>
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(30);
+                        client.DefaultRequestHeaders.Add("User-Agent", AppMetadata.UserAgent);
+                    });
 
             _provider = services.BuildServiceProvider();
         }
