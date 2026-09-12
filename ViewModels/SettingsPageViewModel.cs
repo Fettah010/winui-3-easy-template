@@ -50,13 +50,7 @@ public partial class SettingsPageViewModel : ObservableObject
 
         try
         {
-            var channel = SettingsService.Current.Channel;
-            SelectedChannelIndex = channel switch
-            {
-                "beta" => 1,
-                "dev" => 2,
-                _ => 0
-            };
+            SelectedChannelIndex = SettingsService.Current.Channel == ChannelResolver.Beta ? 1 : 0;
         }
         catch { SelectedChannelIndex = 0; }
 
@@ -111,12 +105,8 @@ public partial class SettingsPageViewModel : ObservableObject
 
     partial void OnSelectedChannelIndexChanged(int value)
     {
-        var channel = value switch
-        {
-            1 => "beta",
-            2 => "dev",
-            _ => "stable"
-        };
+        // Only Stable (0) and Beta (1) exist; anything else falls back to stable.
+        var channel = value == 1 ? ChannelResolver.Beta : ChannelResolver.Stable;
         try { SettingsService.Current.Channel = channel; } catch { }
         try { UpdateService.Current.SetChannel(channel); } catch { }
     }

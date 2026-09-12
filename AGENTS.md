@@ -139,12 +139,16 @@ dotnet run                                   # runs unpackaged (updates disabled
 ## Desktop shortcut setup
 
 Run `Scripts\create-shortcut.ps1` to create the desktop shortcut. The shortcut
-uses `RunDevTem.vbs` which launches the app silently without showing a terminal window.
+targets the built exe directly (fast cold start). `RunDevTem.vbs` / `.bat`
+run `dotnet run` (handy for dev, but adds seconds to every launch) — the app
+is WinExe so it never shows a terminal window on its own.
 
 ## Versioning
 
-Current version: **0.0.1** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
-in `DevTemWinUi3.csproj` — keep all three in sync).
+Current version: **0.0.2** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
+beta releases carry the `-beta` suffix (e.g. `0.0.2-beta`) so fresh installs
+default to the beta channel; stable releases use the plain version).
 
 ## Known gotchas
 
@@ -157,7 +161,9 @@ in `DevTemWinUi3.csproj` — keep all three in sync).
    apps (no settings.dat is ever written) — all settings go through
    `LocalSettingsStore` (`%LocalAppData%\DevTemWinUi3\settings.json`).
 7. **MVVM toolkit AOT warnings.** Suppressed via `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>`.
-8. **Desktop shortcut must use VBS launcher.** `.bat` shows terminal window.
+8. **Desktop shortcut targets the built exe directly.** The app is WinExe (no
+   console), so no VBS wrapper is needed; `.bat`/VBS run `dotnet run` and add
+   seconds to launch.
 9. **UpdatesPage is deprecated.** Do not use or modify - kept for reference only.
 
 ## Conventions

@@ -26,9 +26,11 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // Show splash screen immediately
+        // Show splash screen immediately (it reports real init phases below)
         _splash = new SplashScreen();
         _splash.Activate();
+        LoggingService.Log.Information(
+            "Splash shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
 
         // Initialize services while splash is visible
         await InitializeServicesAsync();
@@ -36,14 +38,20 @@ public partial class App : Application
         // Create main window (hidden initially)
         _mainWindow = new MainWindow();
         m_window = _mainWindow;
+        _splash?.ReportProgress(0.85, LocalizationService.Current.GetString("SplashPreparingWindow"));
 
         // Animate transition: splash fades out, main window fades in
         await TransitionToMainWindow();
+        LoggingService.Log.Information(
+            "Main window shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
 
+        // Heavy work deferred past the first frame so the window appears ASAP:
+        // database init and the update check run while the user already sees UI.
+        _ = InitializeDatabaseAsync();
         _ = CheckForUpdatesAsync();
     }
 
-    private static async Task InitializeServicesAsync()
+    private async Task InitializeServicesAsync()
     {
         await Task.Run(() =>
         {
@@ -51,8 +59,28 @@ public partial class App : Application
             LocalizationService.Current.Initialize();
         });
 
-        var db = ServiceLocator.GetRequiredService<DatabaseService>();
-        await db.InitializeAsync();
+        // One-time channel migration (beta builds holding a stale channel).
+        SettingsService.Current.EnsureChannelForCurrentBuild();
+
+        var loc = LocalizationService.Current;
+        _splash?.ReportProgress(0.4, loc.GetString("SplashLoadingServices"));
+        LoggingService.Log.Information(
+            "Services ready after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
+    }
+
+    private static async Task InitializeDatabaseAsync()
+    {
+        try
+        {
+            var db = ServiceLocator.GetRequiredService<DatabaseService>();
+            await db.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            // DatabaseService.InitializeAsync is idempotent; a page that needs
+            // the DB earlier triggers init itself, so this is best-effort.
+            LoggingService.Log.Error(ex, "Deferred database init failed");
+        }
     }
 
     private async Task TransitionToMainWindow()

@@ -110,7 +110,6 @@
                         HorizontalAlignment="Right">
                         <ctk:SegmentedItem Content="Stable"/>
                         <ctk:SegmentedItem Content="Beta"/>
-                        <ctk:SegmentedItem Content="Dev"/>
                     </ctk:Segmented>
                 </ctk:SettingsCard>
 

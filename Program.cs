@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
@@ -11,6 +12,11 @@ namespace DevTemWinUi3;
 
 public static class Program
 {
+    /// <summary>
+    /// Starts ticking at process entry; used for startup timing diagnostics.
+    /// </summary>
+    internal static readonly Stopwatch StartupStopwatch = Stopwatch.StartNew();
+
     private static Mutex? _mutex;
     private static EventWaitHandle? _activateEvent;
 
@@ -103,10 +109,13 @@ public static class Program
     /// <summary>
     /// Waits for the activation event from a second instance.
     /// Called on the UI thread after the main window is created.
+    /// Uses one dedicated background thread blocked in WaitOne (zero CPU)
+    /// instead of occupying a threadpool thread, and retries with backoff
+    /// instead of dying silently if the event is momentarily unavailable.
     /// </summary>
     internal static void StartActivationListener(DispatcherQueue dispatcher, Action onActivate)
     {
-        Task.Run(() =>
+        var thread = new Thread(() =>
         {
             while (true)
             {
@@ -115,14 +124,20 @@ public static class Program
                     using var evt = EventWaitHandle.OpenExisting(
                         "Global\\DevTemWinUi3_Activate_Event");
                     evt.WaitOne();
-                    dispatcher.TryEnqueue(() => onActivate());
+                    dispatcher.TryEnqueue(() => { try { onActivate(); } catch { } });
                 }
                 catch
                 {
-                    // Event closed — app shutting down
-                    break;
+                    // Event missing (or app shutting down): back off and retry
+                    // rather than spinning or abandoning the listener.
+                    Thread.Sleep(5000);
                 }
             }
-        });
+        })
+        {
+            IsBackground = true,
+            Name = "DevTemSingleInstanceActivation",
+        };
+        thread.Start();
     }
 }

@@ -50,19 +50,28 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- Bottom: slim loading bar + version -->
+        <!-- Bottom: slim loading bar + live status + version -->
         <StackPanel
             Grid.Row="1"
             HorizontalAlignment="Center"
-            Spacing="12"
+            Spacing="8"
             Margin="0,0,0,28">
 
             <ProgressBar
+                x:Name="LoadProgress"
                 Width="220" Height="3"
                 HorizontalAlignment="Center"
-                IsIndeterminate="True"
+                Minimum="0" Maximum="100" Value="5"
+                IsIndeterminate="False"
                 ShowPaused="False"
                 ShowError="False"/>
+
+            <TextBlock
+                x:Name="StatusText"
+                Text="Loading…"
+                FontSize="11"
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
 
             <TextBlock
                 x:Name="VersionText"

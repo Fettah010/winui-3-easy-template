@@ -26,10 +26,13 @@ public sealed class UpdateService
 
     private readonly SemaphoreSlim _managerLock = new(1, 1);
     private UpdateManager? _manager;
-    private string _channel = "stable";
+    private string _channel = ChannelResolver.Stable;
 
     private UpdateService()
     {
+        // Start on the persisted (or build-default) channel so background
+        // checks use the right feed even if the user never opens Settings.
+        try { _channel = SettingsService.Current.Channel; } catch { }
     }
 
     /// <summary>
@@ -108,6 +111,7 @@ public sealed class UpdateService
 
     public void SetChannel(string channel)
     {
+        channel = ChannelResolver.Normalize(channel);
         if (_channel == channel)
             return;
 

@@ -1,26 +1,28 @@
 using System;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace DevTemWinUi3.Services;
 
 /// <summary>
 /// Provides dependency injection for the application.
 /// Register services here and resolve them via GetService or GetRequiredService.
+/// Uses a bare <see cref="ServiceCollection"/> on purpose: the generic host
+/// (CreateDefaultBuilder) costs seconds at startup for configuration/logging
+/// plumbing this app never uses.
 /// </summary>
 public static class ServiceLocator
 {
-    private static IHost? _host;
+    private static ServiceProvider? _provider;
     private static readonly object _lock = new();
 
     public static IServiceProvider Services
     {
         get
         {
-            if (_host is null)
+            if (_provider is null)
                 throw new InvalidOperationException("ServiceLocator not initialized. Call Initialize() first.");
-            return _host.Services;
+            return _provider;
         }
     }
 
@@ -31,25 +33,24 @@ public static class ServiceLocator
     {
         lock (_lock)
         {
-            if (_host is not null) return;
+            if (_provider is not null) return;
 
-            _host = Host.CreateDefaultBuilder()
-                .ConfigureServices((_, services) =>
-                {
-                    // Singleton services
-                    services.AddSingleton<DatabaseService>(DatabaseService.Current);
-                    services.AddSingleton<WindowStateService>(WindowStateService.Current);
-                    services.AddSingleton<FirstRunService>(FirstRunService.Current);
-                    services.AddSingleton<LocalizationService>(LocalizationService.Current);
+            var services = new ServiceCollection();
 
-                    // HTTP client (transient by default)
-                    services.AddHttpClient<ApiService>(client =>
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(30);
-                        client.DefaultRequestHeaders.Add("User-Agent", "DevTem-WinUI3/1.0");
-                    });
-                })
-                .Build();
+            // Singleton services
+            services.AddSingleton<DatabaseService>(DatabaseService.Current);
+            services.AddSingleton<WindowStateService>(WindowStateService.Current);
+            services.AddSingleton<FirstRunService>(FirstRunService.Current);
+            services.AddSingleton<LocalizationService>(LocalizationService.Current);
+
+            // HTTP client (transient by default)
+            services.AddHttpClient<ApiService>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Add("User-Agent", "DevTem-WinUI3/1.0");
+            });
+
+            _provider = services.BuildServiceProvider();
         }
     }
 
@@ -70,14 +71,14 @@ public static class ServiceLocator
     }
 
     /// <summary>
-    /// Shuts down the host and disposes all services.
+    /// Shuts down the container and disposes all services.
     /// </summary>
     public static void Shutdown()
     {
         lock (_lock)
         {
-            _host?.Dispose();
-            _host = null;
+            _provider?.Dispose();
+            _provider = null;
         }
     }
 }

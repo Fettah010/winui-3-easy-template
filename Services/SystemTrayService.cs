@@ -167,6 +167,7 @@ public sealed class SystemTrayService : IDisposable
     private IntPtr _iconHandle;
     private NOTIFYICONDATAW _notifyIconData;
     private WndProcDelegate? _wndProcDelegate;
+    private GCHandle _wndProcHandle;
     private uint _taskbarCreatedMsg;
     private bool _disposed;
 
@@ -191,7 +192,11 @@ public sealed class SystemTrayService : IDisposable
             _taskbarCreatedMsg = RegisterWindowMessageW("TaskbarCreated");
 
             _wndProcDelegate = TrayWndProc;
-            GCHandle.Alloc(_wndProcDelegate);
+            // Pin the delegate for the process lifetime; freed in Dispose.
+            // (Previously allocated and never freed: a permanent handle leak.)
+            if (_wndProcHandle.IsAllocated)
+                _wndProcHandle.Free();
+            _wndProcHandle = GCHandle.Alloc(_wndProcDelegate);
 
             CreateMessageWindow();
 
@@ -544,5 +549,9 @@ public sealed class SystemTrayService : IDisposable
 
         RemoveTrayIcon();
         DestroyMessageWindow();
+
+        if (_wndProcHandle.IsAllocated)
+            _wndProcHandle.Free();
+        _wndProcDelegate = null;
     }
 }

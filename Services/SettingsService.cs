@@ -15,6 +15,7 @@ public sealed class SettingsService
     private const string KeyPendingVersion = "PendingUpdateVersion";
     private const string KeyMinimizeToTray = "MinimizeToTray";
     private const string KeyAutoCheck = "AutoCheckOnStartup";
+    private const string KeyChannelMigratedFor = "ChannelMigratedFor";
 
     public static SettingsService Current { get; } = new();
 
@@ -34,12 +35,14 @@ public sealed class SettingsService
     }
 
     /// <summary>
-    /// Update channel: "stable", "beta", or "dev". Default is "stable".
+    /// Update channel: "stable" or "beta". Fresh installs default to the
+    /// build's own channel (beta builds track beta); a saved choice always
+    /// wins. Legacy "dev" values normalize to "beta".
     /// </summary>
     public string Channel
     {
-        get => Store.Get(KeyChannel, "stable");
-        set => Store.Set(KeyChannel, value);
+        get => ChannelResolver.Normalize(Store.Get(KeyChannel, AppInfo.Current.DefaultChannel));
+        set => Store.Set(KeyChannel, ChannelResolver.Normalize(value));
     }
 
     /// <summary>
@@ -75,6 +78,30 @@ public sealed class SettingsService
             else
                 Store.Remove(KeyPendingVersion);
         }
+    }
+
+    /// <summary>
+    /// One-time per-version channel migration, called at startup. A beta build
+    /// holding a non-beta channel (e.g. upgraded from a stable default) would
+    /// otherwise never see beta updates, so it is moved to beta once. Fresh
+    /// installs need nothing (the default is already build-aware), and a user
+    /// choice made after migration is left alone until the next version.
+    /// </summary>
+    public void EnsureChannelForCurrentBuild()
+    {
+        try
+        {
+            var version = AppInfo.Current.Version;
+            if (Store.Get(KeyChannelMigratedFor, string.Empty) == version)
+                return;
+            Store.Set(KeyChannelMigratedFor, version);
+
+            if (!AppInfo.Current.IsBetaBuild)
+                return;
+            if (Channel != ChannelResolver.Beta)
+                Channel = ChannelResolver.Beta;
+        }
+        catch { }
     }
 
     /// <summary>

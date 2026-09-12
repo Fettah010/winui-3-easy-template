@@ -213,7 +213,7 @@
                             <TextBlock x:Name="FeatUpdatesTitle" Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 x:Name="FeatUpdatesDesc"
-                                Text="Stable / Beta / Dev channels over GitHub Releases with one-click install and restart."
+                                Text="Stable / Beta channels over GitHub Releases with one-click install and restart."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap"/>

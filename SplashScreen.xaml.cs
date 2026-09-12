@@ -74,6 +74,28 @@ public sealed partial class SplashScreen : Window
         this.Activated += OnActivated;
     }
 
+    /// <summary>
+    /// Reports real startup progress on the splash (fraction 0..1 + status
+    /// text). Thread-safe: marshals to the UI thread when needed.
+    /// </summary>
+    public void ReportProgress(double fraction, string status)
+    {
+        try
+        {
+            if (!DispatcherQueue.HasThreadAccess)
+            {
+                DispatcherQueue.TryEnqueue(() => ReportProgress(fraction, status));
+                return;
+            }
+
+            if (double.IsNaN(fraction) || double.IsInfinity(fraction))
+                return;
+            LoadProgress.Value = Math.Clamp(fraction * 100.0, 0, 100);
+            StatusText.Text = status;
+        }
+        catch { }
+    }
+
     private void OnActivated(object sender, WindowActivatedEventArgs args)
     {
         if (args.WindowActivationState != WindowActivationState.Deactivated)
