@@ -29,6 +29,46 @@ with your art, then run `Scripts/create-shortcut.ps1` again.
 
 ## 2. Add a page (6 steps, all required)
 
+## 2b. Scaffold a page (dotnet new, recommended)
+
+The 6-step recipe above ships as an item template. Install once per machine,
+then scaffold from the repo root:
+
+```powershell
+dotnet new install .\Templates\Page
+dotnet new devtem-page -n Orders
+```
+
+This generates 4 files (`Sample` → `Orders`):
+
+| File | Contents |
+| --- | --- |
+| `Pages/OrdersPage.xaml` (+ `.xaml.cs`) | Card layout, `INavigationAware`, `ApplyLocalization`, responsive switch |
+| `ViewModels/OrdersPageViewModel.cs` | Transient `[ObservableProperty]`/`[RelayCommand]` VM |
+| `Tests/ViewModels/OrdersPageViewModelTests.cs` | VM unit tests + translation-coverage test |
+
+Wire-up (4 steps, ~5 minutes):
+
+1. **Strings** — add `OrdersTitle`/`OrdersDescription` to all three
+   dictionaries in `LocalizationService` (the coverage test fails until
+   every language has them):
+   ```csharp
+   ["OrdersTitle"] = "Orders",       // es: "Pedidos", fr: "Commandes"
+   ["OrdersDescription"] = "...",    // es/fr translations
+   ```
+2. **DI** — register the VM in `ServiceLocator.Initialize()`:
+   ```csharp
+   services.AddTransient<OrdersPageViewModel>();
+   ```
+3. **Route + nav** — in `MainWindow`: `RegisterRoute("orders",
+   typeof(OrdersPage))`, add a `NavigationViewItem` (`Tag="orders"`),
+   and its label in `ApplyNavLocalization()` (+ a `NavOrders` string key).
+4. **Verify** — `dotnet build -c Debug -p:Platform=x64` (0 warnings),
+   then `dotnet test` (the new `Strings_AreTranslated` test proves the
+   keys landed in all three languages).
+
+Uninstall when done: `dotnet new uninstall .\Templates\Page`.
+
 1. **XAML + code-behind** in `Pages/` following `HomePage`: root `Grid` →
    `ScrollViewer` (horizontal scrollbar `Disabled`) → viewport `Grid` →
    content `StackPanel` with `MaxWidth` (see "Layout" below).

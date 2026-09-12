@@ -86,13 +86,15 @@ if ((Test-Path -LiteralPath $oldCsproj) -and $SafeName -ne "DevTemWinUi3") {
 }
 
 # Verify: no template identity may remain (outside archive + this script).
+# Case-sensitive on purpose: the scaffolder command `devtem-page` (lowercase)
+# is stable across renames and must not match the `DevTem` prose token.
 $leftovers = Get-ChildItem -LiteralPath $PSScriptRoot/.. -Recurse -File -Include $extensions |
     Where-Object {
         $full = $_.FullName
         -not ($skipDirs | Where-Object { $full -like "*\$_\*" }) -and
         $_.Name -notin $frozenNames
     } |
-    Select-String -Pattern "DevTem|Fettah010" |
+    Select-String -Pattern "DevTem|devtem://|Fettah010|winui-3-easy-template" -CaseSensitive |
     Select-Object -ExpandProperty Path -Unique
 
 if ($leftovers) {

@@ -57,6 +57,14 @@
     <Content Remove="docs\**" />
   </ItemGroup>
 
+  <!-- dotnet-new scaffolding sources: template files, not product code. -->
+  <ItemGroup>
+    <Compile Remove="Templates\**" />
+    <Page Remove="Templates\**" />
+    <None Remove="Templates\**" />
+    <Content Remove="Templates\**" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.2.251219" />
