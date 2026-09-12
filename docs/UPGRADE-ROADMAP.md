@@ -28,7 +28,7 @@ MATRIX PASSED (4 combos + page probe, 0 warnings each).
   sample) on every push/PR and builds + tests each.
 - [x] Dependabot for NuGet (`.github/dependabot.yml`, weekly).
 
-## 2. Fill the real app gaps `[~]`
+## 2. Fill the real app gaps `[x]`
 
 - [x] Periodic update checks while trayed (6h timer honoring auto-check +
   installed guards; `UpdateService.PeriodicCheckInterval` + tests; live log
