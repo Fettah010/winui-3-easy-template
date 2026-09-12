@@ -31,14 +31,17 @@ public sealed partial class MainWindow : Window
         this.ExtendsContentIntoTitleBar = true;
         this.SetTitleBar(AppTitleBar);
         this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
-        this.AppWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-        this.AppWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        SetTitleBarColors();
 
         // Restore window state
         RestoreWindowState();
 
         // Save window state on close
         this.Closed += MainWindow_Closed;
+
+        // Refresh title bar colors when theme changes
+        if (Content is FrameworkElement root)
+            root.ActualThemeChanged += (_, _) => SetTitleBarColors();
 
         ContentFrame.Navigate(typeof(HomePage));
         RootNavigationView.SelectedItem = RootNavigationView.MenuItems[0];
@@ -52,6 +55,40 @@ public sealed partial class MainWindow : Window
 
         // Show first-run or what's-new dialog after window is shown
         _ = ShowFirstRunDialogIfNeeded();
+    }
+
+    private void SetTitleBarColors()
+    {
+        var titleBar = this.AppWindow.TitleBar;
+        var isDark = (Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
+
+        // Active state
+        titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonForegroundColor = isDark
+            ? Microsoft.UI.Colors.White
+            : Microsoft.UI.Colors.Black;
+
+        // Hover state
+        titleBar.ButtonHoverBackgroundColor = isDark
+            ? Microsoft.UI.ColorHelper.FromArgb(40, 255, 255, 255)
+            : Microsoft.UI.ColorHelper.FromArgb(30, 0, 0, 0);
+        titleBar.ButtonHoverForegroundColor = isDark
+            ? Microsoft.UI.Colors.White
+            : Microsoft.UI.Colors.Black;
+
+        // Pressed state
+        titleBar.ButtonPressedBackgroundColor = isDark
+            ? Microsoft.UI.ColorHelper.FromArgb(60, 255, 255, 255)
+            : Microsoft.UI.ColorHelper.FromArgb(50, 0, 0, 0);
+        titleBar.ButtonPressedForegroundColor = isDark
+            ? Microsoft.UI.Colors.White
+            : Microsoft.UI.Colors.Black;
+
+        // Inactive state
+        titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonInactiveForegroundColor = isDark
+            ? Microsoft.UI.ColorHelper.FromArgb(120, 255, 255, 255)
+            : Microsoft.UI.ColorHelper.FromArgb(120, 0, 0, 0);
     }
 
     private void RestoreWindowState()
