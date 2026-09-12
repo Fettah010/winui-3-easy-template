@@ -9,12 +9,44 @@
     mc:Ignorable="d"
     NavigationCacheMode="Enabled">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
+    <Grid>
+        <!-- Responsive states: single-column below 860px (matches
+             ResponsiveLayout.CompactLayoutThreshold), two-column at/above. -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="LayoutStates">
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.Padding" Value="16,16,16,24"/>
+                        <Setter Target="HeroSideCol.Width" Value="0"/>
+                        <Setter Target="GlanceCard.(Grid.Row)" Value="1"/>
+                        <Setter Target="GlanceCard.(Grid.Column)" Value="0"/>
+                        <Setter Target="HeroLinks.Orientation" Value="Vertical"/>
+                        <Setter Target="HeroLinks.HorizontalAlignment" Value="Stretch"/>
+                        <Setter Target="TechCol.Width" Value="0"/>
+                        <Setter Target="TechPanel.(Grid.Row)" Value="1"/>
+                        <Setter Target="TechPanel.(Grid.Column)" Value="0"/>
+                        <Setter Target="LinksCol.Width" Value="0"/>
+                        <Setter Target="LinksPanel.(Grid.Row)" Value="1"/>
+                        <Setter Target="LinksPanel.(Grid.Column)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="860"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 
             <!-- Header -->
             <StackPanel Spacing="4">
-                <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+                <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                 <TextBlock
                     Text="Everything behind DevTem — version, stack, license and links."
                     Style="{ThemeResource BodyTextBlockStyle}"
@@ -29,14 +61,18 @@
                 BorderThickness="1"
                 CornerRadius="12"
                 Padding="24">
-                <Grid ColumnSpacing="24" RowSpacing="20">
+                <Grid x:Name="HeroGrid" ColumnSpacing="24" RowSpacing="20">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition x:Name="HeroMainCol" Width="2*"/>
+                        <ColumnDefinition x:Name="HeroSideCol" Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
                     <!-- Identity -->
-                    <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center">
+                    <StackPanel x:Name="IdentityPanel" Grid.Column="0" Grid.Row="0" Spacing="12" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
                             <Border
                                 Width="64" Height="64"
@@ -50,7 +86,7 @@
                                     VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Spacing="4" VerticalAlignment="Center">
-                                <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold"/>
+                                <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <Border
                                         VerticalAlignment="Center"
@@ -67,7 +103,8 @@
                                         Text=".NET 10 · WinUI 3 · Windows 11"
                                         Style="{ThemeResource CaptionTextBlockStyle}"
                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        VerticalAlignment="Center"/>
+                                        VerticalAlignment="Center"
+                                        TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
@@ -78,7 +115,7 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap"/>
 
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel x:Name="HeroLinks" Orientation="Horizontal" Spacing="8">
                             <HyperlinkButton
                                 Content="GitHub Repository"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template"/>
@@ -90,7 +127,8 @@
 
                     <!-- At a glance -->
                     <Border
-                        Grid.Column="1"
+                        x:Name="GlanceCard"
+                        Grid.Column="1" Grid.Row="0"
                         Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
@@ -103,15 +141,15 @@
                             </StackPanel>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Version" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Framework" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text=".NET 10 / WinUI 3" Style="{ThemeResource BodyTextBlockStyle}"/>
+                                <TextBlock Text=".NET 10 / WinUI 3" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Platform" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text="Windows 10/11 (x64, ARM64)" Style="{ThemeResource BodyTextBlockStyle}"/>
+                                <TextBlock Text="Windows 10/11 (x64, ARM64)" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -119,13 +157,17 @@
             </Border>
 
             <!-- Two-column details: app info + technology -->
-            <Grid ColumnSpacing="16" RowSpacing="16">
+            <Grid x:Name="DetailsGrid" ColumnSpacing="16" RowSpacing="16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition x:Name="AppCol" Width="*"/>
+                    <ColumnDefinition x:Name="TechCol" Width="*"/>
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Spacing="8">
+                <StackPanel x:Name="AppPanel" Grid.Column="0" Grid.Row="0" Spacing="8">
                     <TextBlock
                         x:Name="AboutAppInfoText"
                         Text="APP INFO"
@@ -137,32 +179,32 @@
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8A5;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="DevTem-WinUI 3" VerticalAlignment="Center"/>
+                        <TextBlock Text="DevTem-WinUI 3" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
                     <ctk:SettingsCard Header="Version" Description="Assembly version">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE930;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
                     <ctk:SettingsCard Header="Framework" Description="Runtime + UI stack">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE737;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text=".NET 10 / WinUI 3" VerticalAlignment="Center"/>
+                        <TextBlock Text=".NET 10 / WinUI 3" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
                     <ctk:SettingsCard Header="Platform" Description="Supported targets">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE7F4;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="Windows 10/11 (x64, ARM64)" VerticalAlignment="Center"/>
+                        <TextBlock Text="Windows 10/11 (x64, ARM64)" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Spacing="8">
+                <StackPanel x:Name="TechPanel" Grid.Column="1" Grid.Row="0" Spacing="8">
                     <TextBlock
                         x:Name="AboutTechnologyText"
                         Text="TECHNOLOGY"
@@ -174,40 +216,44 @@
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE74E;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="Velopack 1.2" VerticalAlignment="Center"/>
+                        <TextBlock Text="Velopack 1.2" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
                     <ctk:SettingsCard Header="Logging" Description="File + debugger sinks">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xEADF;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="Serilog" VerticalAlignment="Center"/>
+                        <TextBlock Text="Serilog" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
                     <ctk:SettingsCard Header="MVVM" Description="Observable properties + commands">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xEB4A;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="CommunityToolkit.Mvvm" VerticalAlignment="Center"/>
+                        <TextBlock Text="CommunityToolkit.Mvvm" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
                     <ctk:SettingsCard Header="UI Controls" Description="Cards, segmented + helpers">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE710;"/>
                         </ctk:SettingsCard.HeaderIcon>
-                        <TextBlock Text="CommunityToolkit.WinUI" VerticalAlignment="Center"/>
+                        <TextBlock Text="CommunityToolkit.WinUI" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
                 </StackPanel>
             </Grid>
 
             <!-- Two-column footer: license + links -->
-            <Grid ColumnSpacing="16" RowSpacing="16">
+            <Grid x:Name="FooterGrid" ColumnSpacing="16" RowSpacing="16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition x:Name="LicenseCol" Width="*"/>
+                    <ColumnDefinition x:Name="LinksCol" Width="*"/>
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Spacing="8">
+                <StackPanel x:Name="LicensePanel" Grid.Column="0" Grid.Row="0" Spacing="8">
                     <TextBlock
                         x:Name="AboutLicenseText"
                         Text="LICENSE"
@@ -226,7 +272,7 @@
                     </ctk:SettingsCard>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Spacing="8">
+                <StackPanel x:Name="LinksPanel" Grid.Column="1" Grid.Row="0" Spacing="8">
                     <TextBlock
                         x:Name="AboutLinksText"
                         Text="LINKS"
@@ -268,4 +314,5 @@
 
         </StackPanel>
     </ScrollViewer>
+    </Grid>
 </Page>

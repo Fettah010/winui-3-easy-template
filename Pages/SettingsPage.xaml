@@ -15,8 +15,28 @@
         <vm:SettingsPageViewModel/>
     </Page.DataContext>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
+    <Grid>
+        <!-- Narrow windows get tighter page padding so cards keep breathing room. -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="LayoutStates">
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="SettingsPanel.Padding" Value="16,16,16,24"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="860"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="SettingsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Stretch">
 
             <TextBlock x:Name="SettingsTitleText" Text="Settings" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
             <TextBlock
@@ -181,4 +201,5 @@
 
         </StackPanel>
     </ScrollViewer>
+    </Grid>
 </Page>

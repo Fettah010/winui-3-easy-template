@@ -8,8 +8,45 @@
     mc:Ignorable="d"
     NavigationCacheMode="Enabled">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
+    <Grid>
+        <!-- Responsive states: single-column below 860px (matches
+             ResponsiveLayout.CompactLayoutThreshold), two-column at/above. -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="LayoutStates">
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ContentPanel.Padding" Value="16,16,16,24"/>
+                        <Setter Target="HeroTextCol.Width" Value="0"/>
+                        <Setter Target="HeroText.(Grid.Row)" Value="1"/>
+                        <Setter Target="HeroText.(Grid.Column)" Value="0"/>
+                        <Setter Target="HeroText.(Grid.ColumnSpan)" Value="2"/>
+                        <Setter Target="HeroActions.Orientation" Value="Vertical"/>
+                        <Setter Target="HeroActions.HorizontalAlignment" Value="Stretch"/>
+                        <Setter Target="StatusCol1.Width" Value="0"/>
+                        <Setter Target="QuickCard.(Grid.Row)" Value="1"/>
+                        <Setter Target="QuickCard.(Grid.Column)" Value="0"/>
+                        <Setter Target="FeatureCol1.Width" Value="0"/>
+                        <Setter Target="FeatureCard2.(Grid.Row)" Value="1"/>
+                        <Setter Target="FeatureCard2.(Grid.Column)" Value="0"/>
+                        <Setter Target="FeatureCard3.(Grid.Row)" Value="2"/>
+                        <Setter Target="FeatureCard3.(Grid.Column)" Value="0"/>
+                        <Setter Target="FeatureCard4.(Grid.Row)" Value="3"/>
+                        <Setter Target="FeatureCard4.(Grid.Column)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="860"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 
             <!-- Hero -->
             <Border
@@ -18,18 +55,24 @@
                 BorderThickness="1"
                 CornerRadius="12"
                 Padding="24">
-                <Grid ColumnSpacing="24" RowSpacing="16">
+                <Grid x:Name="HeroGrid" ColumnSpacing="24" RowSpacing="16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition x:Name="HeroLogoCol" Width="Auto"/>
+                        <ColumnDefinition x:Name="HeroTextCol" Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
                     <Border
-                        Grid.Column="0"
+                        x:Name="HeroLogo"
+                        Grid.Column="0" Grid.Row="0"
                         Width="84" Height="84"
                         CornerRadius="20"
                         Background="{ThemeResource AccentFillColorDefaultBrush}"
-                        VerticalAlignment="Center">
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left">
                         <Image
                             Source="ms-appx:///Assets/Logo.png"
                             Width="72" Height="72"
@@ -38,9 +81,9 @@
                             VerticalAlignment="Center"/>
                     </Border>
 
-                    <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+                    <StackPanel x:Name="HeroText" Grid.Column="1" Grid.Row="0" Spacing="8" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             <Border
                                 VerticalAlignment="Center"
                                 CornerRadius="10"
@@ -59,7 +102,7 @@
                             Style="{ThemeResource BodyTextBlockStyle}"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap"/>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel x:Name="HeroActions" Orientation="Horizontal" Spacing="8">
                             <Button
                                 x:Name="CheckUpdatesQuickButton"
                                 Content="Check for updates"
@@ -78,14 +121,19 @@
             </Border>
 
             <!-- Status + quick actions -->
-            <Grid ColumnSpacing="16" RowSpacing="16">
+            <Grid x:Name="StatusGrid" ColumnSpacing="16" RowSpacing="16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition x:Name="StatusCol0" Width="*"/>
+                    <ColumnDefinition x:Name="StatusCol1" Width="*"/>
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
                 <Border
-                    Grid.Column="0"
+                    x:Name="StatusCard"
+                    Grid.Column="0" Grid.Row="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
@@ -106,11 +154,12 @@
                             VerticalAlignment="Center"/>
 
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            <TextBlock Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock x:Name="StatusCaptionText"
                                        Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap"/>
                         </StackPanel>
 
                         <InfoBadge
@@ -126,7 +175,8 @@
                 </Border>
 
                 <Border
-                    Grid.Column="1"
+                    x:Name="QuickCard"
+                    Grid.Column="1" Grid.Row="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
@@ -154,17 +204,20 @@
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid x:Name="FeatureGrid" ColumnSpacing="16" RowSpacing="16">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition x:Name="FeatureCol0" Width="*"/>
+                        <ColumnDefinition x:Name="FeatureCol1" Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <Border
+                        x:Name="FeatureCard1"
                         Grid.Row="0" Grid.Column="0"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -173,7 +226,7 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE74E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="Stable / Beta / Dev channels over GitHub Releases with one-click install and restart."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -183,6 +236,7 @@
                     </Border>
 
                     <Border
+                        x:Name="FeatureCard2"
                         Grid.Row="0" Grid.Column="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -191,7 +245,7 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE771;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Settings that persist" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock Text="Settings that persist" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="Theme, language, update channel, tray and autostart — saved locally, restored on launch."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -201,6 +255,7 @@
                     </Border>
 
                     <Border
+                        x:Name="FeatureCard3"
                         Grid.Row="1" Grid.Column="0"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -209,7 +264,7 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xEADF;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Diagnostics built in" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock Text="Diagnostics built in" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="Serilog rolling logs plus notification toasts so update checks never fail silently."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -219,6 +274,7 @@
                     </Border>
 
                     <Border
+                        x:Name="FeatureCard4"
                         Grid.Row="1" Grid.Column="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -227,7 +283,7 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE96E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Tray + native shell" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock Text="Tray + native shell" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="Mica backdrop, custom title bar, minimize-to-tray with quick Settings and update actions."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -259,10 +315,12 @@
                     <TextBlock
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                        TextWrapping="Wrap"
                         Text="Publishing scripts live in /Scripts. Update checks run only in installed builds."/>
                 </StackPanel>
             </Border>
 
         </StackPanel>
     </ScrollViewer>
+    </Grid>
 </Page>

@@ -18,6 +18,37 @@ public sealed partial class MainWindow : Window
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
+    [DllImport("comctl32.dll", SetLastError = true)]
+    private static extern bool SetWindowSubclass(IntPtr hWnd, IntPtr pfnSubclass, IntPtr uIdSubclass, IntPtr dwRefData);
+
+    [DllImport("comctl32.dll")]
+    private static extern int DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(IntPtr hwnd);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MinMaxPoint
+    {
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MinMaxInfo
+    {
+        public MinMaxPoint ptReserved;
+        public MinMaxPoint ptMaxSize;
+        public MinMaxPoint ptMaxPosition;
+        public MinMaxPoint ptMinTrackSize;
+        public MinMaxPoint ptMaxTrackSize;
+    }
+
+    private delegate int SubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData);
+
+    // Held in a field so the GC never collects the native callback.
+    private SubclassProc? _subclassProc;
+
     private readonly WindowStateService _windowState = WindowStateService.Current;
     private readonly NavigationService _nav = NavigationService.Current;
 
@@ -56,6 +87,11 @@ public sealed partial class MainWindow : Window
         this.SetTitleBar(AppTitleBar);
         this.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
         SetTitleBarColors();
+
+        // Native min window size + responsive navigation pane
+        EnforceMinWindowSize();
+        this.SizeChanged += MainWindow_SizeChanged;
+        UpdateNavigationPaneMode(this.AppWindow.Size.Width);
 
         // Register routes
         _nav.RegisterRoute("home", typeof(HomePage));
@@ -148,6 +184,67 @@ public sealed partial class MainWindow : Window
             : Microsoft.UI.ColorHelper.FromArgb(120, 0, 0, 0);
     }
 
+    /// <summary>
+    /// Enforces the minimum window size natively via <c>WM_GETMINMAXINFO</c>,
+    /// so the OS itself blocks shrinking below the limit (no flicker, works
+    /// with snap/Aero and per-monitor DPI). Limits come from
+    /// <see cref="ResponsiveLayout"/> and are scaled to physical pixels.
+    /// </summary>
+    private void EnforceMinWindowSize()
+    {
+        try
+        {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            if (hwnd == IntPtr.Zero)
+                return;
+            _subclassProc = MainWindowSubclassProc;
+            SetWindowSubclass(hwnd, Marshal.GetFunctionPointerForDelegate(_subclassProc), IntPtr.Zero, IntPtr.Zero);
+        }
+        catch { }
+    }
+
+    private int MainWindowSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, IntPtr uIdSubclass, IntPtr dwRefData)
+    {
+        const uint WM_GETMINMAXINFO = 0x0024;
+        if (uMsg == WM_GETMINMAXINFO && lParam != IntPtr.Zero)
+        {
+            try
+            {
+                var dpi = GetDpiForWindow(hWnd);
+                if (dpi == 0)
+                    dpi = 96;
+                var info = Marshal.PtrToStructure<MinMaxInfo>(lParam);
+                info.ptMinTrackSize.X = ResponsiveLayout.ScaleLogicalToPhysical(ResponsiveLayout.MinWindowWidth, dpi);
+                info.ptMinTrackSize.Y = ResponsiveLayout.ScaleLogicalToPhysical(ResponsiveLayout.MinWindowHeight, dpi);
+                Marshal.StructureToPtr(info, lParam, false);
+                return 0;
+            }
+            catch { }
+        }
+        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+    {
+        UpdateNavigationPaneMode(args.Size.Width);
+    }
+
+    /// <summary>
+    /// Switches the nav pane between full and compact based on window width,
+    /// mirroring the page-level <c>AdaptiveTrigger</c> breakpoint so content
+    /// never gets squeezed into clipping.
+    /// </summary>
+    private void UpdateNavigationPaneMode(double windowWidth)
+    {
+        try
+        {
+            RootNavigationView.PaneDisplayMode = ResponsiveLayout.ShouldUseCompactPane(windowWidth)
+                ? NavigationViewPaneDisplayMode.LeftCompact
+                : NavigationViewPaneDisplayMode.Left;
+        }
+        catch { }
+    }
+
     private void RestoreWindowState()
     {
         try
@@ -210,6 +307,14 @@ public sealed partial class MainWindow : Window
 
     private void OnNavigated(object? sender, string tag)
     {
+        // The built-in settings item lives outside MenuItems/FooterMenuItems,
+        // so sync it explicitly — otherwise the previous item stays highlighted.
+        if (string.Equals(tag, "settings", StringComparison.OrdinalIgnoreCase))
+        {
+            RootNavigationView.SelectedItem = RootNavigationView.SettingsItem;
+            return;
+        }
+
         // Sync NavigationView selection to the navigated page
         foreach (var item in RootNavigationView.MenuItems)
         {
