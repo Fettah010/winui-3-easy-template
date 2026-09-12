@@ -3,17 +3,10 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using WinRT.Interop;
 using Serilog;
 
 namespace DevTemWinUi3.Services;
-
-[ComImport]
-[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-[Guid("EECDBF0E-19C6-4105-BFE1-372A28ECA438")]
-internal interface IWindowNative
-{
-    IntPtr GetWindowHandle();
-}
 
 public sealed class SystemTrayService : IDisposable
 {
@@ -190,8 +183,7 @@ public sealed class SystemTrayService : IDisposable
 
         try
         {
-            var windowNative = (IWindowNative)mainWindow;
-            _mainWindowHwnd = windowNative.GetWindowHandle();
+            _mainWindowHwnd = WindowNative.GetWindowHandle(mainWindow);
 
             _taskbarCreatedMsg = RegisterWindowMessageW("TaskbarCreated");
 
