@@ -1,28 +1,23 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.UI;
-using Microsoft.UI.Composition;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Shapes;
 using DevTemWinUi3.Services;
 
 namespace DevTemWinUi3;
 
 public sealed partial class SplashScreen : Window
 {
-    private readonly CompositionCapabilities _capabilities = new();
-
     public SplashScreen()
     {
         this.InitializeComponent();
         this.Title = string.Empty;
+        this.SystemBackdrop = new MicaBackdrop();
 
-        // Borderless, fixed size, no chrome
+        // Borderless, fixed size
         var presenter = this.AppWindow.Presenter as OverlappedPresenter;
         if (presenter != null)
         {
@@ -32,13 +27,9 @@ public sealed partial class SplashScreen : Window
             presenter.IsResizable = false;
         }
 
-        // Set version
         VersionText.Text = AppInfo.Current.VersionDisplay;
-
-        // Center on screen
         CenterToScreen();
 
-        // Start entrance animation once loaded
         this.Activated += OnActivated;
     }
 
@@ -59,7 +50,7 @@ public sealed partial class SplashScreen : Window
             var workArea = displayArea.WorkArea;
 
             int width = 480;
-            int height = 320;
+            int height = 380;
 
             this.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
             this.AppWindow.Move(new Windows.Graphics.PointInt32(
@@ -71,7 +62,6 @@ public sealed partial class SplashScreen : Window
 
     private async Task PlayEntranceAnimation()
     {
-        // Fade in + scale up
         var fadeIn = new DoubleAnimation
         {
             From = 0,
@@ -107,73 +97,15 @@ public sealed partial class SplashScreen : Window
         story.Children.Add(fadeIn);
         story.Children.Add(scaleX);
         story.Children.Add(scaleY);
-
         story.Begin();
 
-        // Start pulsing dots after entrance
-        await Task.Delay(400);
-        StartPulsingDots();
+        await Task.Delay(600);
     }
 
-    private void StartPulsingDots()
-    {
-        _ = AnimateDot(Dot1, 0);
-        _ = AnimateDot(Dot2, 200);
-        _ = AnimateDot(Dot3, 400);
-    }
-
-    private async Task AnimateDot(Ellipse dot, int delay)
-    {
-        while (true)
-        {
-            try
-            {
-                await Task.Delay(delay);
-
-                // Pulse up
-                var up = new DoubleAnimation
-                {
-                    From = 0.3,
-                    To = 1.0,
-                    Duration = new Duration(TimeSpan.FromMilliseconds(400)),
-                    EasingFunction = new SineEase { EasingMode = EasingMode.EaseOut }
-                };
-                Storyboard.SetTarget(up, dot);
-                Storyboard.SetTargetProperty(up, "Opacity");
-                var s1 = new Storyboard();
-                s1.Children.Add(up);
-                s1.Begin();
-
-                await Task.Delay(300);
-
-                // Pulse down
-                var down = new DoubleAnimation
-                {
-                    From = 1.0,
-                    To = 0.3,
-                    Duration = new Duration(TimeSpan.FromMilliseconds(400)),
-                    EasingFunction = new SineEase { EasingMode = EasingMode.EaseIn }
-                };
-                Storyboard.SetTarget(down, dot);
-                Storyboard.SetTargetProperty(down, "Opacity");
-                var s2 = new Storyboard();
-                s2.Children.Add(down);
-                s2.Begin();
-
-                await Task.Delay(600);
-            }
-            catch { break; }
-        }
-    }
-
-    /// <summary>
-    /// Plays the exit animation then closes the window.
-    /// </summary>
     public async Task CloseWithAnimation()
     {
         try
         {
-            // Fade out + slight scale down
             var fadeOut = new DoubleAnimation
             {
                 From = 1.0,
@@ -209,8 +141,8 @@ public sealed partial class SplashScreen : Window
             story.Children.Add(fadeOut);
             story.Children.Add(scaleXOut);
             story.Children.Add(scaleYOut);
-
             story.Begin();
+
             await Task.Delay(300);
         }
         catch { }
