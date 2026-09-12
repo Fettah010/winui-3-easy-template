@@ -93,6 +93,41 @@
                         IsOn="{x:Bind ViewModel.AutoCheckOnStartup, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    x:Name="CheckUpdatesCard"
+                    Header="Check for updates"
+                    Description="Manually check for new versions on the selected channel.">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button
+                            x:Name="CheckUpdatesButton"
+                            Content="Check now"
+                            Click="CheckUpdatesButton_Click"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                    </StackPanel>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    x:Name="UpdateStatusCard"
+                    Header="Update status"
+                    Description="No check performed yet."
+                    Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <TextBlock
+                            x:Name="UpdateStatusText"
+                            Text=""
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            VerticalAlignment="Center"
+                            MaxWidth="200"
+                            TextWrapping="Wrap"/>
+                        <Button
+                            x:Name="InstallUpdateButton"
+                            Content="Install"
+                            Click="InstallUpdateButton_Click"
+                            Visibility="Collapsed"/>
+                    </StackPanel>
+                </ctk:SettingsCard>
             </StackPanel>
 
             <StackPanel Spacing="8" Margin="0,8,0,0">

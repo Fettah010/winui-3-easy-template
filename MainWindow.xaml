@@ -21,7 +21,14 @@
             Grid.Row="0"
             Height="48"
             Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
             <StackPanel
+                Grid.Column="0"
                 Orientation="Horizontal"
                 Spacing="10"
                 Margin="20,0,0,0"
@@ -36,6 +43,20 @@
                     FontWeight="SemiBold"
                     VerticalAlignment="Center"/>
             </StackPanel>
+
+            <!-- Tray button: minimize to system tray -->
+            <Button
+                x:Name="TrayButton"
+                Grid.Column="2"
+                Width="46"
+                Height="32"
+                Margin="0,0,4,0"
+                VerticalAlignment="Center"
+                ToolTipService.ToolTip="Minimize to tray"
+                Click="TrayButton_Click"
+                Background="Transparent">
+                <FontIcon Glyph="&#xEA8E;" FontSize="14"/>
+            </Button>
         </Grid>
 
         <NavigationView

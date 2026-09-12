@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using DevTemWinUi3.Services;
@@ -66,5 +68,81 @@ public sealed partial class SettingsPage : Page
             SystemTrayService.SetAutoStart(AutoStartToggle.IsOn);
         }
         catch { }
+    }
+
+    private Velopack.UpdateInfo? _pendingUpdate;
+
+    private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        var svc = UpdateService.Current;
+
+        if (!svc.IsInstalled)
+        {
+            ShowUpdateStatus(UpdateService.NotInstalledMessage, false);
+            return;
+        }
+
+        CheckUpdatesButton.IsEnabled = false;
+        CheckUpdatesButton.Content = "Checking\u2026";
+
+        try
+        {
+            var update = await svc.CheckForUpdatesAsync();
+            if (update is null)
+            {
+                ShowUpdateStatus(UpdateService.NoUpdateMessage, false);
+            }
+            else
+            {
+                _pendingUpdate = update;
+                var version = update.TargetFullRelease.Version;
+                ShowUpdateStatus($"v{version} available", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowUpdateStatus($"Check failed: {ex.Message}", false);
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+            CheckUpdatesButton.Content = "Check now";
+        }
+    }
+
+    private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_pendingUpdate is null) return;
+
+        InstallUpdateButton.IsEnabled = false;
+        InstallUpdateButton.Content = "Downloading\u2026";
+
+        try
+        {
+            await UpdateService.Current.DownloadUpdatesAsync(_pendingUpdate);
+            UpdateStatusText.Text = "Installing\u2026";
+            InstallUpdateButton.Visibility = Visibility.Collapsed;
+
+            await Task.Delay(300);
+            UpdateService.Current.ApplyUpdatesAndRestart(_pendingUpdate);
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusText.Text = $"Install failed: {ex.Message}";
+            InstallUpdateButton.IsEnabled = true;
+            InstallUpdateButton.Content = "Install";
+        }
+    }
+
+    private void ShowUpdateStatus(string message, bool showInstall)
+    {
+        UpdateStatusCard.Visibility = Visibility.Visible;
+        UpdateStatusText.Text = message;
+        InstallUpdateButton.Visibility = showInstall ? Visibility.Visible : Visibility.Collapsed;
+        if (showInstall)
+        {
+            InstallUpdateButton.IsEnabled = true;
+            InstallUpdateButton.Content = "Install";
+        }
     }
 }

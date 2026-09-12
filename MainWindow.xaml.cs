@@ -186,4 +186,9 @@ public sealed partial class MainWindow : Window
                 break;
         }
     }
+
+    private void TrayButton_Click(object sender, RoutedEventArgs e)
+    {
+        SystemTrayService.Current.HideToTray();
+    }
 }
