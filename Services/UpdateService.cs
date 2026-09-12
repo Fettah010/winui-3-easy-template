@@ -23,6 +23,13 @@ public sealed class UpdateService
     public const string NoUpdateMessage =
         "You are running the latest version published on the selected release feed.";
 
+    /// <summary>
+    /// How often a long-running app re-checks for updates after the startup
+    /// check (trayed apps live for days). Honored only when the auto-check
+    /// setting is on and the app is installed; the feed poll itself is cheap.
+    /// </summary>
+    public static readonly TimeSpan PeriodicCheckInterval = TimeSpan.FromHours(6);
+
     public static UpdateService Current { get; } = new();
 
     private readonly SemaphoreSlim _managerLock = new(1, 1);

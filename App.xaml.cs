@@ -47,8 +47,10 @@ public partial class App : Application
 
         // Heavy work deferred past the first frame so the window appears ASAP:
         // database init and the update check run while the user already sees UI.
+        // The periodic loop keeps trayed (long-running) apps current too.
         _ = InitializeDatabaseAsync();
         _ = CheckForUpdatesAsync();
+        _ = RunPeriodicChecksAsync();
     }
 
     private async Task InitializeServicesAsync()
@@ -101,6 +103,30 @@ public partial class App : Application
 
         // Fade in main window content
         await _mainWindow.PlayEntranceAnimation();
+    }
+
+    /// <summary>
+    /// Re-checks for updates on <see cref="UpdateService.PeriodicCheckInterval"/>
+    /// while the app stays running. <see cref="CheckForUpdatesAsync"/> itself
+    /// honors the auto-check setting and the installed-app guard, so this loop
+    /// is a no-op for opted-out or unpackaged runs (one log line per tick).
+    /// </summary>
+    private async Task RunPeriodicChecksAsync()
+    {
+        try
+        {
+            LoggingService.Log.Information(
+                "Periodic update checks scheduled every {Interval}", UpdateService.PeriodicCheckInterval);
+            using var timer = new PeriodicTimer(UpdateService.PeriodicCheckInterval);
+            while (await timer.WaitForNextTickAsync())
+            {
+                await CheckForUpdatesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Log.Error(ex, "Periodic update check loop ended");
+        }
     }
 
     private async Task CheckForUpdatesAsync()

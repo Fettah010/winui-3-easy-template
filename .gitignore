@@ -3,6 +3,7 @@ bin/
 obj/
 Releases/
 ReleasesLocal/
+nupkgs/
 
 # App runtime output (Serilog)
 Logs/

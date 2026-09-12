@@ -49,6 +49,14 @@
     <Content Remove="Tests\**" />
   </ItemGroup>
 
+  <!-- Template packaging project: ships templates, never app code. Its obj/
+       AssemblyInfo must never join this compilation (CS0579 duplicates). -->
+  <ItemGroup>
+    <Compile Remove="Packaging\**" />
+    <None Remove="Packaging\**" />
+    <Content Remove="Packaging\**" />
+  </ItemGroup>
+
   <!-- Archived reference code is documentation, not product code. -->
   <ItemGroup>
     <Compile Remove="docs\**" />

@@ -34,6 +34,8 @@ is downloaded silently, and the user is asked to restart once it is ready.
 The app checks GitHub Releases on startup. When a new version is found, it
 downloads with a live progress bar and prompts the user to restart once the
 download finishes, then applies the update and restarts smoothly.
+Long-running apps re-check every 6 hours (trayed apps included), honoring
+the auto-check setting.
 
 ```powershell
 # Tag-based release
