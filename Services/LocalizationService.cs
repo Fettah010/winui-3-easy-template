@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Windows.Globalization;
 using Serilog;
 
 [assembly: InternalsVisibleTo("DevTemWinUi3.Tests")]
@@ -133,7 +134,17 @@ public sealed class LocalizationService
     /// </summary>
     public void Initialize()
     {
-        Log.Information("Localization initialized. Language: {Language}", _currentLanguage);
+        try
+        {
+            var lang = ApplicationLanguages.PrimaryLanguageOverride;
+            if (!string.IsNullOrEmpty(lang) && _resources.ContainsKey(lang))
+                _currentLanguage = lang;
+            Log.Information("Localization initialized. Language: {Language}", _currentLanguage);
+        }
+        catch
+        {
+            _currentLanguage = "en-US";
+        }
     }
 
     /// <summary>
@@ -172,6 +183,8 @@ public sealed class LocalizationService
         if (_resources.ContainsKey(languageTag))
         {
             _currentLanguage = languageTag;
+            try { ApplicationLanguages.PrimaryLanguageOverride = languageTag; }
+            catch { }
             Log.Information("Language changed to: {Language}", languageTag);
         }
     }
@@ -182,6 +195,8 @@ public sealed class LocalizationService
     public void ResetLanguage()
     {
         _currentLanguage = "en-US";
+        try { ApplicationLanguages.PrimaryLanguageOverride = string.Empty; }
+        catch { }
         Log.Information("Language reset to system default");
     }
 }
