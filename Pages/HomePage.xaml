@@ -41,7 +41,17 @@
                     <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                             <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <InfoBadge Value="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}" Style="{ThemeResource AttentionValueInfoBadgeStyle}" VerticalAlignment="Center"/>
+                            <Border
+                                VerticalAlignment="Center"
+                                CornerRadius="10"
+                                Padding="8,2"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                <TextBlock
+                                    Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
+                                    Style="{ThemeResource CaptionTextBlockStyle}"
+                                    Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                    VerticalAlignment="Center"/>
+                            </Border>
                         </StackPanel>
                         <TextBlock
                             x:Name="HomeDescText"
