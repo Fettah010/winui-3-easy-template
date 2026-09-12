@@ -19,6 +19,12 @@ public sealed partial class MainWindow : Window
         this.Title = "DevTem-WinUI 3";
         this.SystemBackdrop = new MicaBackdrop();
 
+        // Apply localized strings
+        var loc = LocalizationService.Current;
+        NavHomeItem.Content = loc.GetString("NavHome");
+        NavAboutItem.Content = loc.GetString("NavAbout");
+        NavSettingsItem.Content = loc.GetString("NavSettings");
+
         // Native-feeling, theme-aware title bar: the app content extends into the
         // caption area, Mica shows through it, and the caption buttons (min/max/
         // close) stay OS-drawn with automatic light/dark colors.
@@ -109,10 +115,11 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            var loc = LocalizationService.Current;
             var dialog = new ContentDialog
             {
                 XamlRoot = this.Content.XamlRoot,
-                Title = "Welcome to DevTem-WinUI 3",
+                Title = loc.GetString("FirstRunTitle"),
                 Content = "A ready-to-use template for WinUI 3 desktop apps.\n\n" +
                           "This template includes:\n" +
                           "• Settings with theme selector\n" +
@@ -120,7 +127,7 @@ public sealed partial class MainWindow : Window
                           "• Logging system\n" +
                           "• Desktop shortcut support\n\n" +
                           "Get started by exploring the app!",
-                PrimaryButtonText = "Get Started",
+                PrimaryButtonText = loc.GetString("FirstRunButton"),
                 DefaultButton = ContentDialogButton.Primary
             };
             await dialog.ShowAsync();

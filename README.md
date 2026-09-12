@@ -94,6 +94,22 @@ var result = await api.PostAsync<CreateUserRequest, CreateUserResponse>("/users"
 
 Uses `IHttpClientFactory` for proper lifecycle management. No socket exhaustion.
 
+#### Localization
+
+```csharp
+// Get localized string
+var title = LocalizationService.Current.GetString("HomeTitle");
+
+// Change language (takes effect immediately in UI)
+LocalizationService.Current.SetLanguage("es-ES");
+
+// Available languages: en-US, es-ES, fr-FR
+```
+
+The app supports runtime language switching via a language selector in Settings.
+All UI strings are managed through `LocalizationService` using a dictionary-based
+approach for reliable unpackaged app support.
+
 ### Releases
 
 The app is unpackaged (`WindowsPackageType=None`) and updated via Velopack.
@@ -136,6 +152,7 @@ Services/
   FirstRunService.cs       # First-run detection + What's New dialog
   DatabaseService.cs       # SQLite database access
   ApiService.cs            # Typed HTTP client
+  LocalizationService.cs   # Dictionary-based i18n (en-US, es-ES, fr-FR)
   ServiceLocator.cs        # Dependency injection container
 Tests/
   Services/                # Unit tests (requires app runtime for DI tests)

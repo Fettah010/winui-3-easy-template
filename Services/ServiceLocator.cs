@@ -40,6 +40,7 @@ public static class ServiceLocator
                     services.AddSingleton<DatabaseService>(DatabaseService.Current);
                     services.AddSingleton<WindowStateService>(WindowStateService.Current);
                     services.AddSingleton<FirstRunService>(FirstRunService.Current);
+                    services.AddSingleton<LocalizationService>(LocalizationService.Current);
 
                     // HTTP client (transient by default)
                     services.AddHttpClient<ApiService>(client =>

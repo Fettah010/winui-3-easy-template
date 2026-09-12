@@ -25,8 +25,9 @@
                 </Border>
 
                 <StackPanel Spacing="2">
-                    <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                     <TextBlock
+                        x:Name="HomeDescText"
                         Text="A modern Windows 11 app built with WinUI 3, Community Toolkit and Velopack auto-updates."
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"

@@ -28,6 +28,9 @@ public partial class App : Application
         // Initialize DI container
         ServiceLocator.Initialize();
 
+        // Initialize localization
+        LocalizationService.Current.Initialize();
+
         // Initialize database
         var db = ServiceLocator.GetRequiredService<DatabaseService>();
         await db.InitializeAsync();

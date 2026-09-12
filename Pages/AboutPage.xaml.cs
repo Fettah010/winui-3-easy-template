@@ -11,5 +11,12 @@ public sealed partial class AboutPage : Page
     {
         this.InitializeComponent();
         AppVersion = AppInfo.Current.Version;
+
+        var loc = LocalizationService.Current;
+        AboutTitleText.Text = loc.GetString("AboutTitle");
+        AboutAppInfoText.Text = loc.GetString("AboutAppInfo");
+        AboutTechnologyText.Text = loc.GetString("AboutTechnology");
+        AboutLicenseText.Text = loc.GetString("AboutLicense");
+        AboutLinksText.Text = loc.GetString("AboutLinks");
     }
 }

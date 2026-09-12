@@ -16,8 +16,9 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
 
-            <TextBlock Text="Settings" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <TextBlock x:Name="SettingsTitleText" Text="Settings" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
             <TextBlock
+                x:Name="SettingsDescText"
                 Text="Customize the appearance and behavior of the app."
                 Style="{ThemeResource BodyTextBlockStyle}"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -25,6 +26,7 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="SettingsAppearanceText"
                     Text="APPEARANCE"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
@@ -47,6 +49,24 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="SettingsLanguageText"
+                    Text="Language"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard Header="Language" Description="Choose the display language for the app.">
+                    <ComboBox
+                        x:Name="LanguageComboBox"
+                        HorizontalAlignment="Right"
+                        MinWidth="140"
+                        SelectionChanged="LanguageComboBox_SelectionChanged"/>
+                </ctk:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="8" Margin="0,8,0,0">
+                <TextBlock
+                    x:Name="SettingsUpdatesText"
                     Text="UPDATES"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
@@ -77,13 +97,14 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="SettingsAboutText"
                     Text="ABOUT"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
                 <ctk:SettingsCard Header="App version">
-                    <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneWay}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneTime}" VerticalAlignment="Center"/>
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard Header="Repository">

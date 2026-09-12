@@ -49,7 +49,7 @@
             OpenPaneLength="240">
 
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Home" Tag="home">
+                <NavigationViewItem x:Name="NavHomeItem" Content="Home" Tag="home">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
@@ -57,12 +57,12 @@
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="About" Tag="about">
+                <NavigationViewItem x:Name="NavAboutItem" Content="About" Tag="about">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Settings" Tag="settings">
+                <NavigationViewItem x:Name="NavSettingsItem" Content="Settings" Tag="settings">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;"/>
                     </NavigationViewItem.Icon>

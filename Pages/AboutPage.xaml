@@ -11,10 +11,11 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
 
-            <TextBlock Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="AboutAppInfoText"
                     Text="APP INFO"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
@@ -39,6 +40,7 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="AboutTechnologyText"
                     Text="TECHNOLOGY"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
@@ -63,6 +65,7 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="AboutLicenseText"
                     Text="LICENSE"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
@@ -78,6 +81,7 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="AboutLinksText"
                     Text="LINKS"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
