@@ -1,3 +1,4 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
@@ -19,6 +20,7 @@ public sealed partial class SettingsPage : Page
         SettingsAppearanceText.Text = loc.GetString("SettingsAppearance");
         SettingsLanguageText.Text = loc.GetString("SettingsLanguage");
         SettingsUpdatesText.Text = loc.GetString("SettingsUpdates");
+        SettingsSystemTrayText.Text = loc.GetString("SettingsSystemTray");
         SettingsAboutText.Text = loc.GetString("SettingsAbout");
 
         // Populate language combo box
@@ -45,5 +47,24 @@ public sealed partial class SettingsPage : Page
         {
             LocalizationService.Current.SetLanguage(lang.Tag);
         }
+    }
+
+    private void MinimizeToTrayToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            SettingsService.Current.MinimizeToTray = MinimizeToTrayToggle.IsOn;
+            SystemTrayService.Current.UpdateSettings();
+        }
+        catch { }
+    }
+
+    private void AutoStartToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            SystemTrayService.SetAutoStart(AutoStartToggle.IsOn);
+        }
+        catch { }
     }
 }

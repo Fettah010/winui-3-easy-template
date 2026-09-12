@@ -57,6 +57,9 @@ public sealed class LocalizationService
             ["SettingsUpdates"] = "UPDATES",
             ["SettingsAutoCheck"] = "Auto-check for updates",
             ["SettingsAbout"] = "ABOUT",
+            ["SettingsSystemTray"] = "SYSTEM TRAY",
+            ["SettingsMinimizeToTray"] = "Minimize to system tray",
+            ["SettingsAutoStart"] = "Start automatically with Windows",
             ["FirstRunTitle"] = "Welcome to DevTem-WinUI 3",
             ["FirstRunButton"] = "Get Started",
         };
@@ -86,6 +89,9 @@ public sealed class LocalizationService
             ["SettingsUpdates"] = "ACTUALIZACIONES",
             ["SettingsAutoCheck"] = "Verificar actualizaciones automáticamente",
             ["SettingsAbout"] = "ACERCA DE",
+            ["SettingsSystemTray"] = "BANDEJA DEL SISTEMA",
+            ["SettingsMinimizeToTray"] = "Minimizar a la bandeja del sistema",
+            ["SettingsAutoStart"] = "Iniciar automáticamente con Windows",
             ["FirstRunTitle"] = "Bienvenido a DevTem-WinUI 3",
             ["FirstRunButton"] = "Empezar",
         };
@@ -115,6 +121,9 @@ public sealed class LocalizationService
             ["SettingsUpdates"] = "MISES À JOUR",
             ["SettingsAutoCheck"] = "Vérifier les mises à jour automatiquement",
             ["SettingsAbout"] = "À PROPOS",
+            ["SettingsSystemTray"] = "ZONE DE NOTIFICATION",
+            ["SettingsMinimizeToTray"] = "Réduire dans la zone de notification",
+            ["SettingsAutoStart"] = "Démarrer automatiquement avec Windows",
             ["FirstRunTitle"] = "Bienvenue dans DevTem-WinUI 3",
             ["FirstRunButton"] = "Commencer",
         };

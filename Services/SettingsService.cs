@@ -15,6 +15,7 @@ public sealed class SettingsService
     private const string KeyChannel = "UpdateChannel";
     private const string KeyLastCheckTime = "LastUpdateCheckTime";
     private const string KeyPendingVersion = "PendingUpdateVersion";
+    private const string KeyMinimizeToTray = "MinimizeToTray";
 
     public static SettingsService Current { get; } = new();
 
@@ -93,6 +94,27 @@ public sealed class SettingsService
             {
                 try { LocalSettings.Values.Remove(KeyPendingVersion); } catch { }
             }
+        }
+    }
+
+    /// <summary>
+    /// Whether the app minimizes to the system tray on close. Default is true.
+    /// </summary>
+    public bool MinimizeToTray
+    {
+        get
+        {
+            try
+            {
+                if (LocalSettings.Values.TryGetValue(KeyMinimizeToTray, out var obj) && obj is bool b)
+                    return b;
+            }
+            catch { }
+            return true;
+        }
+        set
+        {
+            try { LocalSettings.Values[KeyMinimizeToTray] = value; } catch { }
         }
     }
 

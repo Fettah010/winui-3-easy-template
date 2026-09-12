@@ -97,6 +97,35 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="SettingsSystemTrayText"
+                    Text="SYSTEM TRAY"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard
+                    Header="Minimize to system tray"
+                    Description="When closed, the app minimizes to the system tray instead of exiting.">
+                    <ToggleSwitch
+                        x:Name="MinimizeToTrayToggle"
+                        IsOn="{x:Bind ViewModel.MinimizeToTray, Mode=TwoWay}"
+                        Toggled="MinimizeToTrayToggle_Toggled"
+                        HorizontalAlignment="Right"/>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    Header="Start automatically with Windows"
+                    Description="Launch the app when you sign in to Windows.">
+                    <ToggleSwitch
+                        x:Name="AutoStartToggle"
+                        IsOn="{x:Bind ViewModel.AutoStart, Mode=OneWay}"
+                        Toggled="AutoStartToggle_Toggled"
+                        HorizontalAlignment="Right"/>
+                </ctk:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="8" Margin="0,8,0,0">
+                <TextBlock
                     x:Name="SettingsAboutText"
                     Text="ABOUT"
                     Style="{ThemeResource CaptionTextBlockStyle}"

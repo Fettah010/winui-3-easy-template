@@ -43,6 +43,9 @@ public sealed partial class MainWindow : Window
         ContentFrame.Navigate(typeof(HomePage));
         RootNavigationView.SelectedItem = RootNavigationView.MenuItems[0];
 
+        // Initialize system tray
+        SystemTrayService.Current.Initialize(this);
+
         // Show first-run or what's-new dialog after window is shown
         _ = ShowFirstRunDialogIfNeeded();
     }
@@ -70,7 +73,19 @@ public sealed partial class MainWindow : Window
         catch { }
     }
 
-    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    private void MainWindow_Closed(object? sender, WindowEventArgs args)
+    {
+        // If tray is active and minimize-to-tray is on, intercept the close
+        if (SystemTrayService.Current.HandleWindowClose())
+        {
+            args.Handled = true;
+            return;
+        }
+
+        SaveWindowState();
+    }
+
+    private void SaveWindowState()
     {
         try
         {

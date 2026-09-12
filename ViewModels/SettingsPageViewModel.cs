@@ -18,6 +18,12 @@ public partial class SettingsPageViewModel : ObservableObject
     private bool _autoCheckOnStartup;
 
     [ObservableProperty]
+    private bool _minimizeToTray;
+
+    [ObservableProperty]
+    private bool _autoStart;
+
+    [ObservableProperty]
     private string _appVersion = string.Empty;
 
     public SettingsPageViewModel()
@@ -49,6 +55,11 @@ public partial class SettingsPageViewModel : ObservableObject
         catch { SelectedChannelIndex = 0; }
 
         AutoCheckOnStartup = true;
+
+        try { MinimizeToTray = SettingsService.Current.MinimizeToTray; }
+        catch { MinimizeToTray = true; }
+
+        AutoStart = SystemTrayService.IsAutoStartEnabled();
     }
 
     partial void OnSelectedThemeIndexChanged(int value)
