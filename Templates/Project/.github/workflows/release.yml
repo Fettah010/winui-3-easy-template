@@ -1,0 +1,125 @@
+name: Release
+
+# Builds, packs and uploads a Velopack release to GitHub Releases.
+#
+#   Trigger A - tag push (recommended):
+#     git tag v1.0.2 && git push origin v1.0.2
+#
+#   Trigger B - manual run from the Actions tab:
+#     "Run workflow" > enter a version > optional channel / pre-release
+#
+# The version is taken from the pushed tag (Trigger A) or the input
+# (Trigger B). Publishing requires no PAT: the built-in GITHUB_TOKEN with
+# `contents: write` is enough. Release logic lives in
+# Scripts/build-and-release.ps1 (single source of truth, runnable locally too).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.0.2 (must be higher than the latest)"
+        required: true
+        type: string
+      channel:
+        description: "Release channel"
+        required: false
+        default: "stable"
+        type: choice
+        options:
+          - stable
+          - beta
+          - alpha
+      prerelease:
+        description: "Mark the GitHub release as a pre-release"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    name: Build & publish
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install vpk (Velopack CLI)
+        run: dotnet tool install --global vpk
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ("${{ github.event_name }}" -eq "push") { "${{ github.ref_name }}" } else { "${{ inputs.version }}" }
+          $version = $version.TrimStart('v')
+          if ([string]::IsNullOrWhiteSpace($version)) { throw "Could not determine a version." }
+          Write-Output "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Output "tag=v$version" >> $env:GITHUB_OUTPUT
+
+          # Detect channel from tag name (e.g., v0.0.1-beta -> beta)
+          $channel = "stable"
+          if ($version -match "-beta$") { $channel = "beta" }
+          elseif ($version -match "-alpha$") { $channel = "alpha" }
+          Write-Output "channel=$channel" >> $env:GITHUB_OUTPUT
+
+      - name: Generate release notes
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          $notes = @(
+            "## DevTem-WinUI 3 $env:VERSION",
+            "",
+            "Automated release built from commit ``$env:SHA``.",
+            "",
+            "For a full list of changes, see the [commits](https://github.com/$env:REPO/commits/$env:TAG)."
+          )
+          Set-Content -Path ReleaseNotes.md -Value $notes
+
+      - name: Build, pack & upload
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+          CHANNEL: ${{ github.event_name == 'push' && steps.version.outputs.channel || inputs.channel }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          $releaseArgs = @{
+            Version      = $env:VERSION
+            Channel      = $env:CHANNEL
+            Runtime      = "win-x64"
+            ReleaseNotes = "ReleaseNotes.md"
+            Download     = $true
+            Publish      = $true
+            Tag          = $env:TAG
+          }
+          if ($env:PRERELEASE -eq "true") { $releaseArgs["PreRelease"] = $true }
+          & ./Scripts/build-and-release.ps1 @releaseArgs
+          if ($LASTEXITCODE -ne 0) { throw "Release script failed with exit code $LASTEXITCODE" }

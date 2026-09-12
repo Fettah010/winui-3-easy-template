@@ -1,0 +1,21 @@
+# Build outputs
+bin/
+obj/
+Releases/
+ReleasesLocal/
+
+# App runtime output (Serilog)
+Logs/
+
+# VS / user files
+.vs/
+*.user
+*.suo
+
+# Secrets — never commit tokens
+.env
+*.secret
+
+# IDE
+.idea/
+.vscode/

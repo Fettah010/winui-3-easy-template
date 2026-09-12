@@ -1,5 +1,13 @@
 # Template Guide — building YOUR app on DevTem-WinUI 3
 
+> Scaffolded via `dotnet new devtem-winui`: the namespace, display name,
+> company, repo and URI scheme were already replaced from your scaffold
+> parameters. Disabled features were removed at scaffold time (their files
+> and packages are absent) and their UI is gated at runtime
+> (`Services/AppFeatures.cs`) — sections for missing features simply stay
+> hidden. `§1` below stays useful if you ever re-brand with
+> `Scripts/init-template.ps1`.
+
 This is a starting template, not a finished app. Follow the recipes below and
 you keep every feature (updates, tray, i18n, logging) working.
 
@@ -29,35 +37,16 @@ with your art, then run `Scripts/create-shortcut.ps1` again.
 
 ## 2. Add a page (6 steps, all required)
 
-1. **XAML + code-behind** in `Pages/` following `HomePage`: root `Grid` →
-   `ScrollViewer` (horizontal scrollbar `Disabled`) → viewport `Grid` →
-   content `StackPanel` with `MaxWidth` (see "Layout" below).
-2. **ViewModel** in `ViewModels/` (transient, `[ObservableProperty]` /
-   `[RelayCommand]`), registered in `ServiceLocator.Initialize()`, resolved
-   in the page via `ServiceLocator.GetRequiredService<T>()` — never `new`.
-3. **Navigation awareness**: implement `INavigationAware`
-   (`Services/NavigationService.cs`) instead of overriding `OnNavigatedTo` —
-   the service calls it with the navigation parameter.
-4. **Strings**: add `HomeTitle`-style keys to all three dictionaries in
-   `LocalizationService`, `x:Name` every user-facing element, apply them in
-   one `ApplyLocalization()` method called from constructor, `OnNavigatedTo`,
-   and (Settings-style) after `SetLanguage`.
-5. **Route**: `NavigationService.RegisterRoute("orders", typeof(OrdersPage))`
-   in `MainWindow`, plus a `NavigationViewItem` (menu or footer) and a
-   selection-sync case (note: the built-in Settings item needs the explicit
-   branch in `OnNavigated`).
-6. **Responsive**: drive two-column → stacked switching from
-   `ResponsiveLayout.ShouldUseNarrowPage(ActualWidth)` in code-behind
-   (`SizeChanged` + `Loaded` + `OnNavigatedTo`); never `ColumnSpan` for
-   stacking (spanned children join Auto sizing and blow the grid past the
-   card); button rows go in `Controls/WrapPanel`.
-
 ## 2b. Scaffold a page (dotnet new, recommended)
 
-The 6-step recipe above ships as an item template. Install once per machine,
+The 6-step recipe above ships as an item template. Enable it once (its
+template config ships dormant as `config.hold/template.json.hold`, so
+installing the project template does not register a stale global copy),
 then scaffold from the repo root:
 
 ```powershell
+Rename-Item .\Templates\Page\config.hold\template.json.hold template.json
+Rename-Item .\Templates\Page\config.hold .template.config
 dotnet new install .\Templates\Page
 dotnet new devtem-page -n Orders
 ```
@@ -92,50 +81,28 @@ Wire-up (4 steps, ~5 minutes):
 
 Uninstall when done: `dotnet new uninstall .\Templates\Page`.
 
-## 2c. Scaffold a whole app (dotnet new project template)
-
-`Templates/Project/` is the full app as a project template with identity
-parameters and feature flags (all flags default on):
-
-```powershell
-dotnet new install .\Templates\Project
-dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
-    --repo "acme/desk-app" --scheme "acme://" --tray false --updates false --database false
-```
-
-| Parameter | Replaces | Example |
-| --- | --- | --- |
-| `-n` | Namespace, file names, mutex/registry/folders | `AcmeDesk` |
-| `--displayName` | Display name (titles, toasts, installer) | `Acme Desk` |
-| `--company` | Pack author | `Acme` |
-| `--repo` | GitHub `org/name` (feeds, links, CI) | `acme/desk-app` |
-| `--scheme` | Deep-link scheme | `acme://` |
-| `--tray/--updates/--database` | Feature on/off (`false` drops it) | `--tray false` |
-
-How flags work (verified over all-on, all-off, and mixed scaffolds):
-
-- **Files**: services, tests, release scripts and feature packages are
-  excluded per flag (`sources.modifiers` in `template.json`).
-- **Code**: `.cs` `#if (tray|updates|database)` blocks (the engine only
-  evaluates markers in code files).
-- **Packages**: `Build/Features.*.props` imported with `Exists` guards, so
-  one static csproj serves every combo.
-- **UI**: no markers in `.xaml` (the engine ignores them there) — instead
-  `Services/AppFeatures.cs` (values rendered from the flags) gates
-  visibility, and `HomePage` fills its card grid from the visible cards.
-- **Docs**: `README`/`AGENTS` rows carry `(feature)` qualifiers.
-
-Engine gotchas learned while building it (do not regress):
-
-- `dotnet new` CLI does NOT run script post-actions (IDE-only); there is no
-  post-scaffold script — the design above needs none.
-- Never author `$var`-heavy `.ps1` content relying on engine behavior; keep
-  template scripts plain.
-- The nested page template ships dormant
-  (`Templates/Page/config.hold/template.json.hold`) so installing the project
-  package does not register a stale global `devtem-page`; scaffolded apps
-  rename it back per §2b.
-- `init-template.ps1` still works in scaffolded apps for re-branding.
+1. **XAML + code-behind** in `Pages/` following `HomePage`: root `Grid` →
+   `ScrollViewer` (horizontal scrollbar `Disabled`) → viewport `Grid` →
+   content `StackPanel` with `MaxWidth` (see "Layout" below).
+2. **ViewModel** in `ViewModels/` (transient, `[ObservableProperty]` /
+   `[RelayCommand]`), registered in `ServiceLocator.Initialize()`, resolved
+   in the page via `ServiceLocator.GetRequiredService<T>()` — never `new`.
+3. **Navigation awareness**: implement `INavigationAware`
+   (`Services/NavigationService.cs`) instead of overriding `OnNavigatedTo` —
+   the service calls it with the navigation parameter.
+4. **Strings**: add `HomeTitle`-style keys to all three dictionaries in
+   `LocalizationService`, `x:Name` every user-facing element, apply them in
+   one `ApplyLocalization()` method called from constructor, `OnNavigatedTo`,
+   and (Settings-style) after `SetLanguage`.
+5. **Route**: `NavigationService.RegisterRoute("orders", typeof(OrdersPage))`
+   in `MainWindow`, plus a `NavigationViewItem` (menu or footer) and a
+   selection-sync case (note: the built-in Settings item needs the explicit
+   branch in `OnNavigated`).
+6. **Responsive**: drive two-column → stacked switching from
+   `ResponsiveLayout.ShouldUseNarrowPage(ActualWidth)` in code-behind
+   (`SizeChanged` + `Loaded` + `OnNavigatedTo`); never `ColumnSpan` for
+   stacking (spanned children join Auto sizing and blow the grid past the
+   card); button rows go in `Controls/WrapPanel`.
 
 ## 3. Add a setting
 

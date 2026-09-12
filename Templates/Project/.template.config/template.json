@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "WinUI 3 template contributors",
+  "classifications": [ "WinUI", "WinUI 3", "Desktop", "MVVM" ],
+  "identity": "WinUI3.App.TrayUpdatesDb",
+  "groupIdentity": "WinUI3.App",
+  "name": "WinUI 3 desktop app (tray, Velopack updates, SQLite, i18n)",
+  "shortName": "devtem-winui",
+  "description": "Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates, SQLite + HTTP data layer, 3-language UI, persisted settings, Serilog, release pipeline. Identity (namespace, display name, company, repo, URI scheme) and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "type": "project",
+  "sourceName": "DevTemWinUi3",
+  "preferNameDirectory": true,
+  "symbols": {
+    "displayName": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "My App",
+      "replaces": "DevTem-WinUI 3",
+      "description": "Display name used in titles, toasts and the installer."
+    },
+    "company": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "Contoso",
+      "replaces": "Fettah",
+      "description": "Pack author."
+    },
+    "repo": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "myorg/my-app",
+      "replaces": "Fettah010/winui-3-easy-template",
+      "description": "GitHub repo path (org/name) used for feeds, links and CI."
+    },
+    "scheme": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "myapp://",
+      "replaces": "devtem://",
+      "description": "Deep-link URI scheme, including :// (e.g. --scheme acme://)."
+    },
+    "tray": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "replaces": "__TRAY__",
+      "description": "Include minimize-to-tray, autostart and desktop toasts (--tray false to drop)."
+    },
+    "updates": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "replaces": "__UPDATES__",
+      "description": "Include Velopack auto-updates, channels and the release pipeline (--updates false to drop)."
+    },
+    "database": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "replaces": "__DATABASE__",
+      "description": "Include the SQLite + HTTP data layer (--database false to drop)."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!tray)",
+          "exclude": [
+            "Services/SystemTrayService.cs",
+            "Services/DesktopToastService.cs",
+            "Tests/Services/DesktopToastServiceTests.cs"
+          ]
+        },
+        {
+          "condition": "(!updates)",
+          "exclude": [
+            "Services/UpdateService.cs",
+            "Build/Features.Updates.props",
+            ".github/workflows/release.yml",
+            "Scripts/build-and-release.ps1",
+            "Scripts/local-smoke-test.ps1",
+            "Scripts/upload-github.ps1"
+          ]
+        },
+        {
+          "condition": "(!database)",
+          "exclude": [
+            "Services/DatabaseService.cs",
+            "Services/ApiService.cs",
+            "Build/Features.Database.props",
+            "Tests/Services/DatabaseServiceTests.cs",
+            "Tests/Services/ApiServiceTests.cs"
+          ]
+        }
+      ]
+    }
+  ]
+}

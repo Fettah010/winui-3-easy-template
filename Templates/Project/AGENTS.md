@@ -10,11 +10,11 @@ It is a small starter app (a Home page + a Settings page) that demonstrates:
 
 - WinUI 3 / Windows App SDK on **.NET 10** (`net10.0-windows10.0.19041.0`)
 - Unpackaged app (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`)
-- **Velopack 1.2.0** auto-updates over **GitHub Releases**
+- **Velopack 1.2.0** auto-updates over **GitHub Releases** (updates feature)
 - **Serilog** logging (debugger console + rolling file, 14 days)
 - **CommunityToolkit.Mvvm** for MVVM pattern (ObservableProperty, RelayCommand)
 - **SettingsService** for persisted user preferences (theme, channel, etc.)
-- One-command release pipeline (local script + GitHub Actions, no PAT)
+- One-command release pipeline (local script + GitHub Actions, no PAT) (updates feature)
 
 Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows.
 
@@ -32,20 +32,19 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
-| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--updates/--database` flags). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
-| `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager`. |
+| `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager` (updates feature). |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/AppInfo.cs` | Assembly-version accessors. |
-| `Services/DesktopToastService.cs` | OS Action Center toasts (tray-minimize, not-installed); click reopens the app. |
+| `Services/DesktopToastService.cs` | OS Action Center toasts (tray feature); click reopens the app. |
 | `Services/LocalizationService.cs` | en-US/es-ES/fr-FR dictionaries, instant switch via LanguageChanged, persisted choice. |
 | `Services/NotificationService.cs` | In-app toast cards (bottom-right host). |
 | `Assets/app.ico` | App + installer + tray + shortcut icon (single source, `vpk --icon`). |
 | `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
-| `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release. |
+| `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release (updates feature). |
 | `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
 | `run-dev.vbs` / `run-dev.bat` | Dev-only `dotnet run` launchers (repo-relative paths). The desktop shortcut targets the built exe directly (fast cold start). |
-| `.github/workflows/release.yml` | CI release pipeline (tag push `v*` or manual `workflow_dispatch`). |
+| `.github/workflows/release.yml` | CI release pipeline (updates feature). |
 | `Tests/` | xunit test project. |
 | `README.md` | User-facing docs/questions. |
 | `AGENTS.md` | This file - guidance for AI agents. |

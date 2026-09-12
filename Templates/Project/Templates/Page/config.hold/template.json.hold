@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "WinUI 3 template contributors",
+  "classifications": [ "WinUI", "WinUI 3", "Page", "MVVM" ],
+  "identity": "WinUI3.Page.MvvmI18n",
+  "groupIdentity": "WinUI3.Page",
+  "name": "WinUI 3 MVVM content page (i18n + responsive)",
+  "shortName": "devtem-page",
+  "description": "Content Page + code-behind (INavigationAware, ApplyLocalization, responsive) + transient ViewModel + MSTest stub. After scaffolding: add the SampleTitle/SampleDescription strings, register the ViewModel, add the route (see docs/TEMPLATE-GUIDE.md).",
+  "precedence": "0",
+  "type": "item",
+  "sourceName": "Sample",
+  "defaultName": "Sample",
+  "preferNameDirectory": false,
+  "primaryOutputs": [
+    { "path": "Pages/SamplePage.xaml" }
+  ],
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  }
+}

@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DevTemWinUi3.Pages.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
+    xmlns:wrap="using:DevTemWinUi3.Controls"
+    mc:Ignorable="d"
+    NavigationCacheMode="Enabled"
+    Loaded="AboutPage_Loaded"
+    SizeChanged="AboutPage_SizeChanged">
+
+    <!-- Narrow stacking is driven imperatively from code-behind
+         (UpdateResponsiveLayout): VisualState setters cannot reliably retarget
+         Grid columns/rows, which used to leave half-applied layouts. -->
+    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <!-- Grid wrapper: forces viewport-width measure so the inner panel is
+             always exactly min(viewport, MaxWidth), positioned identically in
+             every language (a bare StackPanel sizes to its longest line). -->
+        <Grid>
+        <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
+
+            <!-- Header -->
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock
+                    x:Name="AboutSubtitleText"
+                    Text="Everything behind this app — version, stack, license and links."
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Hero card: identity on the left, at-a-glance on the right -->
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="24">
+                <Grid x:Name="HeroGrid" ColumnSpacing="24" RowSpacing="20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition x:Name="HeroMainCol" Width="2*"/>
+                        <ColumnDefinition x:Name="HeroSideCol" Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Identity -->
+                    <StackPanel x:Name="IdentityPanel" Grid.Column="0" Grid.Row="0" Spacing="12" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                            <Border
+                                Width="64" Height="64"
+                                CornerRadius="16"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                <Image
+                                    Source="ms-appx:///Assets/Logo.png"
+                                    Width="56" Height="56"
+                                    Stretch="Uniform"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <!-- Bounded grid (not an infinite-width row) so the
+                                     caption wraps instead of overflowing the card. -->
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        CornerRadius="10"
+                                        Padding="8,2"
+                                        Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                        <TextBlock
+                                            Text="{x:Bind AppVersion, Mode=OneTime}"
+                                            Style="{ThemeResource CaptionTextBlockStyle}"
+                                            Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                            VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text=".NET 10 · WinUI 3 · Windows 11"
+                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        VerticalAlignment="Center"
+                                        TextWrapping="Wrap"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock
+                            x:Name="AboutDescriptionText"
+                            Text="A production-ready starter template: Mica + native WinUI 3 styling, persisted settings, Velopack auto-updates, Serilog diagnostics and a one-command release pipeline."
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap"/>
+
+                        <wrap:WrapPanel x:Name="HeroLinks" HorizontalSpacing="8" VerticalSpacing="8">
+                            <HyperlinkButton
+                                x:Name="GithubLink"
+                                Content="GitHub Repository"
+                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template"/>
+                            <HyperlinkButton
+                                x:Name="ReportIssueLink"
+                                Content="Report an issue"
+                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"/>
+                        </wrap:WrapPanel>
+                    </StackPanel>
+
+                    <!-- At a glance -->
+                    <Border
+                        x:Name="GlanceCard"
+                        Grid.Column="1" Grid.Row="0"
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="12" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE946;" FontSize="16" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                                <TextBlock x:Name="GlanceTitleText" Text="AT A GLANCE" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Name="GlanceVersionLabel" Text="Version" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Name="GlanceFrameworkLabel" Text="Framework" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text=".NET 10 / WinUI 3" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Name="GlancePlatformLabel" Text="Platform" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="Windows 10/11 (x64, ARM64)" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Two-column details: app info + technology -->
+            <Grid x:Name="DetailsGrid" ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="AppCol" Width="*"/>
+                    <ColumnDefinition x:Name="TechCol" Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel x:Name="AppPanel" Grid.Column="0" Grid.Row="0" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutAppInfoText"
+                        Text="APP INFO"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                    <ctk:SettingsCard x:Name="NameCard" Header="Name" Description="Product name">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8A5;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="DevTem-WinUI 3" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="VersionCard" Header="Version" Description="Assembly version">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE930;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="FrameworkCard" Header="Framework" Description="Runtime + UI stack">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE737;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text=".NET 10 / WinUI 3" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="PlatformCard" Header="Platform" Description="Supported targets">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE7F4;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="Windows 10/11 (x64, ARM64)" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
+
+                <StackPanel x:Name="TechPanel" Grid.Column="1" Grid.Row="0" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutTechnologyText"
+                        Text="TECHNOLOGY"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                    <ctk:SettingsCard x:Name="UpdatesCard" Header="Auto-updates" Description="Installer + delta updates">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE74E;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="Velopack 1.2" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="LoggingCard" Header="Logging" Description="File + debugger sinks">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xEADF;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="Serilog" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="MvvmCard" Header="MVVM" Description="Observable properties + commands">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xEB4A;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="CommunityToolkit.Mvvm" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="UiCard" Header="UI Controls" Description="Cards, segmented + helpers">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE710;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="CommunityToolkit.WinUI" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
+            </Grid>
+
+            <!-- Two-column footer: license + links -->
+            <Grid x:Name="FooterGrid" ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="LicenseCol" Width="*"/>
+                    <ColumnDefinition x:Name="LinksCol" Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel x:Name="LicensePanel" Grid.Column="0" Grid.Row="0" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutLicenseText"
+                        Text="LICENSE"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                    <ctk:SettingsCard x:Name="LicenseCard" Header="MIT License" Description="Free for personal and commercial use.">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8A7;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            x:Name="ViewLicenseButton"
+                            Content="View License"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/blob/main/LICENSE"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
+
+                <StackPanel x:Name="LinksPanel" Grid.Column="1" Grid.Row="0" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutLinksText"
+                        Text="LINKS"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                    <ctk:SettingsCard x:Name="SourceCard" Header="Source Code" Description="Star or fork the template">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8C6;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            x:Name="GithubButton"
+                            Content="GitHub"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="ReleasesCard" Header="Releases" Description="Changelog + installers">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE785;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            x:Name="ReleasesButton"
+                            Content="View Releases"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard x:Name="IssuesCard" Header="Report Issues" Description="Bugs + feature requests">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE783;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            x:Name="IssuesButton"
+                            Content="Open Issue"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
+            </Grid>
+
+        </StackPanel>
+        </Grid>
+    </ScrollViewer>
+    </Grid>
+</Page>
