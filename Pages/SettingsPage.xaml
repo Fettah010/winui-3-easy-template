@@ -86,15 +86,6 @@
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
-                    Header="Check for updates on startup"
-                    Description="Automatically check for updates when the app starts.">
-                    <ToggleSwitch
-                        x:Name="AutoCheckToggle"
-                        IsOn="{x:Bind ViewModel.AutoCheckOnStartup, Mode=TwoWay}"
-                        HorizontalAlignment="Right"/>
-                </ctk:SettingsCard>
-
-                <ctk:SettingsCard
                     x:Name="CheckUpdatesCard"
                     Header="Check for updates"
                     Description="Manually check for new versions on the selected channel.">
@@ -105,6 +96,15 @@
                             Click="CheckUpdatesButton_Click"
                             Style="{ThemeResource AccentButtonStyle}"/>
                     </StackPanel>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    Header="Check for updates on startup"
+                    Description="Automatically check for updates when the app starts.">
+                    <ToggleSwitch
+                        x:Name="AutoCheckToggle"
+                        IsOn="{x:Bind ViewModel.AutoCheckOnStartup, Mode=TwoWay}"
+                        HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
