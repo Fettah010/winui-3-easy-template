@@ -22,6 +22,7 @@ public partial class App : Application
         this.UnhandledException += (_, e) =>
         {
             LoggingService.Log.Fatal(e.Exception, "Unhandled UI-thread exception");
+            CrashReportingService.Current.CaptureException(e.Exception, "ui-thread");
             e.Handled = false;
         };
     }

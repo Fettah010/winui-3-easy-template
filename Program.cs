@@ -24,10 +24,15 @@ public static class Program
     static void Main(string[] args)
     {
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-            LoggingService.Log.Fatal(e.ExceptionObject as Exception, "Unhandled app-domain exception");
+        {
+            var ex = e.ExceptionObject as Exception;
+            LoggingService.Log.Fatal(ex, "Unhandled app-domain exception");
+            CrashReportingService.Current.CaptureException(ex, "app-domain");
+        };
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             LoggingService.Log.Fatal(e.Exception, "Unobserved task exception");
+            CrashReportingService.Current.CaptureException(e.Exception, "unobserved-task");
             e.SetObserved();
         };
 
@@ -38,6 +43,7 @@ public static class Program
         catch (Exception ex)
         {
             LoggingService.Log.Fatal(ex, "Application crashed during startup");
+            CrashReportingService.Current.CaptureException(ex, "startup");
             throw;
         }
     }
@@ -45,6 +51,7 @@ public static class Program
     static void Run(string[] args)
     {
         LoggingService.Initialize();
+        CrashReportingService.Current.Initialize();
 
         // Single-instance enforcement
         if (!TryEnforceSingleInstance())

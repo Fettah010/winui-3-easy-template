@@ -282,6 +282,9 @@ public sealed partial class MainWindow : Window
 
         SaveWindowState();
 
+        // Flush any queued crash reports on the way out.
+        CrashReportingService.Current.Shutdown();
+
         // Real exit: tear down the tray icon or Windows keeps a ghost
         // icon after the process dies.
         SystemTrayService.Current.Shutdown();

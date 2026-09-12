@@ -11,6 +11,7 @@ complete starting template for WinUI 3 apps.
 - .NET 10 · WinUI 3 / Microsoft.WindowsAppSDK 1.8
 - Velopack 1.2 — installer + delta auto-updates (updates feature)
 - Serilog 4 — console + rolling file logging
+- Sentry 6 — crash reporting (opt-in via DSN, off by default)
 - Microsoft.Extensions.DependencyInjection — IoC container
 - Microsoft.Data.Sqlite — local database (database feature)
 - Microsoft.Extensions.Http — typed HTTP client (database feature)
@@ -64,6 +65,13 @@ LoggingService.Log.Error(ex, "Something failed");
 
 Logs go to the debugger console and to `Logs/applog-YYYYMMDD.log` next to the
 executable (daily rolling, 14 days kept).
+
+#### Crash reporting (Sentry)
+
+Unhandled exceptions (app-domain, task pool, UI thread) are logged locally
+and, when a DSN is configured, reported to Sentry with release + channel
+tags. Disabled by default — paste a DSN into `AppMetadata.SentryDsn` to
+enable. Queued reports flush on clean exit.
 
 #### Dependency Injection
 

@@ -34,6 +34,7 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
 | `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager` (updates feature). |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
+| `Services/CrashReportingService.cs` | Sentry (DSN-gated, off by default); hooks in `Program.cs` + `App.xaml.cs`. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/AppInfo.cs` | Assembly-version accessors. |
 | `Services/DesktopToastService.cs` | OS Action Center toasts (tray feature); click reopens the app. |

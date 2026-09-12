@@ -38,4 +38,11 @@ public static class AppMetadata
 
     /// <summary>Tray tooltip.</summary>
     public static string TrayTooltip => AppName;
+
+    /// <summary>
+    /// Sentry DSN for crash reporting. Empty (default) disables it entirely:
+    /// <see cref="CrashReportingService"/> becomes a no-op and no Sentry
+    /// package traffic ever happens. Paste a DSN to enable.
+    /// </summary>
+    public const string SentryDsn = "";
 }
