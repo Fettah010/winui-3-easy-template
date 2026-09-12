@@ -9,13 +9,13 @@ namespace DevTemWinUi3;
 
 public partial class App : Application
 {
+    private SplashScreen? _splash;
+    private MainWindow? _mainWindow;
+
     public App()
     {
         this.InitializeComponent();
 
-        // XAML/UI-thread exceptions: log them, but keep default handling.
-        // (Setting e.Handled = true would suppress the crash; a template should
-        //  not hide bugs, so we re-throw through the default path.)
         this.UnhandledException += (_, e) =>
         {
             LoggingService.Log.Fatal(e.Exception, "Unhandled UI-thread exception");
@@ -25,29 +25,37 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // Initialize DI container
-        ServiceLocator.Initialize();
+        // Show splash screen immediately
+        _splash = new SplashScreen();
+        _splash.Activate();
 
-        // Initialize localization
-        LocalizationService.Current.Initialize();
+        // Initialize services in background while splash is visible
+        await InitializeServicesAsync();
 
-        // Initialize database
-        var db = ServiceLocator.GetRequiredService<DatabaseService>();
-        await db.InitializeAsync();
+        // Close splash and show main window
+        _mainWindow = new MainWindow();
+        m_window = _mainWindow;
 
-        m_window = new MainWindow();
-        m_window.Activate();
+        _splash.Close();
+        _splash = null;
 
-        // Fire-and-forget: the update check runs off the UI thread after the
-        // window is up, so startup is never blocked by the network.
+        _mainWindow.Activate();
+
         _ = CheckForUpdatesAsync();
     }
 
-    /// <summary>
-    /// Silent background auto-update flow: check the release feed, download in
-    /// the background when an update exists, and only involve the user once it
-    /// is ready, asking them to restart.
-    /// </summary>
+    private static async Task InitializeServicesAsync()
+    {
+        await Task.Run(() =>
+        {
+            ServiceLocator.Initialize();
+            LocalizationService.Current.Initialize();
+        });
+
+        var db = ServiceLocator.GetRequiredService<DatabaseService>();
+        await db.InitializeAsync();
+    }
+
     private async Task CheckForUpdatesAsync()
     {
         var svc = UpdateService.Current;
