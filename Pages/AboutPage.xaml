@@ -10,118 +10,251 @@
     NavigationCacheMode="Enabled">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
+        <StackPanel Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 
-            <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <!-- Header -->
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+                <TextBlock
+                    Text="Everything behind DevTem — version, stack, license and links."
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap"/>
+            </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0" VerticalAlignment="Center">
-                <Border Width="48" Height="48" CornerRadius="12" VerticalAlignment="Center">
-                    <Image
-                        Source="ms-appx:///Assets/Logo.png"
-                        Width="48" Height="48"
-                        Stretch="UniformToFill"/>
-                </Border>
-                <StackPanel Spacing="2" VerticalAlignment="Center">
-                    <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
-                    <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <!-- Hero card: identity on the left, at-a-glance on the right -->
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="24">
+                <Grid ColumnSpacing="24" RowSpacing="20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Identity -->
+                    <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                            <Border
+                                Width="64" Height="64"
+                                CornerRadius="16"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                <Image
+                                    Source="ms-appx:///Assets/Logo.png"
+                                    Width="56" Height="56"
+                                    Stretch="Uniform"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <InfoBadge Value="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource AttentionValueInfoBadgeStyle}"/>
+                                    <TextBlock
+                                        Text=".NET 10 · WinUI 3 · Windows 11"
+                                        Style="{ThemeResource CaptionTextBlockStyle}"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <TextBlock
+                            Text="A production-ready starter template: Mica + native WinUI 3 styling, persisted settings, Velopack auto-updates, Serilog diagnostics and a one-command release pipeline."
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap"/>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <HyperlinkButton
+                                Content="GitHub Repository"
+                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template"/>
+                            <HyperlinkButton
+                                Content="Report an issue"
+                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- At a glance -->
+                    <Border
+                        Grid.Column="1"
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="12" VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE946;" FontSize="16" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
+                                <TextBlock Text="AT A GLANCE" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Version" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Framework" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text=".NET 10 / WinUI 3" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </StackPanel>
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Platform" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="Windows 10/11 (x64, ARM64)" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Two-column details: app info + technology -->
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutAppInfoText"
+                        Text="APP INFO"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                    <ctk:SettingsCard Header="Name" Description="Product name">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8A5;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="DevTem-WinUI 3" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard Header="Version" Description="Assembly version">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE930;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard Header="Framework" Description="Runtime + UI stack">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE737;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text=".NET 10 / WinUI 3" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard Header="Platform" Description="Supported targets">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE7F4;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="Windows 10/11 (x64, ARM64)" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
                 </StackPanel>
-            </StackPanel>
 
-            <StackPanel Spacing="8" Margin="0,8,0,0">
-                <TextBlock
-                    x:Name="AboutAppInfoText"
-                    Text="APP INFO"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                <StackPanel Grid.Column="1" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutTechnologyText"
+                        Text="TECHNOLOGY"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <ctk:SettingsCard Header="Name">
-                    <TextBlock Text="DevTem-WinUI 3" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
+                    <ctk:SettingsCard Header="Auto-updates" Description="Installer + delta updates">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE74E;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="Velopack 1.2" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
 
-                <ctk:SettingsCard Header="Version">
-                    <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
+                    <ctk:SettingsCard Header="Logging" Description="File + debugger sinks">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xEADF;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="Serilog" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
 
-                <ctk:SettingsCard Header="Framework">
-                    <TextBlock Text=".NET 10 / WinUI 3" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
+                    <ctk:SettingsCard Header="MVVM" Description="Observable properties + commands">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xEB4A;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="CommunityToolkit.Mvvm" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
 
-                <ctk:SettingsCard Header="Platform">
-                    <TextBlock Text="Windows 10/11 (x64, ARM64)" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
-            </StackPanel>
+                    <ctk:SettingsCard Header="UI Controls" Description="Cards, segmented + helpers">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE710;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <TextBlock Text="CommunityToolkit.WinUI" VerticalAlignment="Center"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
+            </Grid>
 
-            <StackPanel Spacing="8" Margin="0,8,0,0">
-                <TextBlock
-                    x:Name="AboutTechnologyText"
-                    Text="TECHNOLOGY"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+            <!-- Two-column footer: license + links -->
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <ctk:SettingsCard Header="Auto-updates">
-                    <TextBlock Text="Velopack 1.2" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
+                <StackPanel Grid.Column="0" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutLicenseText"
+                        Text="LICENSE"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <ctk:SettingsCard Header="Logging">
-                    <TextBlock Text="Serilog" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
+                    <ctk:SettingsCard Header="MIT License" Description="Free for personal and commercial use.">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8A7;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            Content="View License"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/blob/main/LICENSE"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
 
-                <ctk:SettingsCard Header="MVVM">
-                    <TextBlock Text="CommunityToolkit.Mvvm" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
+                <StackPanel Grid.Column="1" Spacing="8">
+                    <TextBlock
+                        x:Name="AboutLinksText"
+                        Text="LINKS"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <ctk:SettingsCard Header="UI Controls">
-                    <TextBlock Text="CommunityToolkit.WinUI" VerticalAlignment="Center"/>
-                </ctk:SettingsCard>
-            </StackPanel>
+                    <ctk:SettingsCard Header="Source Code" Description="Star or fork the template">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE8C6;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            Content="GitHub"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
 
-            <StackPanel Spacing="8" Margin="0,8,0,0">
-                <TextBlock
-                    x:Name="AboutLicenseText"
-                    Text="LICENSE"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    <ctk:SettingsCard Header="Releases" Description="Changelog + installers">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE785;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            Content="View Releases"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
 
-                <ctk:SettingsCard Header="License" Description="This software is released under the MIT License.">
-                    <HyperlinkButton
-                        Content="View License"
-                        NavigateUri="https://github.com/Fettah010/winui-3-easy-template/blob/main/LICENSE"
-                        HorizontalAlignment="Right"/>
-                </ctk:SettingsCard>
-            </StackPanel>
-
-            <StackPanel Spacing="8" Margin="0,8,0,0">
-                <TextBlock
-                    x:Name="AboutLinksText"
-                    Text="LINKS"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
-
-                <ctk:SettingsCard Header="Source Code">
-                    <HyperlinkButton
-                        Content="GitHub Repository"
-                        NavigateUri="https://github.com/Fettah010/winui-3-easy-template"
-                        HorizontalAlignment="Right"/>
-                </ctk:SettingsCard>
-
-                <ctk:SettingsCard Header="Report Issues">
-                    <HyperlinkButton
-                        Content="Open Issue"
-                        NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"
-                        HorizontalAlignment="Right"/>
-                </ctk:SettingsCard>
-
-                <ctk:SettingsCard Header="Releases">
-                    <HyperlinkButton
-                        Content="View Releases"
-                        NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"
-                        HorizontalAlignment="Right"/>
-                </ctk:SettingsCard>
-            </StackPanel>
+                    <ctk:SettingsCard Header="Report Issues" Description="Bugs + feature requests">
+                        <ctk:SettingsCard.HeaderIcon>
+                            <FontIcon Glyph="&#xE783;"/>
+                        </ctk:SettingsCard.HeaderIcon>
+                        <HyperlinkButton
+                            Content="Open Issue"
+                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"
+                            HorizontalAlignment="Right"/>
+                    </ctk:SettingsCard>
+                </StackPanel>
+            </Grid>
 
         </StackPanel>
     </ScrollViewer>

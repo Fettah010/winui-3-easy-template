@@ -8,7 +8,8 @@
     xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
     xmlns:vm="using:DevTemWinUi3.ViewModels"
     mc:Ignorable="d"
-    NavigationCacheMode="Disabled">
+    NavigationCacheMode="Disabled"
+    Loaded="SettingsPage_Loaded">
 
     <Page.DataContext>
         <vm:SettingsPageViewModel/>

@@ -499,14 +499,14 @@ public sealed class SystemTrayService : IDisposable
                 ShowFromTray();
                 _mainWindow?.DispatcherQueue.TryEnqueue(() =>
                 {
-                    NavigationRequested?.Invoke(this, "settings");
+                    NavigationRequested?.Invoke(this, new TrayNavigationRequest("settings", AutoCheckUpdates: true));
                 });
                 break;
             case ID_TRAY_SETTINGS:
                 ShowFromTray();
                 _mainWindow?.DispatcherQueue.TryEnqueue(() =>
                 {
-                    NavigationRequested?.Invoke(this, "settings");
+                    NavigationRequested?.Invoke(this, new TrayNavigationRequest("settings", AutoCheckUpdates: false));
                 });
                 break;
             case ID_TRAY_EXIT:
@@ -515,7 +515,7 @@ public sealed class SystemTrayService : IDisposable
         }
     }
 
-    public event EventHandler<string>? NavigationRequested;
+    public event EventHandler<TrayNavigationRequest>? NavigationRequested;
 
     private void ExitApp()
     {

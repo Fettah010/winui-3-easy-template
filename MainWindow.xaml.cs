@@ -251,10 +251,10 @@ public sealed partial class MainWindow : Window
         _nav.GoBack();
     }
 
-    private void OnTrayNavigationRequested(object? sender, string target)
+    private void OnTrayNavigationRequested(object? sender, TrayNavigationRequest request)
     {
         ShowFromTray();
-        _nav.NavigateTo(target);
+        _nav.NavigateTo(request.Target, request.ToParameter());
     }
 
     private void ShowFromTray()

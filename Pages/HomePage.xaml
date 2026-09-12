@@ -9,134 +9,249 @@
     NavigationCacheMode="Enabled">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Center">
+        <StackPanel Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 
-            <StackPanel Spacing="8" HorizontalAlignment="Center">
-                <Border
-                    Width="64" Height="64"
-                    CornerRadius="16"
-                    HorizontalAlignment="Center">
-                    <Image
-                        Source="ms-appx:///Assets/Logo.png"
-                        Width="64" Height="64"
-                        Stretch="UniformToFill"/>
-                </Border>
-
-                <StackPanel Spacing="2">
-                    <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
-                    <TextBlock
-                        x:Name="HomeDescText"
-                        Text="A modern Windows 11 app built with WinUI 3, Community Toolkit and Velopack auto-updates."
-                        Style="{ThemeResource CaptionTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        TextWrapping="Wrap"
-                        TextAlignment="Center"/>
-                </StackPanel>
-            </StackPanel>
-
-            <TextBlock
-                Text="Get started: run your first release, then ship fast."
-                Style="{ThemeResource BodyTextBlockStyle}"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                TextWrapping="Wrap"
-                TextAlignment="Center"/>
-
+            <!-- Hero -->
             <Border
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                CornerRadius="8"
-                Padding="16"
-                Margin="0,8,0,0">
-                <Grid ColumnSpacing="16">
+                CornerRadius="12"
+                Padding="24">
+                <Grid ColumnSpacing="24" RowSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <FontIcon
+                    <Border
                         Grid.Column="0"
-                        Glyph="&#xE930;"
-                        FontSize="24"
-                        Foreground="{ThemeResource SystemFillColorSuccessBrush}"
-                        VerticalAlignment="Center"/>
-
-                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                        <TextBlock Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}"/>
-                        <TextBlock x:Name="StatusCaptionText"
-                                   Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    </StackPanel>
-
-                    <InfoBadge
-                        Grid.Column="2"
-                        x:Name="StatusBadge"
-                        Background="{ThemeResource SystemFillColorSuccessBrush}"
+                        Width="84" Height="84"
+                        CornerRadius="20"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
                         VerticalAlignment="Center">
-                        <InfoBadge.IconSource>
-                            <FontIconSource Glyph="&#xE73E;" FontSize="10"/>
-                        </InfoBadge.IconSource>
-                    </InfoBadge>
+                        <Image
+                            Source="ms-appx:///Assets/Logo.png"
+                            Width="72" Height="72"
+                            Stretch="Uniform"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <InfoBadge Value="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}" Style="{ThemeResource AttentionValueInfoBadgeStyle}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock
+                            x:Name="HomeDescText"
+                            Text="A modern Windows 11 app built with WinUI 3, Community Toolkit and Velopack auto-updates."
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                x:Name="CheckUpdatesQuickButton"
+                                Content="Check for updates"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Click="CheckUpdatesQuickButton_Click"/>
+                            <Button
+                                x:Name="OpenSettingsQuickButton"
+                                Content="Open Settings"
+                                Click="OpenSettingsQuickButton_Click"/>
+                            <HyperlinkButton
+                                Content="How releases work"
+                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"/>
+                        </StackPanel>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <StackPanel Spacing="8" Margin="0,8,0,0">
-                <TextBlock
-                    Text="TECHNOLOGY STACK"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+            <!-- Status + quick actions -->
+            <Grid ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
                 <Border
+                    Grid.Column="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="16">
-                    <StackPanel Spacing="14">
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE737;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="WinUI 3 · Microsoft.WindowsAppSDK" VerticalAlignment="Center"/>
-                        </Grid>
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE74E;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Velopack — installer + delta auto-updates" VerticalAlignment="Center"/>
-                        </Grid>
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE710;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Community Toolkit SettingsCard, Segmented &amp; Helpers" VerticalAlignment="Center"/>
-                        </Grid>
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <FontIcon Glyph="&#xE7F4;" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text=".NET 10 · Mica backdrop · Native Windows 11 styling" VerticalAlignment="Center"/>
-                        </Grid>
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <FontIcon
+                            Grid.Column="0"
+                            Glyph="&#xE930;"
+                            FontSize="24"
+                            Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                            VerticalAlignment="Center"/>
+
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            <TextBlock x:Name="StatusCaptionText"
+                                       Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <InfoBadge
+                            Grid.Column="2"
+                            x:Name="StatusBadge"
+                            Background="{ThemeResource SystemFillColorSuccessBrush}"
+                            VerticalAlignment="Center">
+                            <InfoBadge.IconSource>
+                                <FontIconSource Glyph="&#xE73E;" FontSize="10"/>
+                            </InfoBadge.IconSource>
+                        </InfoBadge>
+                    </Grid>
+                </Border>
+
+                <Border
+                    Grid.Column="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="16">
+                    <StackPanel Spacing="8" VerticalAlignment="Center">
+                        <TextBlock
+                            Text="QUICK ACTIONS"
+                            Style="{ThemeResource CaptionTextBlockStyle}"
+                            FontWeight="SemiBold"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Content="Settings" Click="OpenSettingsQuickButton_Click"/>
+                            <Button Content="About" Click="OpenAboutQuickButton_Click"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
+            </Grid>
+
+            <!-- Feature grid -->
+            <StackPanel Spacing="8">
+                <TextBlock
+                    Text="WHAT'S INCLUDED"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <Grid ColumnSpacing="16" RowSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border
+                        Grid.Row="0" Grid.Column="0"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="8">
+                            <FontIcon Glyph="&#xE74E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
+                            <TextBlock Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Stable / Beta / Dev channels over GitHub Releases with one-click install and restart."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border
+                        Grid.Row="0" Grid.Column="1"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="8">
+                            <FontIcon Glyph="&#xE771;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
+                            <TextBlock Text="Settings that persist" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Theme, language, update channel, tray and autostart — saved locally, restored on launch."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border
+                        Grid.Row="1" Grid.Column="0"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="8">
+                            <FontIcon Glyph="&#xEADF;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
+                            <TextBlock Text="Diagnostics built in" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Serilog rolling logs plus notification toasts so update checks never fail silently."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border
+                        Grid.Row="1" Grid.Column="1"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                        <StackPanel Spacing="8">
+                            <FontIcon Glyph="&#xE96E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
+                            <TextBlock Text="Tray + native shell" Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+                            <TextBlock
+                                Text="Mica backdrop, custom title bar, minimize-to-tray with quick Settings and update actions."
+                                Style="{ThemeResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </StackPanel>
 
-            <TextBlock
-                Margin="0,8,0,0"
-                Style="{ThemeResource CaptionTextBlockStyle}"
-                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                Text="Hint: open the Updates view to check for new versions. Publishing scripts live in /Scripts."/>
+            <!-- Ship it -->
+            <Border
+                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        Text="SHIP YOUR FIRST RELEASE"
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    <TextBlock
+                        Text="1. Bump Version in DevTemWinUi3.csproj  →  2. git tag v0.0.2-beta + push  →  3. CI builds, packs and publishes to GitHub Releases."
+                        Style="{ThemeResource BodyTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap"/>
+                    <TextBlock
+                        Style="{ThemeResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                        Text="Publishing scripts live in /Scripts. Update checks run only in installed builds."/>
+                </StackPanel>
+            </Border>
 
         </StackPanel>
     </ScrollViewer>

@@ -18,7 +18,7 @@ public class DatabaseServiceTests
     [TestMethod]
     public void DatabasePath_ContainsAppName()
     {
-        Assert.IsTrue(DatabaseService.Current.DatabasePath.Contains("app.db"));
+        Assert.Contains("app.db", DatabaseService.Current.DatabasePath);
     }
 
     [TestMethod]

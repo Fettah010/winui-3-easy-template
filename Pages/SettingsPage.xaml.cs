@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
 
@@ -52,11 +53,44 @@ public sealed partial class SettingsPage : Page
     }
 
     private Velopack.UpdateInfo? _pendingUpdate;
+    private bool _autoCheckArmed;
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        if (TrayNavigationRequest.ShouldAutoCheck(e.Parameter))
+            _autoCheckArmed = true;
+    }
+
+    private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (!_autoCheckArmed)
+            return;
+        _autoCheckArmed = false;
+        // Let the page finish rendering before kicking off the check,
+        // so the user sees Settings open and the button state change.
+        await Task.Delay(350);
+        await RunUpdateCheckAsync();
+    }
 
     private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
-        var svc = UpdateService.Current;
+        await RunUpdateCheckAsync();
+    }
 
+    /// <summary>
+    /// Runs the Velopack update check and updates the status card.
+    /// Public so the tray "Check for updates" menu item can trigger it
+    /// right after navigating here.
+    /// </summary>
+    public async Task RunUpdateCheckAsync()
+    {
+        // The page may be navigated via tray before the XAML names are
+        // wired in a test/host scenario — bail out gracefully.
+        if (CheckUpdatesButton is null)
+            return;
+
+        var svc = UpdateService.Current;
         if (!svc.IsInstalled)
         {
             ShowUpdateStatus(UpdateService.NotInstalledMessage, false);

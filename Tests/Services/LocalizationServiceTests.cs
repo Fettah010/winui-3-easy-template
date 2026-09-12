@@ -18,7 +18,7 @@ public class LocalizationServiceTests
     [TestMethod]
     public void AvailableLanguages_ContainsThreeLanguages()
     {
-        Assert.AreEqual(3, LocalizationService.AvailableLanguages.Count);
+        Assert.HasCount(3, LocalizationService.AvailableLanguages);
     }
 
     [TestMethod]
