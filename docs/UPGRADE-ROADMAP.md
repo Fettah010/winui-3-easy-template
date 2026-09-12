@@ -28,7 +28,15 @@ MATRIX PASSED (4 combos + page probe, 0 warnings each).
   sample) on every push/PR and builds + tests each.
 - [x] Dependabot for NuGet (`.github/dependabot.yml`, weekly).
 
-## 2. Fill the real app gaps `[ ]`
+## 2. Fill the real app gaps `[~]`
+
+- [x] Periodic update checks while trayed (6h timer honoring auto-check +
+  installed guards; `UpdateService.PeriodicCheckInterval` + tests; live log
+  proof).
+- [x] Crash reporting (Sentry 6.11.0, DSN-gated off by default;
+  `CrashReportingService` + hooks + tests; live disabled-path proof).
+- [x] Code-signing guidance (TEMPLATE-GUIDE §5: `--signParams`,
+  `VPK_*` env secrets, self-signed testing, EV/OV reputation notes).
 
 - [ ] Periodic update checks while trayed (timer honoring the auto-check
   setting). Small, completes the tray story. Today: startup + manual only.

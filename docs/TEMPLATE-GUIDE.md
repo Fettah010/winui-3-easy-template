@@ -171,3 +171,30 @@ Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
 default to the beta channel). Commit, push, tag (`v0.0.3-beta`), push the tag
 (CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
 is in `AGENTS.md` ("Branches & releases").
+
+### Code signing (do this before distributing)
+
+Unsigned installers trip SmartScreen. Velopack signs every PE it packs
+(your exe, its `Update.exe`, the setup) when you pass signtool args:
+
+```powershell
+vpk pack ... --signParams "/fd SHA256 /td SHA256 /f C:\certs\app.pfx /tr http://timestamp.digicert.com"
+```
+
+Notes from the Velopack docs (verified against `vpk pack -h`):
+
+- Use **absolute paths** in the params; vpk may invoke signtool elsewhere.
+- Get signing working on **one binary with signtool first**, then move it
+  into `--signParams`. Quote-with-backslash anything containing spaces.
+- Secrets belong in **env, not the command line**: every `vpk` option also
+  reads `VPK_*` (e.g. `VPK_SIGN_PARAMS`). In CI, store the PFX base64-encoded
+  in a GitHub secret, decode it at workflow time, pass password via secret.
+- Alternatives: `--signTemplate "<cmd> {{file}}"` for custom signers, and
+  `--azureTrustedSignFile` for Azure Trusted Signing.
+- Test locally with a self-signed cert (`New-SelfSignedCertificate`),
+  imported into Trusted People so your machine trusts it.
+- Reputation is separate from validity: brand-new certs still SmartScreen-warn
+  until trust builds; EV certs skip the queue, OV certs wait it out.
+
+`Scripts/build-and-release.ps1` does not sign today — extend its `vpk pack`
+call with `--signParams` once you hold a cert.
