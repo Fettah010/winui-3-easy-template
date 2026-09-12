@@ -188,9 +188,6 @@ public sealed class SystemTrayService : IDisposable
     {
         _mainWindow = mainWindow;
 
-        if (!_settings.MinimizeToTray)
-            return;
-
         try
         {
             var windowNative = (IWindowNative)mainWindow;
@@ -264,27 +261,15 @@ public sealed class SystemTrayService : IDisposable
 
     public void UpdateSettings()
     {
-        if (_settings.MinimizeToTray && !_isVisible)
-        {
-            if (_windowHandle == IntPtr.Zero)
-            {
-                _mainWindowHwnd = _mainWindow is not null
-                    ? ((IWindowNative)_mainWindow).GetWindowHandle()
-                    : IntPtr.Zero;
-
-                _wndProcDelegate = TrayWndProc;
-                GCHandle.Alloc(_wndProcDelegate);
-
-                CreateMessageWindow();
-            }
-            CreateTrayIcon();
-            _isVisible = true;
-        }
-        else if (!_settings.MinimizeToTray && _isVisible)
+        if (!_settings.MinimizeToTray && _isVisible)
         {
             RemoveTrayIcon();
-            DestroyMessageWindow();
             _isVisible = false;
+        }
+        else if (_settings.MinimizeToTray && !_isVisible)
+        {
+            CreateTrayIcon();
+            _isVisible = true;
         }
     }
 
