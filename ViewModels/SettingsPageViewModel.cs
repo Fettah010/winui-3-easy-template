@@ -26,6 +26,12 @@ public partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private string _appVersion = string.Empty;
 
+    /// <summary>
+    /// Guards change handlers while the constructor loads persisted values,
+    /// so loading never writes back or triggers side effects.
+    /// </summary>
+    private bool _loaded;
+
     public SettingsPageViewModel()
     {
         AppVersion = AppInfo.Current.Version;
@@ -54,12 +60,15 @@ public partial class SettingsPageViewModel : ObservableObject
         }
         catch { SelectedChannelIndex = 0; }
 
-        AutoCheckOnStartup = true;
+        try { AutoCheckOnStartup = SettingsService.Current.AutoCheck; }
+        catch { AutoCheckOnStartup = true; }
 
         try { MinimizeToTray = SettingsService.Current.MinimizeToTray; }
         catch { MinimizeToTray = true; }
 
         AutoStart = SystemTrayService.IsAutoStartEnabled();
+
+        _loaded = true;
     }
 
     partial void OnSelectedThemeIndexChanged(int value)
@@ -105,5 +114,36 @@ public partial class SettingsPageViewModel : ObservableObject
         };
         try { SettingsService.Current.Channel = channel; } catch { }
         try { UpdateService.Current.SetChannel(channel); } catch { }
+    }
+
+    partial void OnAutoCheckOnStartupChanged(bool value)
+    {
+        if (!_loaded) return;
+        try { SettingsService.Current.AutoCheck = value; } catch { }
+    }
+
+    partial void OnMinimizeToTrayChanged(bool value)
+    {
+        if (!_loaded) return;
+        try { SettingsService.Current.MinimizeToTray = value; } catch { }
+        try { SystemTrayService.Current.UpdateSettings(); } catch { }
+    }
+
+    partial void OnAutoStartChanged(bool value)
+    {
+        if (!_loaded) return;
+        try
+        {
+            SystemTrayService.SetAutoStart(value);
+            // Re-read: if the registry write didn't stick, revert the toggle
+            // so the UI never lies about the real state.
+            bool actual = SystemTrayService.IsAutoStartEnabled();
+            if (actual != value)
+                AutoStart = actual;
+        }
+        catch
+        {
+            try { AutoStart = SystemTrayService.IsAutoStartEnabled(); } catch { }
+        }
     }
 }

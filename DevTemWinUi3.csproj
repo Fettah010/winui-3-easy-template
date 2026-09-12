@@ -24,6 +24,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="Assets\Logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-64.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-48.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-32.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-16.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Tests\**" />
     <None Remove="Tests\**" />
     <Content Remove="Tests\**" />

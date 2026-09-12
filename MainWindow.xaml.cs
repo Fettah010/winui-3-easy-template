@@ -27,6 +27,25 @@ public sealed partial class MainWindow : Window
         this.Title = "DevTem-WinUI 3";
         this.SystemBackdrop = new MicaBackdrop();
 
+        // Apply the persisted theme on launch (Settings only applies it on change).
+        try
+        {
+            if (Content is FrameworkElement themedRoot)
+            {
+                themedRoot.RequestedTheme = SettingsService.Current.Theme switch
+                {
+                    "Light" => ElementTheme.Light,
+                    "Dark" => ElementTheme.Dark,
+                    _ => ElementTheme.Default,
+                };
+            }
+        }
+        catch { }
+
+        // Taskbar/titlebar icon matches the app/installer icon
+        try { this.AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico")); }
+        catch { }
+
         // Apply localized strings
         var loc = LocalizationService.Current;
         NavHomeItem.Content = loc.GetString("NavHome");
@@ -161,6 +180,10 @@ public sealed partial class MainWindow : Window
         }
 
         SaveWindowState();
+
+        // Real exit: tear down the tray icon or Windows keeps a ghost
+        // icon after the process dies.
+        SystemTrayService.Current.Shutdown();
     }
 
     private void SaveWindowState()

@@ -51,25 +51,6 @@ public sealed partial class SettingsPage : Page
         }
     }
 
-    private void MinimizeToTrayToggle_Toggled(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            SettingsService.Current.MinimizeToTray = MinimizeToTrayToggle.IsOn;
-            SystemTrayService.Current.UpdateSettings();
-        }
-        catch { }
-    }
-
-    private void AutoStartToggle_Toggled(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            SystemTrayService.SetAutoStart(AutoStartToggle.IsOn);
-        }
-        catch { }
-    }
-
     private Velopack.UpdateInfo? _pendingUpdate;
 
     private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)

@@ -1,12 +1,28 @@
+using System;
+using System.IO;
 using DevTemWinUi3.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DevTemWinUi3.Tests.Services;
 
 [TestClass]
-[Ignore("Requires Windows App SDK runtime context (ApplicationData.Current)")]
 public class FirstRunServiceTests
 {
+    private string _storePath = string.Empty;
+
+    [TestInitialize]
+    public void Init()
+    {
+        _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+        LocalSettingsStore.SetTestPath(_storePath);
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        LocalSettingsStore.SetTestPath(null);
+        try { File.Delete(_storePath); } catch { }
+    }
     [TestMethod]
     public void Current_ReturnsSingleton()
     {

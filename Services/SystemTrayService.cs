@@ -174,6 +174,7 @@ public sealed class SystemTrayService : IDisposable
     private Window? _mainWindow;
     private IntPtr _mainWindowHwnd;
     private bool _isVisible;
+    private bool _iconVisible;
 
     public static SystemTrayService Current { get; } = new();
 
@@ -193,7 +194,15 @@ public sealed class SystemTrayService : IDisposable
             GCHandle.Alloc(_wndProcDelegate);
 
             CreateMessageWindow();
-            CreateTrayIcon();
+
+            // Only show the icon when the user opted in. Creating it
+            // unconditionally is why the app "went to tray" with the
+            // toggle off.
+            if (_settings.MinimizeToTray)
+            {
+                CreateTrayIcon();
+                _iconVisible = true;
+            }
 
             _isVisible = true;
             Log.Information("System tray initialized");
@@ -221,6 +230,9 @@ public sealed class SystemTrayService : IDisposable
 
         try
         {
+            // The icon may be absent (toggle off at launch): hiding without
+            // it would strand the window with no way back. Ensure it first.
+            EnsureTrayIcon();
             _mainWindow.AppWindow.Hide();
             Log.Information("Window hidden to system tray");
         }
@@ -255,16 +267,25 @@ public sealed class SystemTrayService : IDisposable
 
     public void UpdateSettings()
     {
-        if (!_settings.MinimizeToTray && _isVisible)
+        if (!_settings.MinimizeToTray && _iconVisible)
         {
             RemoveTrayIcon();
-            _isVisible = false;
+            _iconVisible = false;
         }
-        else if (_settings.MinimizeToTray && !_isVisible)
+        else if (_settings.MinimizeToTray && !_iconVisible)
         {
-            CreateTrayIcon();
-            _isVisible = true;
+            EnsureTrayIcon();
         }
+    }
+
+    /// <summary>
+    /// Removes the tray icon and tears down the message window. Call on real
+    /// app exit — otherwise Windows keeps a ghost icon after the process dies.
+    /// Idempotent.
+    /// </summary>
+    public void Shutdown()
+    {
+        Dispose();
     }
 
     public static void SetAutoStart(bool enabled)
@@ -346,7 +367,7 @@ public sealed class SystemTrayService : IDisposable
 
     private void CreateTrayIcon()
     {
-        if (_windowHandle == IntPtr.Zero)
+        if (_windowHandle == IntPtr.Zero || _iconVisible)
             return;
 
         var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
@@ -378,6 +399,14 @@ public sealed class SystemTrayService : IDisposable
 
         Shell_NotifyIconW(NIM_ADD, ref _notifyIconData);
         Shell_NotifyIconW(NIM_SETVERSION, ref _notifyIconData);
+        _iconVisible = true;
+    }
+
+    /// <summary>Creates the icon if it is currently absent (no-op otherwise).</summary>
+    private void EnsureTrayIcon()
+    {
+        if (!_iconVisible)
+            CreateTrayIcon();
     }
 
     private void RemoveTrayIcon()
@@ -393,14 +422,21 @@ public sealed class SystemTrayService : IDisposable
             DestroyIcon(_iconHandle);
             _iconHandle = IntPtr.Zero;
         }
+
+        _iconVisible = false;
     }
 
     private IntPtr TrayWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
     {
         if (msg == _taskbarCreatedMsg && _taskbarCreatedMsg != 0)
         {
-            CreateTrayIcon();
-            Log.Information("Taskbar recreated, tray icon restored");
+            // Explorer restarted: restore the icon only if opted in.
+            if (_settings.MinimizeToTray)
+            {
+                RemoveTrayIcon();
+                CreateTrayIcon();
+                Log.Information("Taskbar recreated, tray icon restored");
+            }
             return IntPtr.Zero;
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
@@ -11,20 +12,43 @@ namespace DevTemWinUi3;
 
 public sealed partial class SplashScreen : Window
 {
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWA_BORDER_COLOR = 34;
+    private const int DWMWCP_ROUND = 2;
+    private const int DWMWA_COLOR_NONE = unchecked((int)0xFFFFFFFE);
+
     public SplashScreen()
     {
         this.InitializeComponent();
         this.Title = string.Empty;
         this.SystemBackdrop = new MicaBackdrop();
 
-        // Borderless, fixed size
+        // Taskbar icon matches the app/installer icon
+        try { this.AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico")); }
+        catch { }
+
+        ApplyWindowChrome();
+
+        // Frameless is NOT an option here, by platform design:
+        // - A window with no border/caption can never get DWM rounded corners,
+        //   even via DWMWA_WINDOW_CORNER_PREFERENCE (MS Learn "Apply rounded
+        //   corners in desktop apps", category 3).
+        // - On WindowsAppSDK 1.6+, SetBorderAndTitleBar(false, false) leaves a
+        //   phantom white frame (microsoft-ui-xaml#9978).
+        // So: keep the sizing border (DWM rounds it, draws shadow, and honors
+        // DWMWA_BORDER_COLOR), drop only the title bar.
+        // NOTE: IsResizable must stay true — a non-resizable custom frame loses
+        // DWM rounding on unpackaged apps (microsoft-ui-xaml#8374). The splash
+        // only lives ~1s, so the resize cursor is a non-issue in practice.
         var presenter = this.AppWindow.Presenter as OverlappedPresenter;
         if (presenter != null)
         {
-            presenter.SetBorderAndTitleBar(false, false);
+            presenter.SetBorderAndTitleBar(true, false);
             presenter.IsMaximizable = false;
             presenter.IsMinimizable = false;
-            presenter.IsResizable = false;
         }
 
         VersionText.Text = AppInfo.Current.VersionDisplay;
@@ -42,6 +66,28 @@ public sealed partial class SplashScreen : Window
         }
     }
 
+    /// <summary>
+    /// Forces Windows 11 rounded corners and removes the 1px DWM border that
+    /// Windows draws around borderless windows. Without this the splash gets
+    /// square "harsh" corners with a light edge.
+    /// </summary>
+    private void ApplyWindowChrome()
+    {
+        try
+        {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            if (hwnd == IntPtr.Zero)
+                return;
+
+            int round = DWMWCP_ROUND;
+            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref round, sizeof(int));
+
+            int noBorder = DWMWA_COLOR_NONE;
+            DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref noBorder, sizeof(int));
+        }
+        catch { }
+    }
+
     private void CenterToScreen()
     {
         try
@@ -49,8 +95,8 @@ public sealed partial class SplashScreen : Window
             var displayArea = DisplayArea.GetFromPoint(this.AppWindow.Position, DisplayAreaFallback.Primary);
             var workArea = displayArea.WorkArea;
 
-            int width = 480;
-            int height = 380;
+            int width = 560;
+            int height = 360;
 
             this.AppWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
             this.AppWindow.Move(new Windows.Graphics.PointInt32(

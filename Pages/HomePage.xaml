@@ -15,14 +15,11 @@
                 <Border
                     Width="64" Height="64"
                     CornerRadius="16"
-                    Background="{ThemeResource AccentFillColorDefaultBrush}"
                     HorizontalAlignment="Center">
-                    <FontIcon
-                        Glyph="&#xE950;"
-                        FontSize="28"
-                        Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"/>
+                    <Image
+                        Source="ms-appx:///Assets/Logo.png"
+                        Width="64" Height="64"
+                        Stretch="UniformToFill"/>
                 </Border>
 
                 <StackPanel Spacing="2">

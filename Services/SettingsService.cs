@@ -1,21 +1,20 @@
 using System;
-using Windows.Storage;
 
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Persists user settings via Windows.Storage.ApplicationData (roaming).
-/// Stores theme preference, update channel, and last update-check metadata.
+/// User settings backed by <see cref="LocalSettingsStore"/> (JSON file).
+/// Previously used ApplicationData.LocalSettings, which never persisted for
+/// unpackaged apps — every setting silently reverted to its default.
 /// </summary>
 public sealed class SettingsService
 {
-    private static ApplicationDataContainer? _localSettings;
-
     private const string KeyTheme = "AppTheme";
     private const string KeyChannel = "UpdateChannel";
     private const string KeyLastCheckTime = "LastUpdateCheckTime";
     private const string KeyPendingVersion = "PendingUpdateVersion";
     private const string KeyMinimizeToTray = "MinimizeToTray";
+    private const string KeyAutoCheck = "AutoCheckOnStartup";
 
     public static SettingsService Current { get; } = new();
 
@@ -23,23 +22,15 @@ public sealed class SettingsService
     {
     }
 
-    private static ApplicationDataContainer LocalSettings
-    {
-        get
-        {
-            if (_localSettings is null)
-                _localSettings = ApplicationData.Current.LocalSettings;
-            return _localSettings;
-        }
-    }
+    private static LocalSettingsStore Store => LocalSettingsStore.Shared;
 
     /// <summary>
     /// App theme: "System", "Light", or "Dark". Default is "System".
     /// </summary>
     public string Theme
     {
-        get => ReadString(KeyTheme, "System");
-        set => WriteString(KeyTheme, value);
+        get => Store.Get(KeyTheme, "System");
+        set => Store.Set(KeyTheme, value);
     }
 
     /// <summary>
@@ -47,8 +38,8 @@ public sealed class SettingsService
     /// </summary>
     public string Channel
     {
-        get => ReadString(KeyChannel, "stable");
-        set => WriteString(KeyChannel, value);
+        get => Store.Get(KeyChannel, "stable");
+        set => Store.Set(KeyChannel, value);
     }
 
     /// <summary>
@@ -58,24 +49,15 @@ public sealed class SettingsService
     {
         get
         {
-            try
-            {
-                if (LocalSettings.Values.TryGetValue(KeyLastCheckTime, out var obj) && obj is long ticks)
-                    return new DateTimeOffset(ticks, TimeSpan.Zero);
-            }
-            catch { }
-            return null;
+            long ticks = Store.Get(KeyLastCheckTime, 0L);
+            return ticks == 0 ? null : new DateTimeOffset(ticks, TimeSpan.Zero);
         }
         set
         {
-            try
-            {
-                if (value.HasValue)
-                    LocalSettings.Values[KeyLastCheckTime] = value.Value.UtcTicks;
-                else
-                    LocalSettings.Values.Remove(KeyLastCheckTime);
-            }
-            catch { }
+            if (value.HasValue)
+                Store.Set(KeyLastCheckTime, value.Value.UtcTicks);
+            else
+                Store.Remove(KeyLastCheckTime);
         }
     }
 
@@ -85,15 +67,13 @@ public sealed class SettingsService
     /// </summary>
     public string? PendingVersion
     {
-        get => ReadString(KeyPendingVersion, null);
+        get => Store.Get<string?>(KeyPendingVersion, null);
         set
         {
             if (value is not null)
-                WriteString(KeyPendingVersion, value);
+                Store.Set(KeyPendingVersion, value);
             else
-            {
-                try { LocalSettings.Values.Remove(KeyPendingVersion); } catch { }
-            }
+                Store.Remove(KeyPendingVersion);
         }
     }
 
@@ -102,35 +82,17 @@ public sealed class SettingsService
     /// </summary>
     public bool MinimizeToTray
     {
-        get
-        {
-            try
-            {
-                if (LocalSettings.Values.TryGetValue(KeyMinimizeToTray, out var obj) && obj is bool b)
-                    return b;
-            }
-            catch { }
-            return true;
-        }
-        set
-        {
-            try { LocalSettings.Values[KeyMinimizeToTray] = value; } catch { }
-        }
+        get => Store.Get(KeyMinimizeToTray, true);
+        set => Store.Set(KeyMinimizeToTray, value);
     }
 
-    private string ReadString(string key, string? defaultValue)
+    /// <summary>
+    /// Whether the app checks for updates automatically on startup.
+    /// Default is true.
+    /// </summary>
+    public bool AutoCheck
     {
-        try
-        {
-            if (LocalSettings.Values.TryGetValue(key, out var obj) && obj is string s)
-                return s;
-        }
-        catch { }
-        return defaultValue ?? string.Empty;
-    }
-
-    private void WriteString(string key, string value)
-    {
-        try { LocalSettings.Values[key] = value; } catch { }
+        get => Store.Get(KeyAutoCheck, true);
+        set => Store.Set(KeyAutoCheck, value);
     }
 }

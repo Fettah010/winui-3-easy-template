@@ -33,10 +33,15 @@
                 Spacing="10"
                 Margin="20,0,0,0"
                 VerticalAlignment="Center">
-                <FontIcon
-                    Glyph="&#xE950;"
-                    FontSize="16"
-                    Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                <Border
+                    Width="20" Height="20"
+                    CornerRadius="5"
+                    VerticalAlignment="Center">
+                    <Image
+                        Source="ms-appx:///Assets/Logo-32.png"
+                        Width="20" Height="20"
+                        Stretch="UniformToFill"/>
+                </Border>
                 <TextBlock
                     Text="DevTem-WinUI 3"
                     Style="{ThemeResource CaptionTextBlockStyle}"

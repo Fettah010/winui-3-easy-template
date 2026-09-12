@@ -1,11 +1,8 @@
-using System;
-using Windows.Storage;
-
 namespace DevTemWinUi3.Services;
 
 /// <summary>
 /// Persists window state (position, size, maximized) across sessions.
-/// Uses Windows.Storage.ApplicationData for storage.
+/// Backed by <see cref="LocalSettingsStore"/> (JSON file).
 /// </summary>
 public sealed class WindowStateService
 {
@@ -17,120 +14,50 @@ public sealed class WindowStateService
 
     public static WindowStateService Current { get; } = new();
 
-    private ApplicationDataContainer? _localSettings;
-    private bool _initialized;
-
-    private bool TryInit()
-    {
-        if (_initialized) return _localSettings != null;
-        _initialized = true;
-        try
-        {
-            _localSettings = ApplicationData.Current.LocalSettings;
-        }
-        catch
-        {
-            // Unpackaged or pre-runtime context — gracefully degrade
-        }
-        return _localSettings != null;
-    }
-
     private WindowStateService()
     {
     }
 
+    private static LocalSettingsStore Store => LocalSettingsStore.Shared;
+
     public double X
     {
-        get => ReadDouble(KeyWindowX, 100);
-        set => WriteDouble(KeyWindowX, value);
+        get => Store.Get(KeyWindowX, 100.0);
+        set => Store.Set(KeyWindowX, value);
     }
 
     public double Y
     {
-        get => ReadDouble(KeyWindowY, 100);
-        set => WriteDouble(KeyWindowY, value);
+        get => Store.Get(KeyWindowY, 100.0);
+        set => Store.Set(KeyWindowY, value);
     }
 
     public double Width
     {
-        get => ReadDouble(KeyWindowWidth, 1200);
-        set => WriteDouble(KeyWindowWidth, value);
+        get => Store.Get(KeyWindowWidth, 1200.0);
+        set => Store.Set(KeyWindowWidth, value);
     }
 
     public double Height
     {
-        get => ReadDouble(KeyWindowHeight, 800);
-        set => WriteDouble(KeyWindowHeight, value);
+        get => Store.Get(KeyWindowHeight, 800.0);
+        set => Store.Set(KeyWindowHeight, value);
     }
 
     public bool IsMaximized
     {
-        get => ReadBool(KeyIsMaximized, false);
-        set => WriteBool(KeyIsMaximized, value);
+        get => Store.Get(KeyIsMaximized, false);
+        set => Store.Set(KeyIsMaximized, value);
     }
 
-    public bool HasSavedState
-    {
-        get
-        {
-            if (!TryInit()) return false;
-            try
-            {
-                return _localSettings!.Values.ContainsKey(KeyWindowX);
-            }
-            catch { return false; }
-        }
-    }
-
-    private double ReadDouble(string key, double defaultValue)
-    {
-        if (!TryInit()) return defaultValue;
-        try
-        {
-            if (_localSettings!.Values.TryGetValue(key, out var obj) && obj is double d)
-                return d;
-            if (obj is int i)
-                return i;
-        }
-        catch { }
-        return defaultValue;
-    }
-
-    private void WriteDouble(string key, double value)
-    {
-        if (!TryInit()) return;
-        try { _localSettings!.Values[key] = value; } catch { }
-    }
-
-    private bool ReadBool(string key, bool defaultValue)
-    {
-        if (!TryInit()) return defaultValue;
-        try
-        {
-            if (_localSettings!.Values.TryGetValue(key, out var obj) && obj is bool b)
-                return b;
-        }
-        catch { }
-        return defaultValue;
-    }
-
-    private void WriteBool(string key, bool value)
-    {
-        if (!TryInit()) return;
-        try { _localSettings!.Values[key] = value; } catch { }
-    }
+    public bool HasSavedState => Store.Contains(KeyWindowX);
 
     public void Clear()
     {
-        if (!TryInit()) return;
-        try
-        {
-            _localSettings!.Values.Remove(KeyWindowX);
-            _localSettings.Values.Remove(KeyWindowY);
-            _localSettings.Values.Remove(KeyWindowWidth);
-            _localSettings.Values.Remove(KeyWindowHeight);
-            _localSettings.Values.Remove(KeyIsMaximized);
-        }
-        catch { }
+        Store.Remove(KeyWindowX);
+        Store.Remove(KeyWindowY);
+        Store.Remove(KeyWindowWidth);
+        Store.Remove(KeyWindowHeight);
+        Store.Remove(KeyIsMaximized);
     }
 }

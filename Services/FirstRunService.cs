@@ -1,10 +1,8 @@
-using System;
-using Windows.Storage;
-
 namespace DevTemWinUi3.Services;
 
 /// <summary>
 /// Detects first run and tracks shown versions for What's New dialog.
+/// Backed by <see cref="LocalSettingsStore"/> (JSON file).
 /// </summary>
 public sealed class FirstRunService
 {
@@ -13,63 +11,21 @@ public sealed class FirstRunService
 
     public static FirstRunService Current { get; } = new();
 
-    private ApplicationDataContainer? _localSettings;
-    private bool _initialized;
-
-    private bool TryInit()
-    {
-        if (_initialized) return _localSettings != null;
-        _initialized = true;
-        try
-        {
-            _localSettings = ApplicationData.Current.LocalSettings;
-        }
-        catch
-        {
-            // Unpackaged or pre-runtime context — gracefully degrade
-        }
-        return _localSettings != null;
-    }
-
     private FirstRunService()
     {
     }
 
+    private static LocalSettingsStore Store => LocalSettingsStore.Shared;
+
     /// <summary>
     /// Whether this is the first time the app has run.
     /// </summary>
-    public bool IsFirstRun
-    {
-        get
-        {
-            if (!TryInit()) return false;
-            try
-            {
-                if (_localSettings!.Values.TryGetValue(KeyHasRunBefore, out var obj) && obj is bool b)
-                    return !b;
-                return true;
-            }
-            catch { return false; }
-        }
-    }
+    public bool IsFirstRun => !Store.Get(KeyHasRunBefore, false);
 
     /// <summary>
     /// The last version that was shown to the user.
     /// </summary>
-    public string LastShownVersion
-    {
-        get
-        {
-            if (!TryInit()) return string.Empty;
-            try
-            {
-                if (_localSettings!.Values.TryGetValue(KeyLastShownVersion, out var obj) && obj is string s)
-                    return s;
-            }
-            catch { }
-            return string.Empty;
-        }
-    }
+    public string LastShownVersion => Store.Get(KeyLastShownVersion, string.Empty);
 
     /// <summary>
     /// Whether the app has been updated since last run.
@@ -89,13 +45,8 @@ public sealed class FirstRunService
     /// </summary>
     public void MarkAsShown()
     {
-        if (!TryInit()) return;
-        try
-        {
-            _localSettings!.Values[KeyHasRunBefore] = true;
-            _localSettings.Values[KeyLastShownVersion] = AppInfo.Current.Version;
-        }
-        catch { }
+        Store.Set(KeyHasRunBefore, true);
+        Store.Set(KeyLastShownVersion, AppInfo.Current.Version);
     }
 
     /// <summary>

@@ -8,8 +8,7 @@
     mc:Ignorable="d"
     Title="DevTem-WinUI 3">
 
-    <Grid x:Name="RootGrid" Opacity="0" Margin="16" CornerRadius="16"
-          Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+    <Grid x:Name="RootGrid" Opacity="0" Background="Transparent">
         <Grid.RenderTransform>
             <CompositeTransform x:Name="RootTransform" ScaleX="0.96" ScaleY="0.96"/>
         </Grid.RenderTransform>
@@ -19,92 +18,58 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Main content -->
+        <!-- Main content: logo + name + tagline -->
         <StackPanel
             Grid.Row="0"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Spacing="24"
-            MaxWidth="360">
+            Spacing="18">
 
-            <!-- Icon container with accent background -->
-            <Grid Width="88" Height="88" HorizontalAlignment="Center">
-                <Border
-                    CornerRadius="20"
-                    Background="{ThemeResource AccentFillColorDefaultBrush}"
-                    Opacity="0.12"/>
-                <FontIcon
-                    Glyph="&#xE950;"
-                    FontSize="40"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
-            </Grid>
+            <Border
+                Width="88" Height="88"
+                CornerRadius="22"
+                HorizontalAlignment="Center">
+                <Image
+                    Source="ms-appx:///Assets/Logo.png"
+                    Width="88" Height="88"
+                    Stretch="UniformToFill"/>
+            </Border>
 
-            <!-- App name + tagline -->
-            <StackPanel Spacing="8" HorizontalAlignment="Center">
+            <StackPanel Spacing="6" HorizontalAlignment="Center">
                 <TextBlock
                     Text="DevTem-WinUI 3"
-                    FontSize="26"
+                    FontSize="24"
                     FontWeight="SemiBold"
                     HorizontalAlignment="Center"
                     Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
                 <TextBlock
-                    Text="A ready-to-use template for modern Windows apps"
-                    FontSize="13"
+                    Text="Modern Windows app template"
+                    FontSize="12"
                     HorizontalAlignment="Center"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    TextWrapping="Wrap"
-                    TextAlignment="Center"/>
-            </StackPanel>
-
-            <!-- Feature chips -->
-            <StackPanel
-                Orientation="Horizontal"
-                HorizontalAlignment="Center"
-                Spacing="6"
-                Margin="0,4,0,0">
-                <Border CornerRadius="8" Padding="10,5"
-                        Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
-                    <TextBlock Text="Auto-Updates" FontSize="11"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                </Border>
-                <Border CornerRadius="8" Padding="10,5"
-                        Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
-                    <TextBlock Text="Theme Engine" FontSize="11"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                </Border>
-                <Border CornerRadius="8" Padding="10,5"
-                        Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
-                    <TextBlock Text="System Tray" FontSize="11"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                </Border>
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
         </StackPanel>
 
-        <!-- Bottom: loader + version -->
+        <!-- Bottom: slim loading bar + version -->
         <StackPanel
             Grid.Row="1"
             HorizontalAlignment="Center"
-            VerticalAlignment="Bottom"
-            Spacing="14"
-            Margin="0,0,0,20">
+            Spacing="12"
+            Margin="0,0,0,28">
 
-            <!-- Slim progress bar -->
-            <ProgressRing
-                x:Name="LoadingProgress"
-                Width="24" Height="24"
+            <ProgressBar
+                Width="220" Height="3"
                 HorizontalAlignment="Center"
-                IsActive="True"
-                IsIndeterminate="True"/>
+                IsIndeterminate="True"
+                ShowPaused="False"
+                ShowError="False"/>
 
             <TextBlock
                 x:Name="VersionText"
                 Text="Version 0.0.1"
                 FontSize="11"
                 HorizontalAlignment="Center"
-                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                CharacterSpacing="30"/>
+                Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
         </StackPanel>
     </Grid>
 </Window>

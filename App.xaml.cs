@@ -87,6 +87,16 @@ public partial class App : Application
 
         try
         {
+            if (!SettingsService.Current.AutoCheck)
+            {
+                LoggingService.Log.Information("Auto-update check skipped: disabled in settings");
+                return;
+            }
+        }
+        catch { }
+
+        try
+        {
             var update = await svc.CheckForUpdatesAsync();
             if (update is null)
             {

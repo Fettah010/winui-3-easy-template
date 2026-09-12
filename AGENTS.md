@@ -32,9 +32,10 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager`. |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
-| `Services/SettingsService.cs` | Persisted settings via `Windows.Storage.ApplicationData`. |
+| `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/AppInfo.cs` | Assembly-version accessors. |
-| `Assets/app.ico` | App icon. |
+| `Assets/app.ico` | App + installer + tray + shortcut icon (single source, `vpk --icon`). |
+| `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
 | `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release. |
 | `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
 | `RunDevTem.vbs` | Silent launcher (hides terminal window). **Use this for desktop shortcut.** |
@@ -147,7 +148,9 @@ in `DevTemWinUi3.csproj` — keep all three in sync).
 3. **Velopack versions must keep increasing.** Same version can only go to one channel.
 4. **Channels ≠ git branches.** Channels are separate feeds. Branches track releases.
 5. **Tag naming determines channel:** `v0.0.1-beta` → beta, `v0.0.1` → stable.
-6. **SettingsService requires runtime context.** Wrap access in try-catch.
+6. **Never use ApplicationData.LocalSettings.** It does not persist for unpackaged
+   apps (no settings.dat is ever written) — all settings go through
+   `LocalSettingsStore` (`%LocalAppData%\DevTemWinUi3\settings.json`).
 7. **MVVM toolkit AOT warnings.** Suppressed via `<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>`.
 8. **Desktop shortcut must use VBS launcher.** `.bat` shows terminal window.
 9. **UpdatesPage is deprecated.** Do not use or modify - kept for reference only.
