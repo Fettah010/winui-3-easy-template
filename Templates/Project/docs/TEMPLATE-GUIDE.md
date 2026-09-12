@@ -160,3 +160,22 @@ Notes from the Velopack docs (verified against `vpk pack -h`):
 `Scripts/build-and-release.ps1` does not sign today — extend its `vpk pack`
 call with `--signParams` once you hold a cert (omit the whole section with
 `--updates false`: no installer exists to sign).
+
+### MSIX packaging (sideload or Store)
+
+`Packaging/Msix/Package.appxmanifest` + `Scripts/build-msix.ps1` produce an
+MSIX from a Release publish (tile art is generated from `Assets/Logo.png`,
+version is synced from the csproj). This **replaces the Velopack installer**,
+not the app: under MSIX the in-app updater reports "not installed" by design
+(Store/AppInstaller owns updates), and registry autostart does not apply —
+the manifest registers a disabled StartupTask instead, and the app disables
+its autostart toggle itself when packaged (`AppInfo.IsPackaged`).
+
+```powershell
+powershell -File Scripts/build-msix.ps1 -DryRun     # validate without SDK
+powershell -File Scripts/build-msix.ps1 -Publisher "CN=Acme" -CertificatePath C:\certs\app.pfx -CertificatePassword "secret"
+```
+
+- `Publisher` MUST match the signing certificate subject.
+- Unsigned packages validate the pipeline but cannot be installed — sign
+  them, even self-signed for testing.

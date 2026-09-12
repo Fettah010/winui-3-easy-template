@@ -194,6 +194,7 @@
                     <ToggleSwitch
                         x:Name="AutoStartToggle"
                         IsOn="{x:Bind ViewModel.AutoStart, Mode=TwoWay}"
+                        IsEnabled="{x:Bind ViewModel.AutoStartAvailable, Mode=OneWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
             </StackPanel>

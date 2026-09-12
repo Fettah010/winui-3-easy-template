@@ -37,6 +37,13 @@ MATRIX PASSED (4 combos + page probe, 0 warnings each).
   `CrashReportingService` + hooks + tests; live disabled-path proof).
 - [x] Code-signing guidance (TEMPLATE-GUIDE §5: `--signParams`,
   `VPK_*` env secrets, self-signed testing, EV/OV reputation notes).
+- [x] MSIX packaging: `Packaging/Msix/Package.appxmanifest` +
+  `Scripts/build-msix.ps1` (publish, tile art from `Logo.png`, version
+  sync, makeappx pack, optional signtool sign, `-DryRun`) + `msix.yml` CI
+  (ephemeral self-signed cert, uploads package + cert). Packaged runs
+  disable the registry autostart toggle themselves (`AppInfo.IsPackaged`).
+  Verified: DryRun green (staging + manifest sync inspected), matrix green,
+  Settings screenshot. Full makeappx/sign proof happens in CI (no SDK here).
 
 - [ ] Periodic update checks while trayed (timer honoring the auto-check
   setting). Small, completes the tray story. Today: startup + manual only.

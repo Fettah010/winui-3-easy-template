@@ -63,11 +63,13 @@ public class LocalizationCoverageTests
         Assert.AreEqual("Canal de actualización", loc.GetString("SettingsChannelHeader"));
         Assert.AreEqual("Buscar actualizaciones", loc.GetString("TrayCheckUpdates"));
         Assert.AreEqual("Salir", loc.GetString("TrayExit"));
+        Assert.AreEqual("Las instalaciones empaquetadas (MSIX) gestionan el inicio en Configuración de Windows.", loc.GetString("SettingsTrayPackagedNote"));
 
         loc.SetLanguage("fr-FR");
         Assert.AreEqual("Canal de mise à jour", loc.GetString("SettingsChannelHeader"));
         Assert.AreEqual("Rechercher les mises à jour", loc.GetString("TrayCheckUpdates"));
         Assert.AreEqual("Quitter", loc.GetString("TrayExit"));
+        Assert.AreEqual("Les installations packagées (MSIX) gèrent le démarrage dans les paramètres Windows.", loc.GetString("SettingsTrayPackagedNote"));
     }
 
     [TestMethod]

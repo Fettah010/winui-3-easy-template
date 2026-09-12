@@ -1,0 +1,48 @@
+name: msix
+
+# MSIX packaging proof: publishes the app, packs with makeappx and signs
+# with an ephemeral self-signed cert, then uploads the package + cert.
+# Proves Scripts/build-msix.ps1 + Packaging/Msix end to end on every change.
+# Release signing with a real cert happens manually (see TEMPLATE-GUIDE §5).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Packaging/Msix/**"
+      - "Scripts/build-msix.ps1"
+      - ".github/workflows/msix.yml"
+      - "DevTemWinUi3.csproj"
+      - "Assets/Logo.png"
+  workflow_dispatch:
+
+jobs:
+  pack:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Ephemeral test cert (test-only identity, never shipped)
+        shell: pwsh
+        run: |
+          $pwd = ConvertTo-SecureString "ci-test-only" -AsPlainText -Force
+          $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=DevTem-CI-Test" `
+            -KeyUsage DigitalSignature -CertStoreLocation "Cert:\CurrentUser\My" `
+            -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+          Export-PfxCertificate -Cert $cert -FilePath ci-test.pfx -Password $pwd | Out-Null
+          Export-Certificate -Cert $cert -FilePath DevTem-CI-Test.cer | Out-Null
+      - name: Build + sign MSIX
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/build-msix.ps1 -Publisher "CN=DevTem-CI-Test" -CertificatePath "ci-test.pfx" -CertificatePassword "ci-test-only"
+      - name: Remove test key
+        if: always()
+        run: Remove-Item ci-test.pfx -Force -ErrorAction SilentlyContinue
+      - name: Upload package + cert
+        uses: actions/upload-artifact@v4
+        with:
+          name: msix-test
+          path: |
+            Releases/Msix/*.msix
+            DevTem-CI-Test.cer

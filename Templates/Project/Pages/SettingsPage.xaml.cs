@@ -86,6 +86,8 @@ public sealed partial class SettingsPage : Page, INavigationAware
         MinimizeCard.Description = loc.GetString("SettingsTrayMinimizeDesc");
         AutoStartCard.Header = loc.GetString("SettingsAutoStart");
         AutoStartCard.Description = loc.GetString("SettingsTrayAutoStartDesc");
+        if (!ViewModel.AutoStartAvailable)
+            AutoStartCard.Description = loc.GetString("SettingsTrayPackagedNote");
 
         AppVersionCard.Header = loc.GetString("SettingsAppVersion");
         RepoCard.Header = loc.GetString("SettingsRepoHeader");

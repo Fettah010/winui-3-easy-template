@@ -26,6 +26,13 @@ public partial class SettingsPageViewModel : ObservableObject
     private string _appVersion = string.Empty;
 
     /// <summary>
+    /// MSIX-packaged apps cannot use registry autostart (virtualized store):
+    /// the toggle binds IsEnabled to this and shows a note instead.
+    /// Unpackaged runs (including Velopack installs) manage HKCU Run directly.
+    /// </summary>
+    public bool AutoStartAvailable => !AppInfo.IsPackaged;
+
+    /// <summary>
     /// Guards change handlers while the constructor loads persisted values,
     /// so loading never writes back or triggers side effects.
     /// </summary>
@@ -112,6 +119,9 @@ public partial class SettingsPageViewModel : ObservableObject
     partial void OnAutoStartChanged(bool value)
     {
         if (!_loaded) return;
+        // MSIX-packaged runs cannot use registry autostart (virtualized):
+        // the toggle is disabled there (see AutoStartAvailable).
+        if (!AutoStartAvailable) return;
 #if (tray)
         try
         {
