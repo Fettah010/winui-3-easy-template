@@ -69,16 +69,6 @@ public sealed class DesktopToastService
         return TryShow("tray", loc.GetString("TrayMinTitle"), loc.GetString("TrayMinBody"));
     }
 
-    /// <summary>
-    /// Shows the "updates need an installed app" toast instead of the inline
-    /// status card. Returns whether the OS accepted it.
-    /// </summary>
-    public bool TryShowNotInstalled()
-    {
-        var loc = LocalizationService.Current;
-        return TryShow("update", loc.GetString("NotifUpdates"), loc.GetString("SettingsNotInstalled"));
-    }
-
     private bool TryShow(string tag, string title, string body)
     {
         if (!IsAvailable)

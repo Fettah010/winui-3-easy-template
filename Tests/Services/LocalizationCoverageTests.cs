@@ -91,6 +91,21 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void DownloadProgress_FormatWorksInAllLanguages()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Downloading… 42%", loc.GetString("SettingsDownloadingProgress", 42));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Descargando… 42%", loc.GetString("SettingsDownloadingProgress", 42));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Téléchargement… 42%", loc.GetString("SettingsDownloadingProgress", 42));
+    }
+
+    [TestMethod]
     public void SetLanguage_UnknownTag_KeepsCurrentLanguage()
     {
         var loc = LocalizationService.Current;

@@ -36,6 +36,11 @@
         </VisualStateManager.VisualStateGroups>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <!-- Grid wrapper: forces viewport-width measure so the inner panel is
+             always exactly min(viewport, MaxWidth), positioned identically in
+             every language. A bare StackPanel sizes to its longest unwrapped
+             line, which moved the whole page when translations changed length. -->
+        <Grid>
         <StackPanel x:Name="SettingsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Stretch">
 
             <TextBlock x:Name="SettingsTitleText" Text="Settings" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
@@ -138,6 +143,16 @@
                     Description="No check performed yet."
                     Visibility="Collapsed">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <ProgressBar
+                            x:Name="DownloadProgressBar"
+                            Width="140"
+                            Minimum="0"
+                            Maximum="100"
+                            Value="0"
+                            ShowPaused="False"
+                            ShowError="False"
+                            Visibility="Collapsed"
+                            VerticalAlignment="Center"/>
                         <TextBlock
                             x:Name="UpdateStatusText"
                             Text=""
@@ -205,6 +220,7 @@
             </StackPanel>
 
         </StackPanel>
+        </Grid>
     </ScrollViewer>
     </Grid>
 </Page>

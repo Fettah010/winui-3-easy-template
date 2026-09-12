@@ -210,11 +210,9 @@ public sealed partial class SettingsPage : Page
 
         if (!svc.IsInstalled)
         {
-            // Prefer the desktop toast over the inline card for this message;
-            // only fall back to the card when OS toasts are unavailable.
-            if (DesktopToastService.Current.TryShowNotInstalled())
-                return;
-            ShowUpdateStatus(UpdateService.NotInstalledMessage, false);
+            // Unpackaged run: explain via the animated in-app toast (modern
+            // WinUI style) instead of the inline status card.
+            LoggingService.Log.Information("Update check: app is not installed, showing toast");
             NotificationService.Current.Info(loc.GetString("NotifUpdates"), loc.GetString("SettingsNotInstalled"));
             return;
         }
@@ -257,11 +255,31 @@ public sealed partial class SettingsPage : Page
         var loc = LocalizationService.Current;
         InstallUpdateButton.IsEnabled = false;
         InstallUpdateButton.Content = loc.GetString("SettingsDownloading");
+        CheckUpdatesButton.IsEnabled = false;
+
+        // Smooth determinate progress while Velopack downloads the delta/full
+        // package; the callback runs on a background thread, so marshal in.
+        DownloadProgressBar.Visibility = Visibility.Visible;
+        DownloadProgressBar.Value = 0;
+        UpdateStatusText.Text = loc.GetString("SettingsDownloadingProgress", 0);
 
         try
         {
-            await UpdateService.Current.DownloadUpdatesAsync(_pendingUpdate);
+            await UpdateService.Current.DownloadUpdatesAsync(_pendingUpdate, percent =>
+            {
+                try
+                {
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        DownloadProgressBar.Value = percent;
+                        UpdateStatusText.Text = loc.GetString("SettingsDownloadingProgress", percent);
+                    });
+                }
+                catch { }
+            });
+
             UpdateStatusText.Text = loc.GetString("SettingsInstalling");
+            DownloadProgressBar.Visibility = Visibility.Collapsed;
             InstallUpdateButton.Visibility = Visibility.Collapsed;
             NotificationService.Current.Success(loc.GetString("NotifUpdates"), "Update downloaded. Restarting…");
 
@@ -271,8 +289,10 @@ public sealed partial class SettingsPage : Page
         catch (Exception ex)
         {
             UpdateStatusText.Text = $"Install failed: {ex.Message}";
+            DownloadProgressBar.Visibility = Visibility.Collapsed;
             InstallUpdateButton.IsEnabled = true;
             InstallUpdateButton.Content = loc.GetString("SettingsInstall");
+            CheckUpdatesButton.IsEnabled = true;
             NotificationService.Current.Error(loc.GetString("SettingsCheckFailed"), ex.Message);
         }
     }
@@ -282,6 +302,8 @@ public sealed partial class SettingsPage : Page
         var loc = LocalizationService.Current;
         UpdateStatusCard.Visibility = Visibility.Visible;
         UpdateStatusCard.Description = loc.GetString("SettingsCheckHeader");
+        DownloadProgressBar.Visibility = Visibility.Collapsed;
+        DownloadProgressBar.Value = 0;
         UpdateStatusText.Text = message;
         InstallUpdateButton.Visibility = showInstall ? Visibility.Visible : Visibility.Collapsed;
         if (showInstall)

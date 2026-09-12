@@ -107,6 +107,11 @@ $packIcon = Join-Path $ProjectRoot "Assets\app.ico"
 if (Test-Path $packIcon) {
     $packArgs += @("--icon", $packIcon)
 }
+# Branded splash shown by Setup.exe while it installs (app logo, 256px).
+$splashImage = Join-Path $ProjectRoot "Assets\Logo.png"
+if (Test-Path $splashImage) {
+    $packArgs += @("--splashImage", $splashImage)
+}
 if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
     if (-not (Test-Path $ReleaseNotes)) { throw "Release notes file not found: $ReleaseNotes" }
     $packArgs += @("--releaseNotes", $ReleaseNotes)

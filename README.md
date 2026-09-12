@@ -19,8 +19,8 @@ complete starting template for WinUI 3 apps.
 ### Quick start (runs from source)
 
 ```powershell
-dotnet build -c Debug
-dotnet run
+dotnet build -c Debug -p:Platform=x64
+dotnet run -c Debug -p:Platform=x64
 ```
 
 The app window uses a native **Mica** backdrop + rounded corners. On startup
@@ -32,13 +32,25 @@ is downloaded silently, and the user is asked to restart once it is ready.
 #### Auto-updates (Velopack)
 
 The app checks GitHub Releases on startup. When a new version is found, it
-downloads silently and prompts the user to restart.
+downloads with a live progress bar and prompts the user to restart once the
+download finishes, then applies the update and restarts smoothly.
 
 ```powershell
 # Tag-based release
 git tag v0.0.2-beta
 git push origin v0.0.2-beta
 ```
+
+#### Notifications
+
+Two complementary channels:
+
+- **In-app toasts** (`NotificationService`) — small animated cards,
+  bottom-right, theme-aware WinUI 3 styling. Used for update results,
+  e.g. the "updates need an installed app" notice.
+- **Desktop toasts** (`DesktopToastService`) — native Action Center
+  notifications via the Windows App SDK. Used when the app minimizes to
+  the system tray; clicking the toast reopens the app.
 
 #### Logging (Serilog)
 
@@ -106,9 +118,10 @@ LocalizationService.Current.SetLanguage("es-ES");
 // Available languages: en-US, es-ES, fr-FR
 ```
 
-The app supports runtime language switching via a language selector in Settings.
-All UI strings are managed through `LocalizationService` using a dictionary-based
-approach for reliable unpackaged app support.
+The app supports instant runtime language switching via a language selector
+in Settings — no restart needed. The choice is persisted across launches.
+All UI strings are managed through `LocalizationService` using a
+dictionary-based approach for reliable unpackaged app support.
 
 ### Releases
 
@@ -138,6 +151,9 @@ Or run it manually from the **Actions** tab: *Run workflow* → enter the versio
 Program.cs                 # Velopack bootstrap + logging init
 App.xaml(.cs)              # Application entry + DI initialization
 MainWindow.xaml(.cs)       # Shell: custom title bar + NavigationView
+Controls/
+  WrapPanel.cs             # Dependency-free wrap panel for button rows
+  WrapLayout.cs            # Pure, unit-tested wrapping math
 Pages/
   HomePage.xaml            # Landing page
   AboutPage.xaml           # App info, version, links
@@ -148,6 +164,9 @@ Services/
   LoggingService.cs        # Serilog setup
   UpdateService.cs         # Velopack UpdateManager wrapper
   SettingsService.cs       # Persisted user preferences
+  ResponsiveLayout.cs      # Breakpoints + DPI math (min size, compact pane)
+  DesktopToastService.cs   # OS Action Center toasts
+  NotificationService.cs   # In-app animated toast cards
   WindowStateService.cs    # Window size/position persistence
   FirstRunService.cs       # First-run detection + What's New dialog
   DatabaseService.cs       # SQLite database access
@@ -156,6 +175,7 @@ Services/
   ServiceLocator.cs        # Dependency injection container
 Tests/
   Services/                # Unit tests (requires app runtime for DI tests)
+  Controls/                # Layout math tests
 Scripts/
   build-and-release.ps1    # publish + pack + upload (used by CI too)
   create-shortcut.ps1      # creates desktop shortcut

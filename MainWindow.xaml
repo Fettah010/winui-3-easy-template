@@ -96,15 +96,15 @@
             <Frame x:Name="ContentFrame"/>
         </NavigationView>
 
-        <!-- Toast notification host: bottom-right corner -->
-        <Canvas
+        <!-- Toast notification host: bottom-right corner. A content-sized
+             StackPanel (not Canvas: zero-size Canvases park children
+             off-screen) so toasts always lay out; newest inserts on top. -->
+        <StackPanel
             x:Name="NotificationHost"
             Grid.Row="1"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Margin="0,0,0,16"
-            IsHitTestVisible="False"
-            Canvas.Left="0"
-            Canvas.Top="0"/>
+            Spacing="8"/>
     </Grid>
 </Window>

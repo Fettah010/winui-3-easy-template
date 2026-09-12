@@ -30,7 +30,6 @@ public class DesktopToastServiceTests
     {
         // Registration never happened in the test host: must fail gracefully.
         Assert.IsFalse(DesktopToastService.Current.TryShowMinimized());
-        Assert.IsFalse(DesktopToastService.Current.TryShowNotInstalled());
     }
 
     [TestMethod]
