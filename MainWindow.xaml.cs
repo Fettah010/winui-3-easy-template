@@ -15,6 +15,9 @@ public sealed partial class MainWindow : Window
     [DllImport("user32.dll")]
     private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
     private readonly WindowStateService _windowState = WindowStateService.Current;
     private readonly NavigationService _nav = NavigationService.Current;
 
@@ -64,6 +67,9 @@ public sealed partial class MainWindow : Window
 
         // Show first-run or what's-new dialog after window is shown
         _ = ShowFirstRunDialogIfNeeded();
+
+        // Listen for second-instance activation signals (single-instance enforcement)
+        Program.StartActivationListener(this.DispatcherQueue, BringToFront);
     }
 
     private void SetTitleBarColors()
@@ -211,6 +217,19 @@ public sealed partial class MainWindow : Window
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             SetWindowPos(hwnd, new IntPtr(-1), 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0040);
             SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0040);
+        }
+        catch { }
+    }
+
+    private void BringToFront()
+    {
+        try
+        {
+            this.AppWindow.Show();
+            this.Activate();
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            SetForegroundWindow(hwnd);
         }
         catch { }
     }
