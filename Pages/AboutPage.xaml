@@ -48,6 +48,7 @@
             <StackPanel Spacing="4">
                 <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                 <TextBlock
+                    x:Name="AboutSubtitleText"
                     Text="Everything behind DevTem — version, stack, license and links."
                     Style="{ThemeResource BodyTextBlockStyle}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -110,6 +111,7 @@
                         </StackPanel>
 
                         <TextBlock
+                            x:Name="AboutDescriptionText"
                             Text="A production-ready starter template: Mica + native WinUI 3 styling, persisted settings, Velopack auto-updates, Serilog diagnostics and a one-command release pipeline."
                             Style="{ThemeResource BodyTextBlockStyle}"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -117,9 +119,11 @@
 
                         <StackPanel x:Name="HeroLinks" Orientation="Horizontal" Spacing="8">
                             <HyperlinkButton
+                                x:Name="GithubLink"
                                 Content="GitHub Repository"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template"/>
                             <HyperlinkButton
+                                x:Name="ReportIssueLink"
                                 Content="Report an issue"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"/>
                         </StackPanel>
@@ -137,18 +141,18 @@
                         <StackPanel Spacing="12" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <FontIcon Glyph="&#xE946;" FontSize="16" Foreground="{ThemeResource AccentFillColorDefaultBrush}"/>
-                                <TextBlock Text="AT A GLANCE" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                <TextBlock x:Name="GlanceTitleText" Text="AT A GLANCE" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Version" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock x:Name="GlanceVersionLabel" Text="Version" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Framework" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock x:Name="GlanceFrameworkLabel" Text="Framework" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Text=".NET 10 / WinUI 3" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Platform" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock x:Name="GlancePlatformLabel" Text="Platform" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Text="Windows 10/11 (x64, ARM64)" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
                             </StackPanel>
                         </StackPanel>
@@ -175,28 +179,28 @@
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                    <ctk:SettingsCard Header="Name" Description="Product name">
+                    <ctk:SettingsCard x:Name="NameCard" Header="Name" Description="Product name">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8A5;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <TextBlock Text="DevTem-WinUI 3" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="Version" Description="Assembly version">
+                    <ctk:SettingsCard x:Name="VersionCard" Header="Version" Description="Assembly version">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE930;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <TextBlock Text="{x:Bind AppVersion, Mode=OneTime}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="Framework" Description="Runtime + UI stack">
+                    <ctk:SettingsCard x:Name="FrameworkCard" Header="Framework" Description="Runtime + UI stack">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE737;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <TextBlock Text=".NET 10 / WinUI 3" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="Platform" Description="Supported targets">
+                    <ctk:SettingsCard x:Name="PlatformCard" Header="Platform" Description="Supported targets">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE7F4;"/>
                         </ctk:SettingsCard.HeaderIcon>
@@ -212,28 +216,28 @@
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                    <ctk:SettingsCard Header="Auto-updates" Description="Installer + delta updates">
+                    <ctk:SettingsCard x:Name="UpdatesCard" Header="Auto-updates" Description="Installer + delta updates">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE74E;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <TextBlock Text="Velopack 1.2" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="Logging" Description="File + debugger sinks">
+                    <ctk:SettingsCard x:Name="LoggingCard" Header="Logging" Description="File + debugger sinks">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xEADF;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <TextBlock Text="Serilog" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="MVVM" Description="Observable properties + commands">
+                    <ctk:SettingsCard x:Name="MvvmCard" Header="MVVM" Description="Observable properties + commands">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xEB4A;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <TextBlock Text="CommunityToolkit.Mvvm" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="UI Controls" Description="Cards, segmented + helpers">
+                    <ctk:SettingsCard x:Name="UiCard" Header="UI Controls" Description="Cards, segmented + helpers">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE710;"/>
                         </ctk:SettingsCard.HeaderIcon>
@@ -261,11 +265,12 @@
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                    <ctk:SettingsCard Header="MIT License" Description="Free for personal and commercial use.">
+                    <ctk:SettingsCard x:Name="LicenseCard" Header="MIT License" Description="Free for personal and commercial use.">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8A7;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="ViewLicenseButton"
                             Content="View License"
                             NavigateUri="https://github.com/Fettah010/winui-3-easy-template/blob/main/LICENSE"
                             HorizontalAlignment="Right"/>
@@ -280,31 +285,34 @@
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                    <ctk:SettingsCard Header="Source Code" Description="Star or fork the template">
+                    <ctk:SettingsCard x:Name="SourceCard" Header="Source Code" Description="Star or fork the template">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE8C6;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="GithubButton"
                             Content="GitHub"
                             NavigateUri="https://github.com/Fettah010/winui-3-easy-template"
                             HorizontalAlignment="Right"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="Releases" Description="Changelog + installers">
+                    <ctk:SettingsCard x:Name="ReleasesCard" Header="Releases" Description="Changelog + installers">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE785;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="ReleasesButton"
                             Content="View Releases"
                             NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"
                             HorizontalAlignment="Right"/>
                     </ctk:SettingsCard>
 
-                    <ctk:SettingsCard Header="Report Issues" Description="Bugs + feature requests">
+                    <ctk:SettingsCard x:Name="IssuesCard" Header="Report Issues" Description="Bugs + feature requests">
                         <ctk:SettingsCard.HeaderIcon>
                             <FontIcon Glyph="&#xE783;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="IssuesButton"
                             Content="Open Issue"
                             NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"
                             HorizontalAlignment="Right"/>

@@ -476,12 +476,13 @@ public sealed class SystemTrayService : IDisposable
         var hMenu = CreatePopupMenu();
         if (hMenu == IntPtr.Zero) return;
 
-        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_SHOW, "Show DevTem-WinUI 3");
+        var loc = LocalizationService.Current;
+        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_SHOW, loc.GetString("TrayShow"));
         AppendMenuW(hMenu, 0x0000, IntPtr.Zero, null);
-        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_CHECK_UPDATES, "Check for updates");
-        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_SETTINGS, "Settings");
+        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_CHECK_UPDATES, loc.GetString("TrayCheckUpdates"));
+        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_SETTINGS, loc.GetString("TraySettings"));
         AppendMenuW(hMenu, 0x0000, IntPtr.Zero, null);
-        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_EXIT, "Exit");
+        AppendMenuW(hMenu, 0x0000, (IntPtr)ID_TRAY_EXIT, loc.GetString("TrayExit"));
 
         SetForegroundWindow(_windowHandle);
 

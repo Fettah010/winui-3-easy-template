@@ -77,10 +77,20 @@ public sealed partial class MainWindow : Window
         try { this.AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico")); }
         catch { }
 
-        // Apply localized strings
+        // Apply localized strings (and keep them live: the nav pane listens
+        // for language changes; cached pages refresh in OnNavigatedTo).
         var loc = LocalizationService.Current;
         NavHomeItem.Content = loc.GetString("NavHome");
         NavAboutItem.Content = loc.GetString("NavAbout");
+        loc.LanguageChanged += (_, _) =>
+        {
+            try
+            {
+                NavHomeItem.Content = LocalizationService.Current.GetString("NavHome");
+                NavAboutItem.Content = LocalizationService.Current.GetString("NavAbout");
+            }
+            catch { }
+        };
 
         // Title bar setup
         this.ExtendsContentIntoTitleBar = true;
@@ -420,13 +430,7 @@ public sealed partial class MainWindow : Window
             {
                 XamlRoot = this.Content.XamlRoot,
                 Title = loc.GetString("FirstRunTitle"),
-                Content = "A ready-to-use template for WinUI 3 desktop apps.\n\n" +
-                          "This template includes:\n" +
-                          "• Settings with theme selector\n" +
-                          "• Auto-updates via GitHub Releases\n" +
-                          "• Logging system\n" +
-                          "• Desktop shortcut support\n\n" +
-                          "Get started by exploring the app!",
+                Content = loc.GetString("FirstRunContent"),
                 PrimaryButtonText = loc.GetString("FirstRunButton"),
                 DefaultButton = ContentDialogButton.Primary
             };

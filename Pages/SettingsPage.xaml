@@ -55,6 +55,7 @@
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
                 <ctk:SettingsCard
+                    x:Name="ThemeCard"
                     Header="Theme"
                     Description="Choose between light, dark, or system theme.">
                     <ComboBox
@@ -62,9 +63,9 @@
                         SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}"
                         HorizontalAlignment="Right"
                         MinWidth="120">
-                        <ComboBoxItem Content="System"/>
-                        <ComboBoxItem Content="Light"/>
-                        <ComboBoxItem Content="Dark"/>
+                        <ComboBoxItem x:Name="ThemeSystemItem" Content="System"/>
+                        <ComboBoxItem x:Name="ThemeLightItem" Content="Light"/>
+                        <ComboBoxItem x:Name="ThemeDarkItem" Content="Dark"/>
                     </ComboBox>
                 </ctk:SettingsCard>
             </StackPanel>
@@ -77,7 +78,7 @@
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <ctk:SettingsCard Header="Language" Description="Choose the display language for the app.">
+                <ctk:SettingsCard x:Name="LanguageCard" Header="Language" Description="Choose the display language for the app.">
                     <ComboBox
                         x:Name="LanguageComboBox"
                         HorizontalAlignment="Right"
@@ -95,6 +96,7 @@
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
                 <ctk:SettingsCard
+                    x:Name="ChannelCard"
                     Header="Update channel"
                     Description="The channel determines which release feed the app checks for updates.">
                     <ctk:Segmented
@@ -121,6 +123,7 @@
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
+                    x:Name="AutoCheckCard"
                     Header="Check for updates on startup"
                     Description="Automatically check for updates when the app starts.">
                     <ToggleSwitch
@@ -161,6 +164,7 @@
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
                 <ctk:SettingsCard
+                    x:Name="MinimizeCard"
                     Header="Minimize to system tray"
                     Description="When closed, the app minimizes to the system tray instead of exiting.">
                     <ToggleSwitch
@@ -170,6 +174,7 @@
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
+                    x:Name="AutoStartCard"
                     Header="Start automatically with Windows"
                     Description="Launch the app when you sign in to Windows.">
                     <ToggleSwitch
@@ -187,11 +192,11 @@
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <ctk:SettingsCard Header="App version">
+                <ctk:SettingsCard x:Name="AppVersionCard" Header="App version">
                     <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneTime}" VerticalAlignment="Center"/>
                 </ctk:SettingsCard>
 
-                <ctk:SettingsCard Header="Repository">
+                <ctk:SettingsCard x:Name="RepoCard" Header="Repository">
                     <HyperlinkButton
                         Content="GitHub"
                         NavigateUri="https://github.com/Fettah010/winui-3-easy-template"

@@ -113,6 +113,7 @@
                                 Content="Open Settings"
                                 Click="OpenSettingsQuickButton_Click"/>
                             <HyperlinkButton
+                                x:Name="ReleasesLinkButton"
                                 Content="How releases work"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"/>
                         </StackPanel>
@@ -154,7 +155,7 @@
                             VerticalAlignment="Center"/>
 
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="StatusTitleText" Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock x:Name="StatusCaptionText"
                                        Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
@@ -162,15 +163,22 @@
                                        TextWrapping="Wrap"/>
                         </StackPanel>
 
-                        <InfoBadge
+                        <!-- Fixed-size circle: InfoBadge auto-sizes to its icon and
+                             renders as an egg/capsule, so use an explicit ring. -->
+                        <Border
                             Grid.Column="2"
                             x:Name="StatusBadge"
+                            Width="22" Height="22"
+                            CornerRadius="11"
                             Background="{ThemeResource SystemFillColorSuccessBrush}"
                             VerticalAlignment="Center">
-                            <InfoBadge.IconSource>
-                                <FontIconSource Glyph="&#xE73E;" FontSize="10"/>
-                            </InfoBadge.IconSource>
-                        </InfoBadge>
+                            <FontIcon
+                                Glyph="&#xE73E;"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                        </Border>
                     </Grid>
                 </Border>
 
@@ -184,13 +192,14 @@
                     Padding="16">
                     <StackPanel Spacing="8" VerticalAlignment="Center">
                         <TextBlock
+                            x:Name="QuickActionsText"
                             Text="QUICK ACTIONS"
                             Style="{ThemeResource CaptionTextBlockStyle}"
                             FontWeight="SemiBold"
                             Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Content="Settings" Click="OpenSettingsQuickButton_Click"/>
-                            <Button Content="About" Click="OpenAboutQuickButton_Click"/>
+                            <Button x:Name="QuickSettingsButton" Content="Settings" Click="OpenSettingsQuickButton_Click"/>
+                            <Button x:Name="QuickAboutButton" Content="About" Click="OpenAboutQuickButton_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -199,6 +208,7 @@
             <!-- Feature grid -->
             <StackPanel Spacing="8">
                 <TextBlock
+                    x:Name="IncludedText"
                     Text="WHAT'S INCLUDED"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
@@ -226,8 +236,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE74E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="FeatUpdatesTitle" Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
+                                x:Name="FeatUpdatesDesc"
                                 Text="Stable / Beta / Dev channels over GitHub Releases with one-click install and restart."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -245,8 +256,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE771;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Settings that persist" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="FeatSettingsTitle" Text="Settings that persist" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
+                                x:Name="FeatSettingsDesc"
                                 Text="Theme, language, update channel, tray and autostart — saved locally, restored on launch."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -264,8 +276,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xEADF;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Diagnostics built in" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="FeatDiagTitle" Text="Diagnostics built in" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
+                                x:Name="FeatDiagDesc"
                                 Text="Serilog rolling logs plus notification toasts so update checks never fail silently."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -283,8 +296,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE96E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Tray + native shell" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="FeatTrayTitle" Text="Tray + native shell" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
+                                x:Name="FeatTrayDesc"
                                 Text="Mica backdrop, custom title bar, minimize-to-tray with quick Settings and update actions."
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -303,16 +317,19 @@
                 Padding="16">
                 <StackPanel Spacing="8">
                     <TextBlock
+                        x:Name="ShipTitleText"
                         Text="SHIP YOUR FIRST RELEASE"
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                     <TextBlock
+                        x:Name="ShipBodyText"
                         Text="1. Bump Version in DevTemWinUi3.csproj  →  2. git tag v0.0.2-beta + push  →  3. CI builds, packs and publishes to GitHub Releases."
                         Style="{ThemeResource BodyTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap"/>
                     <TextBlock
+                        x:Name="ShipNoteText"
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                         TextWrapping="Wrap"
