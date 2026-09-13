@@ -51,6 +51,10 @@ catch {
 if (-not (Test-Path -LiteralPath $Source)) {
     throw "Source not found: $Source"
 }
+$sourceItem = Get-Item -LiteralPath $Source
+if ($sourceItem.PSIsContainer -or $sourceItem.Extension -ine ".png") {
+    throw "Source must be a PNG file: $Source"
+}
 
 $sourceImage = $null
 try {

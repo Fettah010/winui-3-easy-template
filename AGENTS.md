@@ -5,7 +5,7 @@ first before making changes.
 
 ## Session bootstrap (agents — do this before touching anything)
 
-1. Read `AGENTS.md` → `docs/STATE.md` → `docs/RESTRUCTURE-PLAN.md`, in order.
+1. Read `AGENTS.md` → `docs/STATE.md` → `docs/TEMPLATE-REUSABILITY-ROADMAP.md`, in order.
 2. `git status`, `git log --oneline -5`, newest tags.
 3. Confirm versions: csproj `<Version>`/`<InformationalVersion>` vs tags.
 4. `dotnet build -c Debug -p:Platform=x64` — the tree must be green
@@ -14,9 +14,9 @@ first before making changes.
    when you finish.
 
 Doc map: `AGENTS.md` conventions (stable) · `docs/STATE.md` current facts
-(mutable) · `docs/RESTRUCTURE-PLAN.md` active plan + audit · `docs/WORKFLOW.md`
-definition-of-done per change type (incl. release runbook) · `docs/DECISIONS.md`
-why things are the way they are.
+(mutable) · `docs/TEMPLATE-REUSABILITY-ROADMAP.md` active template plan ·
+`docs/WORKFLOW.md` definition-of-done per change type (incl. release runbook) ·
+`docs/DECISIONS.md` why things are the way they are.
 
 ## What this is
 
@@ -55,12 +55,13 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
-| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--updates/--database` flags). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
+| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--updates/--database/--http` flags). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
 | `Services/UpdateService.cs` | Velopack `UpdateManager` behind `IUpdateService` (holds the pending update; VMs/tests never touch Velopack types). |
 | `Services/Abstractions/` | `IUpdateService`/`UpdateCheckResult`/`IFilePickerService` seams (VM testability). |
 | `Services/FilePickerService.cs` | WinRT save/open pickers with window association for unpackaged apps. |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
 | `Services/CrashReportingService.cs` | Sentry (DSN-gated, off by default); hooks in `Program.cs` + `App.xaml.cs`. |
+| `Services/Configuration/ProductConfiguration.cs` | Secret-free product/deployment defaults plus `DEVTEM_*` environment overrides. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/Helpers/AppInfo.cs` | Assembly-version accessors. |
 | `Services/DesktopToastService.cs` | OS Action Center toasts (tray-minimize, not-installed); click reopens the app. |
@@ -172,7 +173,7 @@ is WinExe so it never shows a terminal window on its own.
 
 ## Versioning
 
-Current version: **0.0.1-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.2-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

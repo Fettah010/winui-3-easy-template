@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "template": "devtem-winui",
+  "features": {
+    "tray": { "default": true, "dependsOn": [], "files": ["Services/SystemTrayService.cs", "Services/DesktopToastService.cs", "Tests/Services/DesktopToastServiceTests.cs"] },
+    "updates": { "default": true, "dependsOn": [], "files": ["Services/UpdateService.cs", "Services/BackgroundUpdateService.cs", "Build/Features.Updates.props", ".github/workflows/release.yml"] },
+    "database": { "default": true, "dependsOn": [], "files": ["Services/DatabaseService.cs", "Services/DatabaseInitializer.cs", "Build/Features.Database.props"] },
+    "http": { "default": true, "dependsOn": [], "files": ["Services/ApiService.cs", "Build/Features.Http.props", "Tests/Services/ApiServiceTests.cs"] }
+  },
+  "rules": [
+    "database and http are independent",
+    "disabled feature files and package references must be absent",
+    "feature flags are rendered into Services/AppFeatures.cs"
+  ]
+}

@@ -49,6 +49,10 @@ public sealed partial class MainWindow : Window
         UpdateNavigationPaneMode(this.AppWindow.Size.Width);
 
         // Register routes
+        // <devtem:routes>
+        // Register application-owned routes here; keep the built-in routes
+        // and navigation lifecycle below this marker intact.
+        // </devtem:routes>
         _nav.RegisterRoute("home", typeof(HomePage));
         _nav.RegisterRoute("about", typeof(AboutPage));
         _nav.RegisterRoute("diagnostics", typeof(DiagnosticsPage));

@@ -1,5 +1,6 @@
 using System;
 using Sentry;
+using DevTemWinUi3.Services.Configuration;
 
 namespace DevTemWinUi3.Services;
 
@@ -32,7 +33,7 @@ public sealed class CrashReportingService
     /// </summary>
     public void Initialize()
     {
-        var dsn = AppMetadata.SentryDsn;
+        var dsn = DeploymentConfiguration.SentryDsn;
         if (string.IsNullOrWhiteSpace(dsn))
         {
             LoggingService.Log.Information("Crash reporting disabled: no Sentry DSN configured");
@@ -48,12 +49,18 @@ public sealed class CrashReportingService
                 _sentry = SentrySdk.Init(o =>
                 {
                     o.Dsn = dsn;
-                    o.Release = AppInfo.Current.Version;
-                    o.Environment = AppInfo.Current.IsBetaBuild ? "beta" : "production";
+                    o.Release = string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryRelease)
+                        ? AppInfo.Current.Version
+                        : DeploymentConfiguration.SentryRelease;
+                    o.Environment = string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryEnvironment)
+                        ? (AppInfo.Current.IsBetaBuild ? "beta" : "production")
+                        : DeploymentConfiguration.SentryEnvironment;
                     o.SendDefaultPii = false;
                 });
                 LoggingService.Log.Information("Crash reporting enabled (Sentry, {Environment})",
-                    AppInfo.Current.IsBetaBuild ? "beta" : "production");
+                    string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryEnvironment)
+                        ? (AppInfo.Current.IsBetaBuild ? "beta" : "production")
+                        : DeploymentConfiguration.SentryEnvironment);
             }
             catch (Exception ex)
             {

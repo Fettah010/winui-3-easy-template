@@ -29,7 +29,7 @@
                 <StackPanel Spacing="8">
                     <!-- Labels bind live ({loc:Loc}); the title parameter seeds
                          the en-US strings in the snippet (wire-up step 2). -->
-                    <TextBlock Text="{loc:Loc Key=SampleTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock AutomationProperties.AutomationId="SampleTitleText" Text="{loc:Loc Key=SampleTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                     <TextBlock Text="{loc:Loc Key=SampleDescription}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>

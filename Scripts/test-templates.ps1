@@ -10,7 +10,7 @@
 # Same matrix runs in CI (.github/workflows/templates.yml).
 
 param(
-    [string[]]$Combos = @("allon", "alloff", "notray", "noupd"),
+    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "nohttp"),
     [switch]$KeepTemp
 )
 
@@ -21,10 +21,14 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("devtem-matrix-" + [Sys
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
 $comboDefs = @{
-    "allon"  = @{ Name = "AcmeDesk";  Safe = "AcmeDesk";  Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @() }
-    "alloff" = @{ Name = "Bare App";  Safe = "Bare_App";  Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false") }
-    "notray" = @{ Name = "NoTrayApp"; Safe = "NoTrayApp"; Display = "NoTray App"; Company = "Nt";   Repo = "nt/app";        Scheme = "nt://";   Flags = @("--tray", "false") }
-    "noupd"  = @{ Name = "NoUpdApp";  Safe = "NoUpdApp";  Display = "NoUpd App";  Company = "Nu";   Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false") }
+    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Attribution = $true }
+    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = $false; Attribution = $true }
+    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = $true; Attribution = $true }
+    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";     Display = "NoUpd App";  Company = "Nu";   Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false"); Http = $true; Database = $true; Tray = $true; Updates = $false; Attribution = $true }
+    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh";   Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = $true; Attribution = $true }
+    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false", "--http", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = $false; Attribution = $false }
+    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "false", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = $false; Attribution = $true }
+    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Attribution = $true }
 }
 
 $failed = 0
@@ -42,18 +46,118 @@ function Invoke-Step([string]$label, [scriptblock]$body) {
 
 # Rename-engine proof: the scaffold must carry the requested scheme in every
 # surface the engines touch (dotnet-new `scheme`/`schemeName` symbols).
-function Assert-ScaffoldIdentity([string]$outDir, [string]$scheme) {
+function Assert-FeatureManifest([string]$outDir) {
+    $manifestPath = Join-Path $outDir "docs\template-features.json"
+    if (-not (Test-Path -LiteralPath $manifestPath)) {
+        throw "feature manifest is missing"
+    }
+    $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
+    foreach ($name in @("tray", "updates", "database", "http")) {
+        if ($null -eq $manifest.features.$name) {
+            throw "feature manifest is missing '$name'"
+        }
+        if ($null -eq $manifest.features.$name.files) {
+            throw "feature manifest has no file list for '$name'"
+        }
+    }
+    Write-Host "feature manifest OK"
+}
+
+function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
+    $readmePath = Join-Path $outDir "README.md"
+    $readme = Get-Content -Raw $readmePath
+    foreach ($marker in @("Starter profiles", "--tray false", "--updates false", "--database false", "--http false")) {
+        if ($readme -notmatch [regex]::Escape($marker)) {
+            throw "generated README is missing profile marker '$marker'"
+        }
+    }
+    $features = Get-Content -Raw (Join-Path $outDir "docs\FEATURES.md")
+    foreach ($pair in @(
+        @("System tray", $definition.Tray),
+        @("Velopack updates", $definition.Updates),
+        @("SQLite database", $definition.Database),
+        @("Typed HTTP client", $definition.Http),
+        @("DevTem attribution", $definition.Attribution)
+    )) {
+        $expected = [string]$pair[1]
+        if ($features -notmatch ([regex]::Escape("| " + $pair[0] + " | " + $expected + " |"))) {
+            throw "feature summary does not report $($pair[0])=$expected"
+        }
+    }
+    $guides = @{
+        tray = $definition.Tray
+        updates = $definition.Updates
+        database = $definition.Database
+        http = $definition.Http
+    }
+    foreach ($guide in $guides.GetEnumerator()) {
+        $guidePath = Join-Path $outDir ("docs\feature-guides\" + $guide.Key + ".md")
+        if ($guide.Value -ne (Test-Path -LiteralPath $guidePath)) {
+            throw "feature guide presence is incorrect for $($guide.Key)"
+        }
+    }
+    Write-Host "profile documentation OK"
+}
+
+function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
+    $scheme = $definition.Scheme
+    $safe = $definition.Safe
+    $display = $definition.Display
+    $repo = $definition.Repo
     $bare = $scheme.TrimEnd('/').TrimEnd(':')
     $manifest = Join-Path $outDir "Packaging\Msix\Package.appxmanifest"
     $manifestText = [System.IO.File]::ReadAllText($manifest)
     if ($manifestText -notmatch [regex]::Escape('Name="' + $bare + '"')) {
         throw "manifest protocol Name is not '$bare'"
     }
+
+    if ($manifestText -notmatch [regex]::Escape("<DisplayName>$display</DisplayName>")) {
+        throw "manifest display name is not '$display'"
+    }
     $metadata = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\Helpers\AppMetadata.cs"))
     if ($metadata -notmatch [regex]::Escape('"' + $scheme + '"')) {
         throw "AppMetadata protocol prefix is not '$scheme'"
     }
-    Write-Host "identity OK ($scheme / $bare)"
+    if ($metadata -notmatch [regex]::Escape('SafeName = "' + $safe + '"')) {
+        throw "AppMetadata safe name is not '$safe'"
+    }
+    if ($metadata -notmatch [regex]::Escape('AppName = "' + $display + '"')) {
+        throw "AppMetadata display name is not '$display'"
+    }
+    if ($metadata -notmatch [regex]::Escape('RepoUrl = "https://github.com/' + $repo + '"')) {
+        throw "AppMetadata repository is not '$repo'"
+    }
+    $csproj = [System.IO.File]::ReadAllText((Join-Path $outDir "$safe.csproj"))
+    if ($csproj -notmatch [regex]::Escape("<RootNamespace>$safe</RootNamespace>")) {
+        throw "RootNamespace is not '$safe'"
+    }
+    if ($csproj -notmatch [regex]::Escape("<AssemblyName>$safe</AssemblyName>")) {
+        throw "AssemblyName is not '$safe'"
+    }
+    if ($metadata -notmatch [regex]::Escape('AppDataFolder = "' + $safe + '"')) {
+        throw "settings folder is not '$safe'"
+    }
+    $apiPath = Join-Path $outDir "Services\ApiService.cs"
+    $httpPropsPath = Join-Path $outDir "Build\Features.Http.props"
+    if ($definition.Http) {
+        if (-not (Test-Path -LiteralPath $apiPath) -or -not (Test-Path -LiteralPath $httpPropsPath)) {
+            throw "HTTP feature files or package import are missing"
+        }
+    }
+    elseif ((Test-Path -LiteralPath $apiPath) -or (Test-Path -LiteralPath $httpPropsPath)) {
+        throw "HTTP feature files or package import remain disabled"
+    }
+    $dbPath = Join-Path $outDir "Services\DatabaseService.cs"
+    $dbPropsPath = Join-Path $outDir "Build\Features.Database.props"
+    if ($definition.Database) {
+        if (-not (Test-Path -LiteralPath $dbPath) -or -not (Test-Path -LiteralPath $dbPropsPath)) {
+            throw "database feature files or package import are missing"
+        }
+    }
+    elseif ((Test-Path -LiteralPath $dbPath) -or (Test-Path -LiteralPath $dbPropsPath)) {
+        throw "database feature files or package import remain disabled"
+    }
+    Write-Host "identity OK ($safe / $display / $scheme / $repo)"
 }
 
 # init-template proof: re-brand a scratch copy of THIS repo and let the
@@ -71,7 +175,7 @@ function Invoke-InitTemplateScratchTest {
         }
         & (Join-Path $scratch "Scripts\init-template.ps1") `
             -AppName "Renamed App" -Company "Renamed" `
-            -RepoUrl "https://github.com/re/named"
+            -RepoUrl "https://github.com/re/named" -Scheme "renamed+beta://"
         Write-Host "init-template scratch re-brand OK"
     }
     finally {
@@ -88,7 +192,7 @@ try {
     if (-not (Invoke-Step "install devtem-page" { & dotnet new install (Join-Path $repoRoot "Templates\Page") })) { throw "install failed" }
 
     foreach ($combo in $Combos) {
-        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/notray/noupd)" }
+        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/nohttp)" }
         $c = $comboDefs[$combo]
         $outDir = Join-Path $tempRoot "$combo\$($c.Name)"
 
@@ -98,9 +202,21 @@ try {
         if (-not (Invoke-Step "scaffold $combo" { & dotnet new @scaffoldArgs })) { continue }
 
         # Rename-engine proof for this combo's scheme (cheap, fail fast).
-        try { Assert-ScaffoldIdentity $outDir $c.Scheme }
+        try { Assert-ScaffoldIdentity $outDir $c }
         catch {
             Write-Host "FAILED: identity $combo : $_" -ForegroundColor Red
+            $failed++
+            continue
+        }
+        try { Assert-FeatureManifest $outDir }
+        catch {
+            Write-Host "FAILED: feature manifest $combo : $_" -ForegroundColor Red
+            $failed++
+            continue
+        }
+        try { Assert-ProfileDocumentation $outDir $c }
+        catch {
+            Write-Host "FAILED: profile documentation $combo : $_" -ForegroundColor Red
             $failed++
             continue
         }
@@ -110,8 +226,32 @@ try {
         # test). Not a git repo down here, so snapshot rollback applies.
         if ($combo -eq "allon") {
             if (-not (Invoke-Step "add-page smoke in allon" {
-                    & (Join-Path $repoRoot "Scripts\add-page.ps1") -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\Page") -Name OrdersSmoke -Title "Smoke Orders" -Icon Shop
+                    & (Join-Path $repoRoot "Scripts\add-page.ps1") -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\Page") -Name OrdersSmoke -Route smoke-orders -Title "Smoke Orders" -Icon Shop
                 })) { continue }
+            if (-not (Invoke-Step "add second page in allon" {
+                    & (Join-Path $repoRoot "Scripts\add-page.ps1") -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\Page") -Name ReportsSmoke -Route smoke-reports -Title "Smoke Reports" -Icon Calendar
+                })) { continue }
+            Write-Host "`n==> duplicate-route rejection" -ForegroundColor Cyan
+                $duplicateOut = ""
+                $duplicateFailed = $false
+                try {
+                    $duplicateOut = & (Join-Path $repoRoot "Scripts\add-page.ps1") -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\Page") -Name DuplicateOrders -Route smoke-orders -Title "Duplicate Orders" -Icon Calendar 2>&1 | Out-String
+                }
+                catch {
+                    $duplicateFailed = $true
+                    $duplicateOut += $_.Exception.Message
+                }
+                if (-not $duplicateFailed -or ($duplicateOut -notmatch "already registered")) {
+                    Write-Host "FAILED: duplicate route was not rejected" -ForegroundColor Red
+                    $failed++
+                    continue
+            }
+            if (Test-Path -LiteralPath (Join-Path $outDir "Pages\DuplicateOrdersPage.xaml")) {
+                Write-Host "FAILED: duplicate route rollback left generated files" -ForegroundColor Red
+                $failed++
+                continue
+            }
+            Write-Host "duplicate route rejected and rolled back" -ForegroundColor Green
         }
 
         $buildLog = ""
@@ -175,4 +315,3 @@ if ($failed -gt 0) {
     exit 1
 }
 Write-Host "`nMATRIX PASSED" -ForegroundColor Green
-

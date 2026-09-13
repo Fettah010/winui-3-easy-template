@@ -1,20 +1,25 @@
 # Session State — mutable, update every session
 
-> Agents: read `AGENTS.md` → this file → `docs/RESTRUCTURE-PLAN.md`, then run
+> Agents: read `AGENTS.md` → this file → `docs/TEMPLATE-REUSABILITY-ROADMAP.md`, then run
 > the bootstrap checklist in `AGENTS.md`. Refresh this file before ending
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only *current facts*.
 
-- **Goal:** improve template discoverability and SEO per the attached
-  `DISCOVERY-PLAN.md`; Phase A is complete and Phase B is in progress
-  (`llms.txt` intentionally deferred until a docs site exists).
-- **Version:** app `0.0.1-beta`; template package `0.1.4`.
-- **Tags:** reset pending; the fresh release tags will be `v0.0.1-beta` and
-  `templates-v0.1.4`.
-- **Branches:** reset pending; `main`, `beta`, and `stable` will point to the
-  fresh baseline.
-- **Tree:** current content is being reset to one fresh baseline commit.
-- **CI health (last known):** unit 131/131, matrix PASSED, parity OK (103),
-  MSIX DryRun valid, FlaUI 4/4, guard passes for 0.0.5-beta.
-- **Next:** verify the fresh app release and NuGet package publication.
-- **Open questions:** none blocking.
+- **Goal:** improve DevTem as a professional, customizable, reusable WinUI 3
+  project template. The authoritative implementation roadmap is
+  `docs/TEMPLATE-REUSABILITY-ROADMAP.md`.
+- **Version:** app `0.0.2-beta`; template package `0.1.5`.
+- **Tags:** `v0.0.2-beta`, `templates-v0.1.5`.
+- **Branches:** `main`, `beta`, and `stable` point to the fresh baseline.
+- **Tree:** Phase 0, Phase 1, completed Phase 2 feature-boundary work, and
+  initial Phase 3 profile work are
+  uncommitted on top of the single-author reset baseline.
+- **CI health (last known):** build 0 warnings/0 errors, unit 131/131,
+  expanded feature/profile/page scaffold matrix PASSED, mirror parity OK
+  (104), MSIX DryRun valid, FlaUI baseline 4/4 plus generated-page navigation
+  PASSED.
+- **Next:** continue to Phase 8 comprehensive verification and regression
+  protection; Phase 7 profile-aware generated documentation is implemented
+  and scaffold-validated.
+- **Open questions:** roadmap decision gates A–G must be resolved before their
+  related implementation phases.

@@ -33,8 +33,8 @@ namespace DevTemWinUi3.SmokeTests;
 [TestClass]
 public sealed class AppSmokeTests
 {
-    private const string AppWindowTitle = "DevTem-WinUI 3";
-    private const string AppProcessName = "DevTemWinUi3";
+    private static string AppWindowTitle => Environment.GetEnvironmentVariable("DEVTEM_SMOKE_TITLE") ?? "DevTem-WinUI 3";
+    private static string AppProcessName => Environment.GetEnvironmentVariable("DEVTEM_SMOKE_PROCESS") ?? "DevTemWinUi3";
 
     // All waits poll (FlaUI Retry) — never a blind Sleep.
     private static readonly TimeSpan LaunchTimeout = TimeSpan.FromSeconds(30);
@@ -217,6 +217,22 @@ public sealed class AppSmokeTests
         ClickNavAndWaitForPage("NavAboutItem", "AboutTitleText");
         ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
         ClickNavAndWaitForPage("NavHomeItem", "HomeTitleText");
+    }
+
+    [TestMethod]
+    public void Generated_Page_Navigation_Works()
+    {
+        var navAutomationId = Environment.GetEnvironmentVariable("DEVTEM_SMOKE_PAGE_NAV_ID");
+        var titleAutomationId = Environment.GetEnvironmentVariable("DEVTEM_SMOKE_PAGE_TITLE_ID");
+        if (string.IsNullOrWhiteSpace(navAutomationId) || string.IsNullOrWhiteSpace(titleAutomationId))
+        {
+            Assert.Inconclusive("Generated-page smoke variables are not configured.");
+            return;
+        }
+
+        RequireWindow();
+        DismissFirstRunDialogIfPresent(RecheckTimeout);
+        ClickNavAndWaitForPage(navAutomationId, titleAutomationId);
     }
 
     [TestMethod]
@@ -516,6 +532,10 @@ public sealed class AppSmokeTests
     /// </summary>
     private static string? LocateAppExe()
     {
+        var configuredPath = Environment.GetEnvironmentVariable("DEVTEM_SMOKE_EXE");
+        if (!string.IsNullOrWhiteSpace(configuredPath) && File.Exists(configuredPath))
+            return configuredPath;
+
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         for (int i = 0; i < 8 && dir is not null; i++, dir = dir.Parent)
         {

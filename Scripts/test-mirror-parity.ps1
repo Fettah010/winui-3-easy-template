@@ -43,6 +43,9 @@ $repoOnly = @(
     "docs/WORKFLOW.md",
     "docs/DECISIONS.md",
     "docs/why-devtem.md",
+    "docs/template-contract.md",
+    "docs/TEMPLATE-REUSABILITY-ROADMAP.md",
+    "docs/template-features.json",
     "docs/discovery/**",
     "CITATION.cff",
     "social-preview.png"
@@ -54,7 +57,9 @@ $templateOnly = @(
     "Services/AppFeatures.cs",
     "DevTemAttribution.cs",
     "Build/**",
-    "Templates/**"
+    "Templates/**",
+    "docs/FEATURES.md",
+    "docs/feature-guides/**"
 )
 
 # Files allowed to differ (hand-conditioned): feature `#if` blocks,

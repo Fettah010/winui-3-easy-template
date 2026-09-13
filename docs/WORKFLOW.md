@@ -35,8 +35,8 @@ Always pass `-p:Platform=x64` (XAML compiler fails without it).
   the repo (`set-app-icon.ps1` is the model); header documents usage.
 - **Workflows:** Workflow tier. Never push a tag to "test CI".
 - **Docs-only:** no build needed — say so in the summary.
-- **Plan files:** `docs/RESTRUCTURE-PLAN.md` checkboxes move in the same
-  commit as the work; `docs/STATE.md` refreshes at session end.
+- **Plan files:** update the relevant roadmap checkboxes in the same commit as
+  the work; `docs/STATE.md` refreshes at session end.
 
 ## Release runbook (maintainer, after green main)
 

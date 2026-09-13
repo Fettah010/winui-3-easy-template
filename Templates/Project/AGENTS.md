@@ -53,6 +53,7 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Services/FilePickerService.cs` | WinRT save/open pickers with window association for unpackaged apps. |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
 | `Services/CrashReportingService.cs` | Sentry (DSN-gated, off by default); hooks in `Program.cs` + `App.xaml.cs`. |
+| `Services/Configuration/ProductConfiguration.cs` | Secret-free product/deployment defaults plus `DEVTEM_*` environment overrides. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/Helpers/AppInfo.cs` | Assembly-version accessors. |
 | `Services/DesktopToastService.cs` | OS Action Center toasts (tray feature); click reopens the app. |
@@ -163,7 +164,7 @@ is WinExe so it never shows a terminal window on its own.
 
 ## Versioning
 
-Current version: **0.0.1-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.2-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

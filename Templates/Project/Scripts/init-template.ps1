@@ -3,7 +3,7 @@
 # CI workflow, and docs — then verifies zero template leftovers.
 #
 #   .\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" `
-#       -RepoUrl "https://github.com/acme/desk-app"
+#       -RepoUrl "https://github.com/acme/desk-app" -Scheme "acme://"
 #
 # Code surfaces (mutex, registry, folders, feeds) read Services/Helpers/AppMetadata.cs,
 # whose defaults this script rewrites too. Manual steps afterwards (see
@@ -12,20 +12,30 @@ param(
     [Parameter(Mandatory = $true)][string]$AppName,
     [Parameter(Mandatory = $true)][string]$Company,
     [Parameter(Mandatory = $true)][string]$RepoUrl,
-    [string]$SafeName = ""
+    [string]$SafeName = "",
+    [string]$Scheme = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($SafeName)) {
-    $SafeName = ($AppName -replace "[^A-Za-z0-9]", "")
+    $SafeName = $AppName -replace "[^A-Za-z0-9_]", "_"
+    if ($SafeName -notmatch "^[A-Za-z_]") { $SafeName = "_" + $SafeName }
+    $SafeName = $SafeName -replace "^_[0-9]+", "_"
 }
-if ($SafeName -notmatch "^[A-Za-z][A-Za-z0-9]*$") {
-    throw "SafeName '$SafeName' must start with a letter and contain only letters/digits."
+if ($SafeName -notmatch "^[A-Za-z_][A-Za-z0-9_]*$") {
+    throw "SafeName '$SafeName' must start with a letter or underscore and contain only letters, digits, or underscores."
 }
 $RepoPath = ($RepoUrl -replace "^https://github\.com/", "").TrimEnd("/")
+if ($RepoPath -notmatch "^[^/]+/[^/]+$") {
+    throw "RepoUrl must be a GitHub URL or org/name path, for example https://github.com/acme/desk-app."
+}
 $RepoSlug = Split-Path $RepoPath -Leaf
-$Scheme = $SafeName.ToLowerInvariant()
+if ([string]::IsNullOrWhiteSpace($Scheme)) { $Scheme = $SafeName.ToLowerInvariant() + "://" }
+if ($Scheme -notmatch "^[a-z][a-z0-9+.-]*://$") {
+    throw "Scheme '$Scheme' must use a lowercase URI scheme followed by ://, for example acme://."
+}
+$SchemeName = $Scheme.TrimEnd('/').TrimEnd(':')
 
 $replacements = @(
     # Order matters: longest/most-specific first; bare DevTem (prose) last.
@@ -34,8 +44,8 @@ $replacements = @(
     @("DevTem-WinUI 3", $AppName),
     @("DevTemWinUi3", $SafeName),
     @("DevTemWinUi3Tray_", $SafeName + "Tray_"),
-    @('Name="devtem"', 'Name="' + $Scheme + '"'),
-    @("devtem://", $Scheme + "://"),
+    @('Name="devtem"', 'Name="' + $SchemeName + '"'),
+    @("devtem://", $Scheme),
     @("winui-3-easy-template", $RepoSlug),
     @('"Fettah"', "`"$Company`""),
     @("DevTem", $AppName)

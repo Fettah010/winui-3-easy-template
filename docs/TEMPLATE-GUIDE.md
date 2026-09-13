@@ -3,6 +3,11 @@
 This is a starting template, not a finished app. Follow the recipes below and
 you keep every feature (updates, tray, i18n, logging) working.
 
+Maintainers should treat [`docs/template-contract.md`](template-contract.md) as
+the authoritative compatibility reference for symbols, feature boundaries,
+generated files, and post-generation responsibilities. This guide focuses on
+consumer workflows; the contract records what the template promises.
+
 ## 1. Rename the template (do this first)
 
 Identity lives in two layers. Code surfaces read `Services/Helpers/AppMetadata.cs`
@@ -18,7 +23,7 @@ Identity lives in two layers. Code surfaces read `Services/Helpers/AppMetadata.c
 | `devtem://` (+ `Name="devtem"` in the MSIX manifest) | Deep-link URI scheme | `acme://` |
 
 ```powershell
-.\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" -RepoUrl "https://github.com/acme/desk-app"
+.\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" -RepoUrl "https://github.com/acme/desk-app" -Scheme "acme://"
 ```
 
 The script also renames `DevTemWinUi3[.Tests].csproj` to match, and fails if
@@ -27,6 +32,70 @@ and this guide (it documents the tokens).
 
 Manual spots the script cannot do: your app art — see §1b below, then run
 `Scripts/create-shortcut.ps1` again.
+
+### Configuration and extension seams
+
+`Services/Configuration/ProductConfiguration.cs` is the generated,
+secret-free product/deployment configuration file. Set product defaults there
+after scaffolding:
+
+- `PrimaryColor` and `AccentColor` are the documented brand color values
+  (`#RRGGBB`) used when extending the app theme.
+- `SupportUrl`, `PrivacyUrl`, and `UpdateFeedUrl` are deployment placeholders.
+- `SentryDsn`, `SentryEnvironment`, and `SentryRelease` configure optional
+  crash reporting.
+
+Developer and CI overrides use environment variables with the `DEVTEM_`
+prefix. Environment values take precedence over generated defaults; empty
+values fall back to the generated file. Never commit DSNs or tokens.
+Template-time identity and feature flags are fixed by `dotnet new`; runtime
+user preferences belong in `SettingsService`.
+
+Stable generated-region markers provide safe extension points:
+
+- `<devtem:services>` in `Services/ServiceLocator.cs`
+- `<devtem:routes>` in `MainWindow.xaml.cs`
+- `Services/SettingsService.cs` for persisted settings
+- `Services/Localization/{En,Es,Fr}Strings.cs` for matching localization keys
+
+`Scripts/add-page.ps1` uses unique anchors, refuses dirty repositories, rolls
+back on failure, and reports each operation. Add custom services and routes
+at the markers instead of editing infrastructure registration or navigation
+lifecycle code.
+
+For a page workflow, use `dotnet new devtem-page -n Orders --route orders
+--title "Order History" --icon Shop`. The item template always emits the page,
+code-behind, transient ViewModel, MSTest stub, and three-language strings
+snippet. `-Route` must be lowercase kebab-case and unique. The supported
+one-command integration is:
+
+```powershell
+.\Scripts\add-page.ps1 -Name Orders -Route orders -Title "Order History" -Icon Shop
+```
+
+Use `-WhatIf` first to preview the files and registrations. Existing page
+names, routes, anchors, or localization keys are rejected rather than
+overwritten; this makes reruns safe and preserves user-owned code.
+
+Generated page titles expose stable `AutomationProperties.AutomationId`
+values such as `OrdersTitleText`, so FlaUI or another UI automation harness
+can verify navigation without depending on translated text.
+
+## Branding and assets
+
+Use `Scripts/set-app-icon.ps1 -Source .\path\to\logo.png` as the single
+replacement workflow. The source must be a square PNG of at least 512x512
+(1024x1024 is recommended), with transparent background and roughly 80%
+safe margins. The script produces the ICO variants and `Logo.png`,
+`Logo-64.png`, `Logo-48.png`, `Logo-32.png`, and `Logo-16.png` used by the
+title bar, tray, shortcut, splash, Home, About, installer, and MSIX tile
+pipeline. Use `-WhatIf` to preview writes; invalid paths, extensions, aspect
+ratios, and dimensions fail before assets are changed.
+
+Keep `AppMetadata` and `ProductConfiguration` as the product-facing source of
+truth. `create-shortcut.ps1` targets the generated executable and
+`Assets/app.ico`; MSIX tile art is derived from `Assets/Logo.png` by
+`build-msix.ps1`.
 
 ## 1b. App icons (one command)
 
@@ -155,7 +224,7 @@ parameters and feature flags (all flags default on):
 dotnet new install .\Templates\Project     # from this repo, or:
 dotnet new install DevTem.Templates::<version>   # versioned NuGet package
 dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
-    --repo "acme/desk-app" --scheme "acme://" --tray false --updates false --database false --attribution false
+    --repo "acme/desk-app" --scheme "acme://" --tray false --updates false --database false --http false --attribution false
 ```
 
 Releases of the package are cut with `templates-v*` tags (CI packs +
@@ -182,12 +251,28 @@ not by choice.
 | `--company` | Pack author | `Acme` |
 | `--repo` | GitHub `org/name` (feeds, links, CI) | `acme/desk-app` |
 | `--scheme` | Deep-link scheme (registered end-to-end: HKCU self-register on first run, manifest for MSIX; `Scripts/register-protocol.ps1` for manual setup) | `acme://` |
-| `--tray/--updates/--database` | Feature on/off (`false` drops it) | `--tray false` |
+| `--tray/--updates/--database/--http` | Feature on/off (`false` drops it) | `--tray false` |
 | `--attribution` | Keep the one-line DevTem source comment in generated `DevTemAttribution.cs` | `true` |
 
 Names with spaces work: `-n "My App"` produces `My_App` identifiers and
 project files (engine sanitization), and the build stays clean — the test
 matrix covers a spaced name every run.
+
+### Stable starter profiles
+
+The public template remains one composable template. Use these documented
+presets when you want a coherent starting point without learning every
+internal service:
+
+| Profile | Flags | Result |
+| --- | --- | --- |
+| Minimal | `--tray false --updates false --database false --http false --attribution false` | Shell, settings, localization, logging |
+| Desktop | `--updates false --database false --http false` | Minimal plus tray and desktop notifications |
+| Production | no overrides | All optional services and release tooling |
+
+Copy a preset's flags into the scaffold command and override any individual
+flag. Individual flags always win; profiles are intentionally documentation
+presets rather than a second template symbol.
 
 How flags work (verified over all-on, all-off, and mixed scaffolds):
 
@@ -266,7 +351,7 @@ dotnet new update                     # update all template packages
 
 Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
 `<InformationalVersion>` (`-beta` suffix on beta releases so fresh installs
-default to the beta channel). Commit, push, tag (`v0.0.5-beta`), push the tag
+default to the beta channel). Commit, push, tag (`v0.0.1-beta`), push the tag
 (CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
 is in `AGENTS.md` ("Branches & releases").
 

@@ -1,0 +1,7 @@
+<Project>
+  <!-- Typed HTTP client infrastructure. Emitted only for scaffolds with the
+       HTTP flag on and imported with an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+  </ItemGroup>
+</Project>

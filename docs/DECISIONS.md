@@ -29,7 +29,7 @@ in git history; this file saves the next agent the archaeology.
   and `v0.0.2` exist; Velopack versions must increase.
 - **2026-09-13 — Deleted plan files stay deleted.** `FLAUI-PLAN.md`,
   `UPGRADE-ROADMAP.md`, root `ROADMAP.md` were all done; the live plan is
-  `docs/RESTRUCTURE-PLAN.md`, decisions live here.
+  `docs/TEMPLATE-REUSABILITY-ROADMAP.md`, decisions live here.
 - **2026-09-13 — Agents never commit/push/tag unasked.** Releases are
   prepared fully, then handed over as exact commands for the human.
 - **2026-09-13 — v0.0.4-beta is a pipeline release.** No app behavior
@@ -39,3 +39,32 @@ in git history; this file saves the next agent the archaeology.
   Phase 1 wiped the `#if (tray|updates)` guards in the template's
   `MainWindow`/`SettingsPage` (parity normalizes `#if` regions, so only
   the matrix caught it). Copy, then restore guards, then matrix.
+- **2026-09-13 — Keep diagnostics and localization baseline-only in Phase 2.**
+  Logging remains included because global exception paths depend on it.
+  Crash reporting remains DSN-gated and inactive by default. Localization
+  remains included with `en-US`, `es-ES`, and `fr-FR`; no off switch is
+  exposed until resource and binding removal is proven safe.
+- **2026-09-13 — Profiles are documented presets over one composable template.**
+  The public template keeps independent boolean feature switches. Minimal,
+  Desktop, and Production are stable command presets, tested through the
+  same scaffold matrix. A `--profile` symbol was intentionally deferred
+  because the template engine cannot both derive boolean defaults from a
+  profile and reliably preserve explicit per-feature overrides.
+- **2026-09-13 — Deployment configuration is generated, secret-free, and layered.**
+  `ProductConfiguration.cs` owns checked-in product defaults and
+  `DeploymentConfiguration` applies `DEVTEM_*` environment overrides for
+  developer and CI use. Runtime preferences remain in `SettingsService`;
+  template-time identity remains in template symbols. No JSON configuration
+  package or committed secret is required.
+- **2026-09-14 — Branding uses one validated asset pipeline.**
+  `ProductConfiguration.cs` owns product-facing color and deployment
+  placeholders, while `AppMetadata` owns runtime identity. A single square
+  PNG is the input to `set-app-icon.ps1`; the script validates extension,
+  dimensions, aspect ratio, and generated output before replacing assets.
+  ICO/logo variants then feed the app, tray, shortcut, splash, About, MSIX,
+  and package surfaces.
+- **2026-09-14 — Generated documentation is profile-aware by composition.**
+  `docs/FEATURES.md` reports the selected switches and next steps, while
+  feature-specific guides are excluded at scaffold time when their feature is
+  disabled. The base README remains stable and points to the generated
+  summary instead of pretending every optional service exists.

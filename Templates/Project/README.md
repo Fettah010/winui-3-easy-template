@@ -3,8 +3,12 @@
 A modern **Windows 11** app built with **WinUI 3** (.NET 10) and shipped with
 **Velopack** auto-updates over **GitHub Releases**. It also ships with a
 ready-made **logging system** (Serilog), **dependency injection**,
-**SQLite database**, and **typed HTTP client**, so it works as a
-complete starting template for WinUI 3 apps.
+optional **SQLite database**, and optional **typed HTTP client**, so it works
+as a complete starting template for WinUI 3 apps.
+
+The exact selected options, generated next steps, and feature-specific setup
+are recorded in [`docs/FEATURES.md`](docs/FEATURES.md). Disabled feature
+guides are not generated.
 
 ### Tech stack
 
@@ -13,8 +17,8 @@ complete starting template for WinUI 3 apps.
 - Serilog 4 — console + rolling file logging
 - Sentry 6 — crash reporting (opt-in via DSN, off by default)
 - Microsoft.Extensions.DependencyInjection — IoC container
-- Microsoft.Data.Sqlite — local database (database feature)
-- Microsoft.Extensions.Http — typed HTTP client (database feature)
+- Microsoft.Data.Sqlite — local database (`--database`)
+- Microsoft.Extensions.Http — typed HTTP client (`--http`)
 - Community Toolkit (SettingsControls, Segmented, Helpers)
 
 ### Quick start (runs from source)
@@ -30,6 +34,25 @@ is downloaded silently, and the user is asked to restart once it is ready.
 
 ### Features
 
+### Starter profiles
+
+Use the same template with a coherent preset, then override individual
+feature flags when needed:
+
+```powershell
+# Minimal: shell, settings, localization and logging only
+dotnet new devtem-winui -n MyApp --tray false --updates false --database false --http false --attribution false
+
+# Desktop: tray and notifications, without distribution services
+dotnet new devtem-winui -n MyApp --updates false --database false --http false
+
+# Production: all optional services enabled (the default)
+dotnet new devtem-winui -n MyApp
+```
+
+These are documented presets rather than a separate `--profile` parameter;
+explicit feature flags remain the authoritative customization surface.
+
 #### Auto-updates (Velopack) — updates feature
 
 The app checks GitHub Releases on startup. When a new version is found, it
@@ -38,8 +61,8 @@ download finishes, then applies the update and restarts smoothly.
 
 ```powershell
 # Tag-based release
-git tag v0.0.5-beta
-git push origin v0.0.5-beta
+git tag v0.0.1-beta
+git push origin v0.0.1-beta
 ```
 
 #### Notifications
@@ -62,6 +85,11 @@ LoggingService.Log.Debug("Debug message");
 LoggingService.Log.Information("User {UserId} logged in", userId);
 LoggingService.Log.Error(ex, "Something failed");
 ```
+
+Crash reporting is opt-in. Set `SentryDsn` in
+`Services/Helpers/AppMetadata.cs` to enable it; `SentryEnvironment` and
+`SentryRelease` optionally override the derived environment and assembly
+version. Empty values keep the default beta/production and version behavior.
 
 Logs go to the debugger console and to `Logs/applog-YYYYMMDD.log` next to the
 executable (daily rolling, 14 days kept).
@@ -102,7 +130,7 @@ await db.ExecuteAsync("INSERT INTO Logs (Message) VALUES ($msg)",
 
 Database file is created at `Data/app.db` next to the executable.
 
-#### Typed HTTP Client — database feature
+#### Typed HTTP Client — HTTP feature
 
 ```csharp
 var api = ServiceLocator.GetRequiredService<ApiService>();
@@ -140,12 +168,12 @@ Releases, and your users get the update in-app.
 
 ```powershell
 # 1. Bump the version, commit, then tag and push a release
-git tag v0.0.5-beta
-git push origin v0.0.5-beta        # -> .github/workflows/release.yml runs
+git tag v0.0.1-beta
+git push origin v0.0.1-beta        # -> .github/workflows/release.yml runs
 ```
 
 Or run it manually from the **Actions** tab: *Run workflow* → enter the version
-(e.g. `0.0.5-beta`) → select *beta* channel.
+(e.g. `0.0.1-beta`) → select *beta* channel.
 
 ### Offline / local testing
 
@@ -177,7 +205,7 @@ Services/
   WindowStateService.cs    # Window size/position persistence
   FirstRunService.cs       # First-run detection + What's New dialog
   DatabaseService.cs       # SQLite database access (database feature)
-  ApiService.cs            # Typed HTTP client (database feature)
+  ApiService.cs            # Typed HTTP client (HTTP feature)
   LocalizationService.cs   # Dictionary-based i18n (en-US, es-ES, fr-FR)
   ServiceLocator.cs        # Dependency injection container
 Tests/

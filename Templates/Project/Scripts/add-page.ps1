@@ -2,11 +2,12 @@
 # route + nav, then builds and tests. Either everything lands green or the
 # tree is rolled back to where it started.
 #
-#   powershell -NoProfile -ExecutionPolicy Bypass -File Scripts\add-page.ps1 -Name Orders -Title "Order History" -Icon Shop
+#   powershell -NoProfile -ExecutionPolicy Bypass -File Scripts\add-page.ps1 -Name Orders -Route orders -Title "Order History" -Icon Shop
 #
 # -Name   PascalCase page name (single word recommended: Orders, not OrderHistory).
 # -Title  Page title + nav label. Defaults to -Name. Seeds the en-US strings
 #         (XAML binds live via {loc:Loc}; es/fr land as TODO-translate).
+# -Route  Lowercase route segment; defaults to the lowercased page name.
 # -Icon   Nav icon, a WinUI Symbol member (matches the template's --icon
 #         choice list; keep the two in sync).
 #
@@ -15,12 +16,16 @@
 # template-matrix temp scaffolds) only the snapshot rollback applies.
 # -RepoRoot/-TemplateSource exist for the matrix; normal use omits them.
 
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[A-Z][A-Za-z0-9]*$')]
     [string]$Name,
 
     [string]$Title = "",
+
+    [ValidatePattern('^[a-z][a-z0-9-]*$')]
+    [string]$Route = "",
 
     [ValidateSet("Home", "Document", "Shop", "Mail", "Calendar", "People", "Globe", "Pictures", "Video", "Camera", "Map", "Phone")]
     [string]$Icon = "Document",
@@ -38,8 +43,15 @@ if ($RepoRoot -eq "") { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")
 
 if ($Title -eq "") { $Title = $Name }
 $tag = $Name.ToLowerInvariant()
+if ($Route -eq "") { $Route = $tag }
 if ($TemplateSource -eq "") { $TemplateSource = Join-Path $RepoRoot "Templates\Page" }
 $RepoRoot = (Resolve-Path $RepoRoot).Path
+
+if ($WhatIfPreference) {
+    Write-Host "WhatIf: would add page '$Name' with route '$Route' and icon '$Icon' to $RepoRoot."
+    Write-Host "WhatIf: would create page, ViewModel, test, three localization entries, DI registration, route, and navigation item."
+    return
+}
 
 # Root namespace: scaffolded apps were renamed, so generated DevTemWinUi3.*
 # references are rewritten to whatever the csproj declares.
@@ -89,6 +101,13 @@ function Insert-Unique([string]$path, [string]$anchor, [string]$insert, [switch]
         $text = $text.Replace($anchor, $anchor + $insert)
     }
     Set-Content -LiteralPath $path -Value $text -NoNewline
+}
+
+function Assert-RouteAvailable([string]$path, [string]$route) {
+    $text = Get-Content -LiteralPath $path -Raw
+    if (($text -match [regex]::Escape("RegisterRoute(`"$route`"")) -or ($text -match [regex]::Escape("Tag=`"$route`""))) {
+        Fail "Route '$route' is already registered in $path. Choose a unique route; no duplicate registration was made."
+    }
 }
 
 function Escape-CSharp([string]$value) {
@@ -144,7 +163,7 @@ try {
 
     $scaffoldDir = Join-Path ([System.IO.Path]::GetTempPath()) ("add-page-scaffold-" + [System.Guid]::NewGuid().ToString("N"))
     Write-Host "`n==> scaffold $Name ($Title, $Icon)" -ForegroundColor Cyan
-    & dotnet new devtem-page -n $Name --title $Title --icon $Icon --output $scaffoldDir 2>&1 | Out-Null
+    & dotnet new devtem-page -n $Name --route $Route --title $Title --icon $Icon --output $scaffoldDir 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { Fail "dotnet new devtem-page failed" }
 
     # Consume the strings snippet: the single source of truth for the three
@@ -234,11 +253,12 @@ try {
     Write-Host "`n==> wire route + nav" -ForegroundColor Cyan
     $mwPath = Join-Path $RepoRoot "MainWindow.xaml.cs"
     Snapshot-File $mwPath
-    Insert-Unique $mwPath '_nav.RegisterRoute("home", typeof(HomePage));' "`r`n        _nav.RegisterRoute(`"$tag`", typeof($($Name)Page));"
+    Assert-RouteAvailable $mwPath $Route
+    Insert-Unique $mwPath '_nav.RegisterRoute("home", typeof(HomePage));' "`r`n        _nav.RegisterRoute(`"$Route`", typeof($($Name)Page));"
 
     $xamlPath = Join-Path $RepoRoot "MainWindow.xaml"
     Snapshot-File $xamlPath
-    $navItem = "`r`n                <NavigationViewItem AutomationProperties.AutomationId=`"Nav$($Name)Item`" Content=`"{loc:Loc Key=Nav$Name}`" Tag=`"$tag`">`r`n                    <NavigationViewItem.Icon>`r`n                        <SymbolIcon Symbol=`"$Icon`"/>`r`n                    </NavigationViewItem.Icon>`r`n                </NavigationViewItem>`r`n            "
+    $navItem = "`r`n                <NavigationViewItem AutomationProperties.AutomationId=`"Nav$($Name)Item`" Content=`"{loc:Loc Key=Nav$Name}`" Tag=`"$Route`">`r`n                    <NavigationViewItem.Icon>`r`n                        <SymbolIcon Symbol=`"$Icon`"/>`r`n                    </NavigationViewItem.Icon>`r`n                </NavigationViewItem>`r`n            "
     Insert-Unique $xamlPath "</NavigationView.MenuItems>" $navItem -Before
 
     # Prove it: full build (warnings are errors) + full test suite.

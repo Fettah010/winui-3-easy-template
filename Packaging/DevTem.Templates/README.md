@@ -14,7 +14,7 @@ dotnet new install DevTem.Templates
 ## `devtem-winui` — full desktop app
 
 Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates,
-SQLite + HTTP data layer, 3-language UI (EN/ES/FR), persisted settings,
+optional SQLite and HTTP services, 3-language UI (EN/ES/FR), persisted settings,
 Serilog logging + optional Sentry crash reports, MSIX packaging script,
 release pipeline.
 
@@ -30,10 +30,28 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--company` | Pack author |
 | `--repo` | GitHub `org/name` (feeds, links, CI) |
 | `--scheme` | Deep-link URI scheme (`acme://`) |
-| `--tray` / `--updates` / `--database` | Feature on/off (`false` drops it; all default on) |
+| `--tray` / `--updates` / `--database` / `--http` | Feature on/off (`false` drops it; all default on) |
 
 Names with spaces work (`-n "My App"` → `My_App` identifiers and files).
 In Visual Studio the parameters render as dialog fields and checkboxes.
+Every generated project also includes `docs/FEATURES.md`, which records the
+selected options and next steps; disabled feature guides are omitted.
+
+### Profile presets
+
+The template keeps one composable set of feature switches. These stable
+presets provide coherent starting points without hiding the individual
+options:
+
+| Profile | Command flags | Included optional services |
+| --- | --- | --- |
+| Minimal | `--tray false --updates false --database false --http false --attribution false` | None |
+| Desktop | `--updates false --database false --http false` | Tray and desktop notifications |
+| Production | no feature overrides | Tray, updates, SQLite, HTTP, attribution |
+
+Apply a preset by copying its flags into the scaffold command, then change
+any individual flag as needed. Individual flags are authoritative; there is
+no separate `--profile` parameter.
 
 ## `devtem-page` — content page
 

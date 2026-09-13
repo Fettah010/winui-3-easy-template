@@ -34,6 +34,10 @@ public class ServiceLocatorTests
     public void GetService_ReturnsNonNull()
     {
         ServiceLocator.Initialize();
+#if (http)
+        var api = ServiceLocator.GetService<ApiService>();
+        Assert.IsNotNull(api);
+#endif
 #if (database)
         var db = ServiceLocator.GetService<DatabaseService>();
         Assert.IsNotNull(db);
@@ -47,6 +51,10 @@ public class ServiceLocatorTests
     public void GetRequiredService_ReturnsNonNull()
     {
         ServiceLocator.Initialize();
+#if (http)
+        var api = ServiceLocator.GetRequiredService<ApiService>();
+        Assert.IsNotNull(api);
+#endif
 #if (database)
         var db = ServiceLocator.GetRequiredService<DatabaseService>();
         Assert.IsNotNull(db);

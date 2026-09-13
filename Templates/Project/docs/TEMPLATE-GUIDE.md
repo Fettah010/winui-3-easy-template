@@ -11,6 +11,9 @@
 This is a starting template, not a finished app. Follow the recipes below and
 you keep every feature (updates, tray, i18n, logging) working.
 
+Read `docs/FEATURES.md` first. It is generated for this scaffold and records
+which optional features and feature guides are present.
+
 ## 1. Rename the template (do this first)
 
 Identity lives in two layers. Code surfaces read `Services/Helpers/AppMetadata.cs`
@@ -26,12 +29,43 @@ Identity lives in two layers. Code surfaces read `Services/Helpers/AppMetadata.c
 | `devtem://` (+ `Name="devtem"` in the MSIX manifest) | Deep-link URI scheme (self-registered per-user on first run; `Scripts/register-protocol.ps1` for manual setup) | `acme://` |
 
 ```powershell
-.\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" -RepoUrl "https://github.com/acme/desk-app"
+.\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" -RepoUrl "https://github.com/acme/desk-app" -Scheme "acme://"
 ```
 
 The script also renames `DevTemWinUi3[.Tests].csproj` to match, and fails if
 any template identity remains. Frozen on purpose: `docs/archive/` (reference)
 and this guide (it documents the tokens).
+
+### Configuration and extension seams
+
+`Services/Configuration/ProductConfiguration.cs` contains secret-free product
+and deployment defaults for support, privacy, update-feed, and Sentry values.
+Developer or CI overrides use the corresponding `DEVTEM_` environment
+variables, which take precedence without committing secrets. Runtime user
+preferences remain owned by `SettingsService`.
+
+Use the explicit extension markers when adding application code:
+
+- `<devtem:services>` in `Services/ServiceLocator.cs`
+- `<devtem:routes>` in `MainWindow.xaml.cs`
+- `Services/SettingsService.cs` for persisted settings
+- all three localization dictionaries for new keys
+
+`Scripts/add-page.ps1` validates unique anchors, refuses dirty repositories,
+and rolls back on failure.
+
+The page item template supports `--route`, `--title`, and `--icon`. The
+supported integration command is
+`Scripts/add-page.ps1 -Name Orders -Route orders -Title "Order History" -Icon Shop`.
+Use `-WhatIf` for a change preview. Existing names and routes are rejected;
+the tool never overwrites user-owned page or registration code.
+Generated page titles expose stable automation IDs such as
+`OrdersTitleText` for FlaUI or other UI automation checks.
+
+Branding defaults live in `Services/Configuration/ProductConfiguration.cs`.
+Use `Scripts/set-app-icon.ps1 -Source .\logo.png` with a square PNG of at
+least 512x512; it validates the input and regenerates the ICO and logo sizes
+used by the app, tray, shortcut, splash, About, installer, and MSIX pipeline.
 
 Manual spots the script cannot do: your app art — see §1b below, then run
 `Scripts/create-shortcut.ps1` again.
@@ -193,7 +227,7 @@ Uninstall when done: `dotnet new uninstall .\Templates\Page`.
 
 Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
 `<InformationalVersion>` (`-beta` suffix on beta releases so fresh installs
-default to the beta channel). Commit, push, tag (`v0.0.5-beta`), push the tag
+default to the beta channel). Commit, push, tag (`v0.0.1-beta`), push the tag
 (CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
 is in `AGENTS.md` ("Branches & releases").
 

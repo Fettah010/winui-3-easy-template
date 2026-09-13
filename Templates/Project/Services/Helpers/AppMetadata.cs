@@ -52,5 +52,11 @@ public static class AppMetadata
     /// <see cref="CrashReportingService"/> becomes a no-op and no Sentry
     /// package traffic ever happens. Paste a DSN to enable.
     /// </summary>
-    public const string SentryDsn = "";
+    public const string SentryDsn = Configuration.ProductConfiguration.SentryDsn;
+
+    /// <summary>Optional Sentry release override; empty uses the assembly version.</summary>
+    public const string SentryRelease = Configuration.ProductConfiguration.SentryRelease;
+
+    /// <summary>Optional Sentry environment override; empty derives beta/production.</summary>
+    public const string SentryEnvironment = Configuration.ProductConfiguration.SentryEnvironment;
 }

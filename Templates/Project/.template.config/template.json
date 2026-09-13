@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates, SQLite + HTTP data layer, 3-language UI, persisted settings, Serilog, release pipeline. Identity (namespace, display name, company, repo, URI scheme) and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional Velopack auto-updates, optional SQLite and HTTP services, 3-language UI, persisted settings, Serilog, and release tooling. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,
@@ -20,14 +20,16 @@
       "generator": "regex",
       "datatype": "string",
       "fileRename": "__SafeName__",
+      "replaces": "DevTemWinUi3",
       "parameters": {
         "source": "name",
         "steps": [
           { "regex": "^[^A-Za-z]+", "replacement": "_" },
+          { "regex": "^_[0-9]+", "replacement": "_" },
           { "regex": "[^A-Za-z0-9_]", "replacement": "_" }
         ]
       },
-      "description": "Identifier-safe form of the project name. Renames the project files so they always match the (sanitized) references inside content — spaced names like 'My App' become My_App.csproj everywhere."
+      "description": "Identifier-safe form of the project name. A leading non-letter prefix becomes '_', other unsupported characters become '_', and the result drives project files, namespace, assembly, and process identity."
     },
     "displayName": {
       "type": "parameter",
@@ -59,7 +61,7 @@
       "displayName": "Deep-link URI scheme",
       "defaultValue": "myapp://",
       "replaces": "devtem://",
-      "description": "Deep-link URI scheme, including :// (e.g. --scheme acme://)."
+      "description": "Lowercase deep-link URI scheme including :// (e.g. --scheme acme://)."
     },
     "schemeName": {
       "type": "generated",
@@ -94,17 +96,26 @@
     "database": {
       "type": "parameter",
       "datatype": "bool",
-      "displayName": "SQLite + HTTP data layer",
+      "displayName": "SQLite database",
       "defaultValue": "true",
       "replaces": "__DATABASE__",
-      "description": "Include the SQLite + HTTP data layer (--database false to drop)."
+      "description": "Include SQLite persistence and deferred database initialization (--database false to drop)."
+    },
+    "http": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "HTTP client",
+      "defaultValue": "true",
+      "replaces": "__HTTP__",
+      "description": "Include the typed HTTP client and HttpClientFactory registration (--http false to drop)."
     },
     "attribution": {
       "type": "parameter",
       "datatype": "bool",
       "displayName": "DevTem attribution",
       "defaultValue": "true",
-      "description": "Keep a one-line source comment in the generated README (--attribution false to omit)."
+      "replaces": "__ATTRIBUTION__",
+      "description": "Keep DevTemAttribution.cs with a one-line source comment (--attribution false to omit)."
     }
   },
   "sources": [
@@ -137,10 +148,16 @@
           "exclude": [
             "Services/DatabaseService.cs",
             "Services/DatabaseInitializer.cs",
-            "Services/ApiService.cs",
             "Build/Features.Database.props",
             "Tests/Services/DatabaseServiceTests.cs",
-            "Tests/Services/DatabaseInitializerTests.cs",
+            "Tests/Services/DatabaseInitializerTests.cs"
+          ]
+        },
+        {
+          "condition": "(!http)",
+          "exclude": [
+            "Services/ApiService.cs",
+            "Build/Features.Http.props",
             "Tests/Services/ApiServiceTests.cs"
           ]
         },
@@ -148,6 +165,30 @@
           "condition": "(!attribution)",
           "exclude": [
             "DevTemAttribution.cs"
+          ]
+        },
+        {
+          "condition": "(!tray)",
+          "exclude": [
+            "docs/feature-guides/tray.md"
+          ]
+        },
+        {
+          "condition": "(!updates)",
+          "exclude": [
+            "docs/feature-guides/updates.md"
+          ]
+        },
+        {
+          "condition": "(!database)",
+          "exclude": [
+            "docs/feature-guides/database.md"
+          ]
+        },
+        {
+          "condition": "(!http)",
+          "exclude": [
+            "docs/feature-guides/http.md"
           ]
         }
       ]

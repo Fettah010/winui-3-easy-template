@@ -37,6 +37,11 @@ public static class ServiceLocator
 
             var services = new ServiceCollection();
 
+            // <devtem:services>
+            // Register application-owned services here. Keep template
+            // infrastructure registrations below this marker unchanged.
+            // </devtem:services>
+
             // Singleton services (process-lifetime objects expose Current;
             // the container owns the registration so there is one composition
             // root instead of scattered news).
@@ -65,13 +70,13 @@ public static class ServiceLocator
             services.AddTransient<ViewModels.SettingsPageViewModel>();
             services.AddTransient<ViewModels.DiagnosticsPageViewModel>();
 
-#if (database)
+#if (http)
             // HTTP client (transient by default)
-                    services.AddHttpClient<ApiService>(client =>
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(30);
-                        client.DefaultRequestHeaders.Add("User-Agent", AppMetadata.UserAgent);
-                    });
+            services.AddHttpClient<ApiService>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Add("User-Agent", AppMetadata.UserAgent);
+            });
 #endif
 
             _provider = services.BuildServiceProvider();

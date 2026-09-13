@@ -13,6 +13,8 @@ namespace DevTemWinUi3.ViewModels;
 /// </summary>
 public partial class SamplePageViewModel : ObservableObject
 {
+    public const string Route = "sample";
+
     /// <summary>
     /// The page's nav icon (chosen at scaffold time via --icon). Used for
     /// the NavigationViewItem's SymbolIcon; data-bound nav hosts can bind it.

@@ -4,6 +4,24 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+## [0.0.2-beta] — 2026-09-14
+
+Profile-aware template documentation, feature composition, reusable page
+generation, branding configuration, and validation improvements.
+
+### Added
+
+- Generated feature summaries and conditional feature guides.
+- Stable template customization contract and documented profile presets.
+- Safe page generation with routes, icons, localization snippets, and rollback.
+- Product/deployment configuration seams and validated branding pipeline.
+- Expanded scaffold matrix, parity checks, and generated-page UI validation.
+
+### Changed
+
+- Optional tray, updates, database, HTTP, and attribution features are
+  documented and validated independently.
+
 ## [0.0.5-beta] — unreleased
 
 Internal restructure release. No behavior changes — same features, cleaner

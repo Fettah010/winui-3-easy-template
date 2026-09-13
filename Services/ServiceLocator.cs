@@ -37,6 +37,11 @@ public static class ServiceLocator
 
             var services = new ServiceCollection();
 
+            // <devtem:services>
+            // Register application-owned services here. Keep template
+            // infrastructure registrations below this marker unchanged.
+            // </devtem:services>
+
             // Singleton services (process-lifetime objects expose Current;
             // the container owns the registration so there is one composition
             // root instead of scattered news).
