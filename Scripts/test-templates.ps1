@@ -49,7 +49,7 @@ function Assert-ScaffoldIdentity([string]$outDir, [string]$scheme) {
     if ($manifestText -notmatch [regex]::Escape('Name="' + $bare + '"')) {
         throw "manifest protocol Name is not '$bare'"
     }
-    $metadata = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\AppMetadata.cs"))
+    $metadata = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\Helpers\AppMetadata.cs"))
     if ($metadata -notmatch [regex]::Escape('"' + $scheme + '"')) {
         throw "AppMetadata protocol prefix is not '$scheme'"
     }

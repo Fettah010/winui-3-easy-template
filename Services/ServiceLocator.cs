@@ -47,6 +47,8 @@ public static class ServiceLocator
             services.AddSingleton<AppInfo>(AppInfo.Current);
             services.AddSingleton<ThemeService>(ThemeService.Current);
             services.AddSingleton<UpdateService>(UpdateService.Current);
+            services.AddSingleton<IUpdateService>(UpdateService.Current);
+            services.AddSingleton<IFilePickerService, FilePickerService>();
             services.AddSingleton<SystemTrayService>(SystemTrayService.Current);
             services.AddSingleton<NavigationService>(NavigationService.Current);
             services.AddSingleton<DesktopToastService>(DesktopToastService.Current);

@@ -5,7 +5,7 @@
 #   .\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" `
 #       -RepoUrl "https://github.com/acme/desk-app"
 #
-# Code surfaces (mutex, registry, folders, feeds) read Services/AppMetadata.cs,
+# Code surfaces (mutex, registry, folders, feeds) read Services/Helpers/AppMetadata.cs,
 # whose defaults this script rewrites too. Manual steps afterwards (see
 # docs/TEMPLATE-GUIDE.md): replace Assets art, re-run create-shortcut.ps1.
 param(

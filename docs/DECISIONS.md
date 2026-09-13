@@ -29,9 +29,13 @@ in git history; this file saves the next agent the archaeology.
   and `v0.0.2` exist; Velopack versions must increase.
 - **2026-09-13 — Deleted plan files stay deleted.** `FLAUI-PLAN.md`,
   `UPGRADE-ROADMAP.md`, root `ROADMAP.md` were all done; the live plan is
-  `docs/RELEASE-PLAN.md`, decisions live here.
+  `docs/RESTRUCTURE-PLAN.md`, decisions live here.
 - **2026-09-13 — Agents never commit/push/tag unasked.** Releases are
   prepared fully, then handed over as exact commands for the human.
 - **2026-09-13 — v0.0.4-beta is a pipeline release.** No app behavior
   changes since 0.0.3-beta (one P1/P2 commit); the what's-new dialog
   says so honestly instead of repeating 0.0.3 highlights.
+- **2026-09-13 — Never blind-copy app→template for conditioned files.**
+  Phase 1 wiped the `#if (tray|updates)` guards in the template's
+  `MainWindow`/`SettingsPage` (parity normalizes `#if` regions, so only
+  the matrix caught it). Copy, then restore guards, then matrix.

@@ -57,8 +57,8 @@ public sealed class FirstRunService
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• Release pipeline hardening and template checks
-• Smoke-test reliability on busy desktops
+• Restart and update prompts fully translated
+• Same features, cleaner and faster internals
 • Bug fixes and performance improvements";
     }
 }

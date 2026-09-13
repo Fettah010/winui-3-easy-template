@@ -1,169 +1,24 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
-using WinRT.Interop;
 using Serilog;
+using static DevTemWinUi3.Services.Native.TrayNative;
 
 namespace DevTemWinUi3.Services;
 
+/// <summary>
+/// Minimize-to-tray: notify icon, message-only window, context menu.
+/// Win32 declarations live in <c>Native/TrayNative.cs</c>; auto-start lives
+/// in <see cref="AutoStartService"/>; showing the window lives in
+/// <see cref="WindowActivator"/>.
+/// </summary>
 public sealed class SystemTrayService : IDisposable
 {
-    private const uint WM_APP = 0x8000;
-    private const uint WM_TRAYICON = WM_APP + 1;
-
-    private const uint NIF_MESSAGE = 0x01;
-    private const uint NIF_ICON = 0x02;
-    private const uint NIF_TIP = 0x04;
-    private const uint NIF_SHOWTIP = 0x10;
-
-    private const uint NIM_ADD = 0x00;
-    private const uint NIM_MODIFY = 0x01;
-    private const uint NIM_DELETE = 0x02;
-    private const uint NIM_SETVERSION = 0x04;
-    private const uint NOTIFYICON_VERSION_4 = 4;
-
-    private const uint WM_LBUTTONUP = 0x0202;
-    private const uint WM_LBUTTONDBLCLK = 0x0203;
-    private const uint WM_RBUTTONUP = 0x0205;
-
-    private const uint TPM_RIGHTBUTTON = 0x0002;
-    private const uint TPM_NONOTIFY = 0x0080;
-    private const uint TPM_RETURNCMD = 0x0100;
-
     private const int ID_TRAY_SHOW = 1001;
     private const int ID_TRAY_CHECK_UPDATES = 1002;
     private const int ID_TRAY_SETTINGS = 1003;
     private const int ID_TRAY_EXIT = 1004;
-
-    private const uint IMAGE_ICON = 1;
-    private const uint LR_LOADFROMFILE = 0x0010;
-    private const uint WS_POPUP = 0x80000000;
-    private const uint WS_EX_TOOLWINDOW = 0x00000080;
-
-    #region P/Invoke
-
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern bool Shell_NotifyIconW(uint dwMessage, ref NOTIFYICONDATAW lpData);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern IntPtr LoadImageW(IntPtr hInst, string name, uint type, int cx, int cy, uint fuLoad);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool DestroyIcon(IntPtr hIcon);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern IntPtr CreateWindowExW(
-        uint dwExStyle, string lpClassName, string lpWindowName, uint dwStyle,
-        int x, int y, int nWidth, int nHeight,
-        IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool DestroyWindow(IntPtr hWnd);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr DefWindowProcW(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr SetWindowLongPtrW(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetWindowLongPtrW(IntPtr hWnd, int nIndex);
-
-    [DllImport("user32.dll")]
-    private static extern bool GetCursorPos(out POINT lpPoint);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr CreatePopupMenu();
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern bool AppendMenuW(IntPtr hMenu, uint uFlags, IntPtr uIDNewItem, string? lpNewItem);
-
-    [DllImport("user32.dll")]
-    private static extern int TrackPopupMenu(
-        IntPtr hMenu, uint uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
-
-    [DllImport("user32.dll")]
-    private static extern bool DestroyMenu(IntPtr hMenu);
-
-    [DllImport("user32.dll")]
-    private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-    private static extern IntPtr GetModuleHandleW(string? lpModuleName);
-
-    [DllImport("user32.dll")]
-    private static extern ushort RegisterClassExW(ref WNDCLASSEXW lpwcx);
-
-    [DllImport("user32.dll")]
-    private static extern uint RegisterWindowMessageW([MarshalAs(UnmanagedType.LPWStr)] string lpString);
-
-    [DllImport("user32.dll")]
-    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr FindWindowW(
-        [MarshalAs(UnmanagedType.LPWStr)] string? lpClassName,
-        [MarshalAs(UnmanagedType.LPWStr)] string? lpWindowName);
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    private struct NOTIFYICONDATAW
-    {
-        public uint cbSize;
-        public IntPtr hWnd;
-        public uint uID;
-        public uint uFlags;
-        public uint uCallbackMessage;
-        public IntPtr hIcon;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-        public string szTip;
-        public uint dwState;
-        public uint dwStateMask;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-        public string szInfo;
-        public uint uTimeoutOrVersion;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-        public string szInfoTitle;
-        public uint dwInfoFlags;
-        public Guid guidItem;
-        public IntPtr hBalloonIcon;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT
-    {
-        public int X;
-        public int Y;
-    }
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    private struct WNDCLASSEXW
-    {
-        public uint cbSize;
-        public uint style;
-        public IntPtr lpfnWndProc;
-        public int cbClsExtra;
-        public int cbWndExtra;
-        public IntPtr hInstance;
-        public IntPtr hIcon;
-        public IntPtr hCursor;
-        public IntPtr hbrBackground;
-        public string? lpszMenuName;
-        public string lpszClassName;
-        public IntPtr hIconSm;
-    }
-
-    private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    private const int GWLP_WNDPROC = -4;
-    private const int GWL_STYLE = -16;
-    private const int HWND_TOPMOST = -1;
-    private const uint SWP_NOMOVE = 0x0002;
-    private const uint SWP_NOSIZE = 0x0001;
-    private const uint SWP_SHOWWINDOW = 0x0040;
-
-    #endregion
 
     private IntPtr _windowHandle;
     private IntPtr _iconHandle;
@@ -175,12 +30,17 @@ public sealed class SystemTrayService : IDisposable
 
     private readonly SettingsService _settings = SettingsService.Current;
     private Window? _mainWindow;
-    private IntPtr _mainWindowHwnd;
     private bool _isVisible;
     private bool _iconVisible;
     private bool _isDarkIcon;
 
     public static SystemTrayService Current { get; } = new();
+
+    /// <summary>
+    /// Raised when a tray menu item targets a page (check-updates, settings).
+    /// MainWindow shows itself and navigates.
+    /// </summary>
+    public event EventHandler<TrayNavigationRequest>? NavigationRequested;
 
     private SystemTrayService() { }
 
@@ -190,8 +50,6 @@ public sealed class SystemTrayService : IDisposable
 
         try
         {
-            _mainWindowHwnd = WindowNative.GetWindowHandle(mainWindow);
-
             _taskbarCreatedMsg = RegisterWindowMessageW("TaskbarCreated");
 
             _wndProcDelegate = TrayWndProc;
@@ -260,14 +118,7 @@ public sealed class SystemTrayService : IDisposable
 
         try
         {
-            _mainWindow.AppWindow.Show();
-            _mainWindow.Activate();
-
-            SetWindowPos(_mainWindowHwnd, (IntPtr)HWND_TOPMOST, 0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-            SetWindowPos(_mainWindowHwnd, IntPtr.Zero, 0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-
+            WindowActivator.ShowAndActivate(_mainWindow);
             Log.Information("Window restored from tray");
         }
         catch (Exception ex)
@@ -320,46 +171,6 @@ public sealed class SystemTrayService : IDisposable
     public void Shutdown()
     {
         Dispose();
-    }
-
-    public static void SetAutoStart(bool enabled)
-    {
-        try
-        {
-            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Run", true);
-            if (key is null) return;
-
-            if (enabled)
-            {
-                var exePath = Environment.ProcessPath ?? string.Empty;
-                key.SetValue(AppMetadata.AutoStartRegistryName, $"\"{exePath}\"");
-                Log.Information("Auto-start enabled");
-            }
-            else
-            {
-                key.DeleteValue(AppMetadata.AutoStartRegistryName, false);
-                Log.Information("Auto-start disabled");
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Failed to set auto-start");
-        }
-    }
-
-    public static bool IsAutoStartEnabled()
-    {
-        try
-        {
-            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Run", false);
-            return key?.GetValue(AppMetadata.AutoStartRegistryName) is not null;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     private void CreateMessageWindow()
@@ -549,8 +360,6 @@ public sealed class SystemTrayService : IDisposable
                 break;
         }
     }
-
-    public event EventHandler<TrayNavigationRequest>? NavigationRequested;
 
     private void ExitApp()
     {

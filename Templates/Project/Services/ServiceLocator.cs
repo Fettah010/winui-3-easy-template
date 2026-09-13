@@ -50,7 +50,9 @@ public static class ServiceLocator
             services.AddSingleton<ThemeService>(ThemeService.Current);
 #if (updates)
             services.AddSingleton<UpdateService>(UpdateService.Current);
+            services.AddSingleton<IUpdateService>(UpdateService.Current);
 #endif
+            services.AddSingleton<IFilePickerService, FilePickerService>();
 #if (tray)
             services.AddSingleton<SystemTrayService>(SystemTrayService.Current);
 #endif

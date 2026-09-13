@@ -8,8 +8,11 @@ using Serilog;
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Typed HTTP client for making REST API calls.
-/// Uses IHttpClientFactory for proper lifecycle management.
+/// Sample typed HTTP client (REST): the template's HTTP starting point,
+/// registered via <c>AddHttpClient</c> (database feature). It ships with no
+/// production call sites on purpose — point <c>BaseAddress</c> at your API
+/// and call it from a ViewModel, or delete this file (plus its registration
+/// and tests) if your app has no backend.
 /// </summary>
 public sealed class ApiService
 {

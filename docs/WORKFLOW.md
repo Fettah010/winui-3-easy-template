@@ -35,8 +35,25 @@ Always pass `-p:Platform=x64` (XAML compiler fails without it).
   the repo (`set-app-icon.ps1` is the model); header documents usage.
 - **Workflows:** Workflow tier. Never push a tag to "test CI".
 - **Docs-only:** no build needed — say so in the summary.
-- **Plan files:** `docs/RELEASE-PLAN.md` checkboxes move in the same
+- **Plan files:** `docs/RESTRUCTURE-PLAN.md` checkboxes move in the same
   commit as the work; `docs/STATE.md` refreshes at session end.
+
+## Release runbook (maintainer, after green main)
+
+```powershell
+git tag v0.0.5-beta
+git push origin v0.0.5-beta
+# CI builds, packs, publishes to GitHub Releases (beta channel)
+git branch -f beta v0.0.5-beta
+git push origin beta --force
+# NuGet template package (separate tag → templates-publish.yml):
+git tag templates-v0.1.3
+git push origin templates-v0.1.3
+```
+
+Tag name determines channel (`v*-beta` → beta, plain `v*` → stable).
+Velopack versions must keep increasing — each beta bumps the patch.
+Never push a tag to "test CI" (Workflow tier above covers it).
 
 ## Known fragile points (do not "fix" by retrying blindly)
 

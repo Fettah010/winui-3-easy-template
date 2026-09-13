@@ -5,8 +5,8 @@
 #   powershell -NoProfile -ExecutionPolicy Bypass -File Scripts\add-page.ps1 -Name Orders -Title "Order History" -Icon Shop
 #
 # -Name   PascalCase page name (single word recommended: Orders, not OrderHistory).
-# -Title  Page title + nav label. Defaults to -Name. Drives the template's
-#         --title (XAML fallback + en-US strings; es/fr land as TODO-translate).
+# -Title  Page title + nav label. Defaults to -Name. Seeds the en-US strings
+#         (XAML binds live via {loc:Loc}; es/fr land as TODO-translate).
 # -Icon   Nav icon, a WinUI Symbol member (matches the template's --icon
 #         choice list; keep the two in sync).
 #
@@ -193,41 +193,35 @@ try {
     }
     Remove-Item -LiteralPath $scaffoldDir -Recurse -Force
 
-    # Strings: one insert per language dict, right after the NavSettings line
-    # (dicts are declared en, es, fr - in that order).
+    # Strings: one insert per language file, right after the NavSettings line
+    # (Services/Localization/{En,Es,Fr}Strings.cs, in that order). .NET
+    # UTF-8 IO (no BOM): PowerShell 5.1 Get/Set-Content would round-trip
+    # through the system codepage and only survive by accident.
     Write-Host "`n==> insert strings (3 languages)" -ForegroundColor Cyan
-    $locPath = Join-Path $RepoRoot "Services\LocalizationService.cs"
-    Snapshot-File $locPath
-    $locText = Get-Content -LiteralPath $locPath -Raw
-    $anchors = [regex]::Matches($locText, '(?m)^(\s*)\["NavSettings"\] = "[^"]*",\s*$')
-    if ($anchors.Count -ne 3) { Fail "NavSettings anchor found $($anchors.Count) times (expected 3) in LocalizationService.cs" }
-    $langs = @("en-US", "es-ES", "fr-FR")
-    $locLines = $locText -split "`r?`n"
-    $offset = 0
-    for ($i = 0; $i -lt 3; $i++) {
-        $lineIdx = -1
-        $seen = -1
-        for ($l = 0; $l -lt $locLines.Count; $l++) {
-            if ($locLines[$l] -match '^\s*\["NavSettings"\] = "[^"]*",\s*$') {
-                $seen++
-                if ($seen -eq $i) { $lineIdx = $l; break }
-            }
-        }
-        if ($lineIdx -lt 0) { Fail "NavSettings anchor #$i vanished in LocalizationService.cs" }
-        $indent = $anchors[$i].Groups[1].Value
-        $lang = $langs[$i]
-        $insert = @(
-            $indent,
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $locFiles = @(
+        @{ Path = Join-Path $RepoRoot "Services\Localization\EnStrings.cs"; Lang = "en-US" },
+        @{ Path = Join-Path $RepoRoot "Services\Localization\EsStrings.cs"; Lang = "es-ES" },
+        @{ Path = Join-Path $RepoRoot "Services\Localization\FrStrings.cs"; Lang = "fr-FR" }
+    )
+    foreach ($entry in $locFiles) {
+        Snapshot-File $entry.Path
+        $text = [System.IO.File]::ReadAllText($entry.Path, [System.Text.Encoding]::UTF8)
+        $m = [regex]::Match($text, '(?m)^(\s*)\["NavSettings"\] = "[^"]*",\s*$')
+        if (-not $m.Success) { Fail "NavSettings anchor missing in $($entry.Path)" }
+        $indent = $m.Groups[1].Value
+        $lang = $entry.Lang
+        $insertLines = @(
             ('{0}["Nav{1}"] = "{2}",' -f $indent, $Name, (Escape-CSharp $sections[$lang]["Nav$Name"])),
             ('{0}["{1}Title"] = "{2}",' -f $indent, $Name, (Escape-CSharp $sections[$lang]["$($Name)Title"])),
             ('{0}["{1}Description"] = "{2}",' -f $indent, $Name, (Escape-CSharp $sections[$lang]["$($Name)Description"]))
         )
-        $before = $locLines[0..($lineIdx + $offset)]
-        $after = $locLines[(($lineIdx + $offset + 1))..($locLines.Count - 1)]
-        $locLines = @($before) + @($insert) + @($after)
-        $offset += 4
+        $insert = "`r`n" + ($insertLines -join "`r`n")
+        $anchorLine = $m.Value
+        $idx = $text.IndexOf($anchorLine, [System.StringComparison]::Ordinal)
+        $newText = $text.Substring(0, $idx + $anchorLine.Length) + $insert + $text.Substring($idx + $anchorLine.Length)
+        [System.IO.File]::WriteAllText($entry.Path, $newText, $utf8NoBom)
     }
-    Set-Content -LiteralPath $locPath -Value ($locLines -join "`r`n") -NoNewline
 
     # DI registration.
     Write-Host "`n==> register ViewModel" -ForegroundColor Cyan
@@ -235,16 +229,16 @@ try {
     Snapshot-File $slPath
     Insert-Unique $slPath "services.AddTransient<ViewModels.SettingsPageViewModel>();" "`r`n            services.AddTransient<ViewModels.$($Name)PageViewModel>();"
 
-    # Route + nav item + nav label.
+    # Route + nav item. The label needs no code: nav items bind
+    # (Content="{loc:Loc Key=Nav<Name>}"), so only the XAML item is added.
     Write-Host "`n==> wire route + nav" -ForegroundColor Cyan
     $mwPath = Join-Path $RepoRoot "MainWindow.xaml.cs"
     Snapshot-File $mwPath
     Insert-Unique $mwPath '_nav.RegisterRoute("home", typeof(HomePage));' "`r`n        _nav.RegisterRoute(`"$tag`", typeof($($Name)Page));"
-    Insert-Unique $mwPath 'NavHomeItem.Content = loc.GetString("NavHome");' "`r`n            Nav$($Name)Item.Content = loc.GetString(`"Nav$Name`");"
 
     $xamlPath = Join-Path $RepoRoot "MainWindow.xaml"
     Snapshot-File $xamlPath
-    $navItem = "`r`n                <NavigationViewItem x:Name=`"Nav$($Name)Item`" AutomationProperties.AutomationId=`"Nav$($Name)Item`" Content=`"$(Escape-Xml $Title)`" Tag=`"$tag`">`r`n                    <NavigationViewItem.Icon>`r`n                        <SymbolIcon Symbol=`"$Icon`"/>`r`n                    </NavigationViewItem.Icon>`r`n                </NavigationViewItem>`r`n            "
+    $navItem = "`r`n                <NavigationViewItem AutomationProperties.AutomationId=`"Nav$($Name)Item`" Content=`"{loc:Loc Key=Nav$Name}`" Tag=`"$tag`">`r`n                    <NavigationViewItem.Icon>`r`n                        <SymbolIcon Symbol=`"$Icon`"/>`r`n                    </NavigationViewItem.Icon>`r`n                </NavigationViewItem>`r`n            "
     Insert-Unique $xamlPath "</NavigationView.MenuItems>" $navItem -Before
 
     # Prove it: full build (warnings are errors) + full test suite.

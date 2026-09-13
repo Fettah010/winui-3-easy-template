@@ -50,7 +50,7 @@ public sealed class ThemeService
         try
         {
             if (App.Current is App app &&
-                app.m_window is MainWindow mainWindow &&
+                app.MainWindowInstance is MainWindow mainWindow &&
                 mainWindow.Content is FrameworkElement root)
             {
                 ApplyTo(root);

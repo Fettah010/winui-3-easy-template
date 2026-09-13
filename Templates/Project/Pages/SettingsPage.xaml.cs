@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
@@ -8,7 +7,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
-using Windows.Storage.Pickers;
 
 namespace DevTemWinUi3.Pages;
 
@@ -26,7 +24,12 @@ public sealed partial class SettingsPage : Page, INavigationAware
         ViewModel = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
         DataContext = ViewModel;
 
-        ApplyLocalization();
+        // Static labels and update state bind in XAML (VM-owned); only the
+        // packaged-install note and screen-reader names need a refresh on
+        // language switch. (Unsubscribed in OnNavigatedFrom: this page is
+        // not cached, so a static-event subscription would leak.)
+        LocalizationService.Current.LanguageChanged += OnLanguageChanged;
+        RefreshDynamicLabels();
 
         // Populate language combo box
         foreach (var lang in LocalizationService.AvailableLanguages)
@@ -35,6 +38,13 @@ public sealed partial class SettingsPage : Page, INavigationAware
         }
 
         SelectCurrentLanguage();
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        RefreshDynamicLabels();
+        RefreshThemeComboBoxDisplay();
+        ViewModel.RefreshUpdateLabels();
     }
 
     private void SelectCurrentLanguage()
@@ -51,73 +61,25 @@ public sealed partial class SettingsPage : Page, INavigationAware
         }
     }
 
-    private void ApplyLocalization()
+    /// <summary>
+    /// Re-applies the labels that cannot live in XAML bindings: the
+    /// packaged-install note (runtime-constant, set once) and screen-reader
+    /// names. Update state (buttons, status card, progress) is VM-owned and
+    /// bound — refreshing it here would clobber a running operation.
+    /// </summary>
+    private void RefreshDynamicLabels()
     {
         var loc = LocalizationService.Current;
 
-        // Feature sections collapse at runtime when their flag was
-        // scaffolded off (XAML keeps no conditionals by design).
-        UpdatesSection.Visibility = AppFeatures.Updates ? Visibility.Visible : Visibility.Collapsed;
-        TraySection.Visibility = AppFeatures.Tray ? Visibility.Visible : Visibility.Collapsed;
-
-        SettingsTitleText.Text = loc.GetString("SettingsTitle");
-        SettingsDescText.Text = loc.GetString("SettingsDescription");
-        SettingsAppearanceText.Text = loc.GetString("SettingsAppearance");
-        SettingsLanguageText.Text = loc.GetString("SettingsLanguage");
-        SettingsUpdatesText.Text = loc.GetString("SettingsUpdates");
-        SettingsSystemTrayText.Text = loc.GetString("SettingsSystemTray");
-        SettingsAboutText.Text = loc.GetString("SettingsAbout");
-
-        ThemeCard.Header = loc.GetString("SettingsTheme");
-        ThemeCard.Description = loc.GetString("SettingsThemeDesc");
-        ThemeSystemItem.Content = loc.GetString("SettingsThemeSystem");
-        ThemeLightItem.Content = loc.GetString("SettingsThemeLight");
-        ThemeDarkItem.Content = loc.GetString("SettingsThemeDark");
-        AutomationProperties.SetName(ThemeComboBox, loc.GetString("SettingsTheme"));
-        RefreshThemeComboBoxDisplay();
-
-        LanguageCard.Header = loc.GetString("SettingsLanguage");
-        LanguageCard.Description = loc.GetString("SettingsLanguageDesc");
-        AutomationProperties.SetName(LanguageComboBox, loc.GetString("SettingsLanguage"));
-
-        ChannelCard.Header = loc.GetString("SettingsChannelHeader");
-        ChannelCard.Description = loc.GetString("SettingsChannelDesc");
-        AutomationProperties.SetName(ChannelSegment, loc.GetString("SettingsChannelHeader"));
-
-        CheckUpdatesCard.Header = loc.GetString("SettingsCheckHeader");
-        CheckUpdatesCard.Description = loc.GetString("SettingsCheckDesc");
-        if (CheckUpdatesButton.IsEnabled)
-            CheckUpdatesButton.Content = loc.GetString("SettingsCheckNow");
-
-        AutoCheckCard.Header = loc.GetString("SettingsAutoCheckHeader");
-        AutoCheckCard.Description = loc.GetString("SettingsAutoCheckDesc");
-        AutomationProperties.SetName(AutoCheckToggle, loc.GetString("SettingsAutoCheckHeader"));
-
-        UpdateStatusCard.Header = loc.GetString("SettingsCheckHeader");
-        if (UpdateStatusCard.Visibility == Visibility.Collapsed)
-            UpdateStatusCard.Description = loc.GetString("SettingsStatusIdle");
-
-        MinimizeCard.Header = loc.GetString("SettingsMinimizeToTray");
-        MinimizeCard.Description = loc.GetString("SettingsTrayMinimizeDesc");
-        AutomationProperties.SetName(MinimizeToTrayToggle, loc.GetString("SettingsMinimizeToTray"));
-        AutoStartCard.Header = loc.GetString("SettingsAutoStart");
-        AutoStartCard.Description = loc.GetString("SettingsTrayAutoStartDesc");
-        AutomationProperties.SetName(AutoStartToggle, loc.GetString("SettingsAutoStart"));
         if (!ViewModel.AutoStartAvailable)
             AutoStartCard.Description = loc.GetString("SettingsTrayPackagedNote");
 
-        AppVersionCard.Header = loc.GetString("SettingsAppVersion");
-        RepoCard.Header = loc.GetString("SettingsRepoHeader");
-
-        SettingsBackupText.Text = loc.GetString("SettingsBackup");
-        BackupCard.Header = loc.GetString("SettingsBackupHeader");
-        BackupCard.Description = loc.GetString("SettingsBackupDesc");
-        ResetSettingsButton.Content = loc.GetString("SettingsReset");
-        ExportSettingsButton.Content = loc.GetString("SettingsExport");
-        ImportSettingsButton.Content = loc.GetString("SettingsImport");
-
-        if (InstallUpdateButton.Visibility == Visibility.Visible && InstallUpdateButton.IsEnabled)
-            InstallUpdateButton.Content = loc.GetString("SettingsInstall");
+        AutomationProperties.SetName(ThemeComboBox, loc.GetString("SettingsTheme"));
+        AutomationProperties.SetName(LanguageComboBox, loc.GetString("SettingsLanguage"));
+        AutomationProperties.SetName(ChannelSegment, loc.GetString("SettingsChannelHeader"));
+        AutomationProperties.SetName(AutoCheckToggle, loc.GetString("SettingsAutoCheckHeader"));
+        AutomationProperties.SetName(MinimizeToTrayToggle, loc.GetString("SettingsMinimizeToTray"));
+        AutomationProperties.SetName(AutoStartToggle, loc.GetString("SettingsAutoStart"));
     }
 
     /// <summary>
@@ -143,31 +105,28 @@ public sealed partial class SettingsPage : Page, INavigationAware
     {
         if (LanguageComboBox.SelectedItem is LanguageInfo lang)
         {
+            // The language applies instantly through bindings + the
+            // LanguageChanged handler above — no manual refresh needed.
             LocalizationService.Current.SetLanguage(lang.Tag);
-            // The language applies instantly: refresh our own strings right away.
-            // Other open pages refresh when navigated to; the nav pane listens
-            // to LanguageChanged directly.
-            ApplyLocalization();
         }
     }
 
-#if (updates)
-    private Velopack.UpdateInfo? _pendingUpdate;
-#endif
     private bool _autoCheckArmed;
     private CancellationTokenSource? _autoCheckCts;
 
     public void OnNavigatedTo(object? parameter)
     {
-        ApplyLocalization();
+        RefreshDynamicLabels();
         if (TrayNavigationRequest.ShouldAutoCheck(parameter))
             _autoCheckArmed = true;
     }
 
     public void OnNavigatedFrom()
     {
-        // The page is gone: cancel any pending auto-check so it can never
-        // touch a detached visual tree.
+        // The page is gone: drop the static subscription (no cache → leak)
+        // and cancel any pending auto-check so it can never touch a
+        // detached visual tree.
+        LocalizationService.Current.LanguageChanged -= OnLanguageChanged;
         _autoCheckArmed = false;
         try { _autoCheckCts?.Cancel(); } catch { }
     }
@@ -182,6 +141,8 @@ public sealed partial class SettingsPage : Page, INavigationAware
         // user first sees Settings open smoothly (from Home or tray restore),
         // then a short beat so the eye registers the page before the button
         // flips to "Checking…". Falls back after a timeout; cancelled on leave.
+        // The check itself lives in the ViewModel (testable); this is pure
+        // view timing.
         _autoCheckCts?.Cancel();
         _autoCheckCts = new CancellationTokenSource();
         var ct = _autoCheckCts.Token;
@@ -192,7 +153,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
             await WaitForFirstRenderAsync(linked.Token);
             await Task.Delay(150, ct);
             if (!ct.IsCancellationRequested)
-                await RunUpdateCheckAsync();
+                await ViewModel.CheckForUpdatesAsync(ct);
         }
         catch (OperationCanceledException) { }
         catch { }
@@ -223,242 +184,17 @@ public sealed partial class SettingsPage : Page, INavigationAware
     {
         // A manual click wins over any armed auto-check still waiting.
         _autoCheckArmed = false;
-        await RunUpdateCheckAsync();
+        await ViewModel.CheckForUpdatesAsync();
     }
 
-    /// <summary>
-    /// Runs the Velopack update check and updates the status card.
-    /// Public so the tray "Check for updates" menu item can trigger it
-    /// right after navigating here.
-    /// Without the updates feature this is an inert stub (the whole section
-    /// is collapsed, so it is unreachable — the shell only satisfies XAML).
-    /// </summary>
-#if (updates)
-    public async Task RunUpdateCheckAsync()
-    {
-        // The page may be navigated via tray before the XAML names are
-        // wired in a test/host scenario — bail out gracefully.
-        if (CheckUpdatesButton is null)
-            return;
-
-        var loc = LocalizationService.Current;
-        var svc = UpdateService.Current;
-
-        if (!svc.IsInstalled)
-        {
-            // Unpackaged run: explain via the animated in-app toast (modern
-            // WinUI style) instead of the inline status card.
-            LoggingService.Log.Information("Update check: app is not installed, showing toast");
-            NotificationService.Current.Info(loc.GetString("NotifUpdates"), loc.GetString("SettingsNotInstalled"));
-            return;
-        }
-
-        CheckUpdatesButton.IsEnabled = false;
-        CheckUpdatesButton.Content = loc.GetString("SettingsChecking");
-
-        try
-        {
-            var update = await svc.CheckForUpdatesAsync();
-            if (update is null)
-            {
-                ShowUpdateStatus(loc.GetString("SettingsNoUpdate"), false);
-                NotificationService.Current.Success(loc.GetString("NotifUpdates"), loc.GetString("SettingsNoUpdate"));
-            }
-            else
-            {
-                _pendingUpdate = update;
-                var version = update.TargetFullRelease.Version;
-                ShowUpdateStatus($"v{version} available", true);
-                NotificationService.Current.Info(loc.GetString("NotifUpdates"), $"Version {version} is available. Click Install to update.");
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowUpdateStatus($"{loc.GetString("SettingsCheckFailed")}: {ex.Message}", false);
-            NotificationService.Current.Error(loc.GetString("SettingsCheckFailed"), ex.Message);
-        }
-        finally
-        {
-            CheckUpdatesButton.IsEnabled = true;
-            CheckUpdatesButton.Content = loc.GetString("SettingsCheckNow");
-        }
-    }
-#else
-    public Task RunUpdateCheckAsync() => Task.CompletedTask;
-#endif
-
-#if (updates)
-    private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_pendingUpdate is null) return;
-
-        var loc = LocalizationService.Current;
-        InstallUpdateButton.IsEnabled = false;
-        InstallUpdateButton.Content = loc.GetString("SettingsDownloading");
-        CheckUpdatesButton.IsEnabled = false;
-
-        // Smooth determinate progress while Velopack downloads the delta/full
-        // package; the callback runs on a background thread, so marshal in.
-        DownloadProgressBar.Visibility = Visibility.Visible;
-        DownloadProgressBar.Value = 0;
-        UpdateStatusText.Text = loc.GetString("SettingsDownloadingProgress", 0);
-
-        try
-        {
-            await UpdateService.Current.DownloadUpdatesAsync(_pendingUpdate, percent =>
-            {
-                try
-                {
-                    DispatcherQueue.TryEnqueue(() =>
-                    {
-                        DownloadProgressBar.Value = percent;
-                        UpdateStatusText.Text = loc.GetString("SettingsDownloadingProgress", percent);
-                    });
-                }
-                catch { }
-            });
-
-            UpdateStatusText.Text = loc.GetString("SettingsInstalling");
-            DownloadProgressBar.Visibility = Visibility.Collapsed;
-            InstallUpdateButton.Visibility = Visibility.Collapsed;
-            NotificationService.Current.Success(loc.GetString("NotifUpdates"), "Update downloaded. Restarting…");
-
-            await Task.Delay(300);
-            UpdateService.Current.ApplyUpdatesAndRestart(_pendingUpdate);
-        }
-        catch (Exception ex)
-        {
-            UpdateStatusText.Text = $"Install failed: {ex.Message}";
-            DownloadProgressBar.Visibility = Visibility.Collapsed;
-            InstallUpdateButton.IsEnabled = true;
-            InstallUpdateButton.Content = loc.GetString("SettingsInstall");
-            CheckUpdatesButton.IsEnabled = true;
-            NotificationService.Current.Error(loc.GetString("SettingsCheckFailed"), ex.Message);
-        }
-    }
-#else
-    private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
-    {
-    }
-#endif
-
-    private void ResetSettingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            ViewModel.ResetSettingsCommand.Execute(null);
-            RefreshAfterBackup();
-            var loc = LocalizationService.Current;
-            NotificationService.Current.Success(
-                loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupResetDone"));
-        }
-        catch { }
-    }
-
-    private async void ExportSettingsButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var picker = new FileSavePicker
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = "devtem-settings",
-            };
-            picker.FileTypeChoices.Add("JSON", new List<string> { ".json" });
-            InitializeWithWindow(picker);
-
-            var file = await picker.PickSaveFileAsync();
-            if (file is null)
-                return;
-
-            var loc = LocalizationService.Current;
-            if (ViewModel.ExportTo(file.Path))
-                NotificationService.Current.Success(
-                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupExportDone"));
-            else
-                NotificationService.Current.Error(
-                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupImportFailed"));
-        }
-        catch { }
-    }
+    private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e) =>
+        await ViewModel.InstallPendingUpdateAsync();
 
     private async void ImportSettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var picker = new FileOpenPicker
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-            };
-            picker.FileTypeFilter.Add(".json");
-            InitializeWithWindow(picker);
-
-            var file = await picker.PickSingleFileAsync();
-            if (file is null)
-                return;
-
-            var loc = LocalizationService.Current;
-            if (ViewModel.ImportFrom(file.Path))
-            {
-                RefreshAfterBackup();
-                NotificationService.Current.Success(
-                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupImportDone"));
-            }
-            else
-            {
-                NotificationService.Current.Error(
-                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupImportFailed"));
-            }
-        }
-        catch { }
-    }
-
-    /// <summary>
-    /// Associates a WinRT picker with the main window (required for
-    /// unpackaged apps). No-op when the window is unavailable.
-    /// </summary>
-    private static void InitializeWithWindow(object picker)
-    {
-        try
-        {
-            if (App.Current is App app && app.m_window is not null)
-            {
-                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(app.m_window);
-                WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
-            }
-        }
-        catch { }
-    }
-
-    /// <summary>
-    /// Re-applies everything a reset/import may have changed behind the
-    /// page's back: strings (language), combo selections, and app theme.
-    /// </summary>
-    private void RefreshAfterBackup()
-    {
-        try
-        {
-            ApplyLocalization();
-            SelectCurrentLanguage();
-            ThemeService.Current.ApplyToMainWindow();
-        }
-        catch { }
-    }
-
-    private void ShowUpdateStatus(string message, bool showInstall)
-    {
-        var loc = LocalizationService.Current;
-        UpdateStatusCard.Visibility = Visibility.Visible;
-        UpdateStatusCard.Description = loc.GetString("SettingsCheckHeader");
-        DownloadProgressBar.Visibility = Visibility.Collapsed;
-        DownloadProgressBar.Value = 0;
-        UpdateStatusText.Text = message;
-        InstallUpdateButton.Visibility = showInstall ? Visibility.Visible : Visibility.Collapsed;
-        if (showInstall)
-        {
-            InstallUpdateButton.IsEnabled = true;
-            InstallUpdateButton.Content = loc.GetString("SettingsInstall");
-        }
+        await ViewModel.ImportSettingsCommand.ExecuteAsync(null);
+        // An import may have changed the language behind the combo's back.
+        SelectCurrentLanguage();
     }
 }
 #pragma warning restore CA1001

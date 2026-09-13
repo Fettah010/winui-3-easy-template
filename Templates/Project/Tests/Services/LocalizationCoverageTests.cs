@@ -160,4 +160,64 @@ public class LocalizationCoverageTests
         string? persisted = LocalSettingsStore.Shared.Get<string?>("AppLanguage", null);
         Assert.AreEqual("fr-FR", persisted);
     }
+
+    [TestMethod]
+    public void ShipBody_FormatsCurrentVersion_ThroughSlot()
+    {
+        var loc = LocalizationService.Current;
+        loc.SetLanguage("en-US");
+        // ShipBody must flow through the {0} slot — never a hardcoded string.
+        Assert.AreEqual(
+            loc.GetString("HomeShipBody", AppInfo.Current.Version),
+            loc.ShipBody);
+        Assert.Contains(AppInfo.Current.Version, loc.ShipBody);
+    }
+
+    [TestMethod]
+    public void NewUpdateFlowKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("v9.9 available", loc.GetString("UpdateAvailableVersion", "9.9"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("v9.9 disponible", loc.GetString("UpdateAvailableVersion", "9.9"));
+        Assert.AreEqual("Actualización descargada. Reiniciando…", loc.GetString("UpdateDownloadedRestart"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("v9.9 disponible", loc.GetString("UpdateAvailableVersion", "9.9"));
+        Assert.AreEqual("Mise à jour téléchargée. Redémarrage…", loc.GetString("UpdateDownloadedRestart"));
+    }
+
+    [TestMethod]
+    public void NewRestartPromptKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Update v9.9 ready", loc.GetString("UpdateRestartTitle", "9.9"));
+        Assert.AreEqual("Later", loc.GetString("UpdateRestartLater"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Actualización v9.9 lista", loc.GetString("UpdateRestartTitle", "9.9"));
+        Assert.AreEqual("Más tarde", loc.GetString("UpdateRestartLater"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Mise à jour v9.9 prête", loc.GetString("UpdateRestartTitle", "9.9"));
+        Assert.AreEqual("Plus tard", loc.GetString("UpdateRestartLater"));
+    }
+
+    [TestMethod]
+    public void Dictionaries_ContainNoHardcodedVersions()
+    {        var versionLike = new System.Text.RegularExpressions.Regex(@"\bv\d+\.\d+");
+        var offenders = new System.Collections.Generic.List<string>();
+        foreach (var value in LocalizationService.GetAllValues())
+        {
+            if (versionLike.IsMatch(value))
+                offenders.Add(value);
+        }
+        Assert.IsEmpty(offenders,
+            "Hardcoded versions in loc files: " + string.Join(" | ", offenders));
+    }
 }

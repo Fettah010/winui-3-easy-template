@@ -5,7 +5,7 @@ you keep every feature (updates, tray, i18n, logging) working.
 
 ## 1. Rename the template (do this first)
 
-Identity lives in two layers. Code surfaces read `Services/AppMetadata.cs`
+Identity lives in two layers. Code surfaces read `Services/Helpers/AppMetadata.cs`
 — change the values there. Text/XAML surfaces are replaced by
 `Scripts/init-template.ps1`, which also verifies zero leftovers.
 
@@ -68,9 +68,11 @@ renders them from `Logo.png` at pack time.
    (`Services/NavigationService.cs`) instead of overriding `OnNavigatedTo` —
    the service calls it with the navigation parameter.
 4. **Strings**: add `HomeTitle`-style keys to all three dictionaries in
-   `LocalizationService`, `x:Name` every user-facing element, apply them in
-   one `ApplyLocalization()` method called from constructor, `OnNavigatedTo`,
-   and (Settings-style) after `SetLanguage`.
+   `Services/Localization/` (`En/Es/FrStrings.cs`) and bind them in XAML
+   with `{loc:Loc Key=…}` (`Controls/LocExtension.cs`) — no code-behind
+   mapping; language switches apply instantly. State-driven text (busy
+   states, composed status lines) stays in code and refreshes on
+   `LanguageChanged` — see `SettingsPage`/`DiagnosticsPage`.
 5. **Route**: `NavigationService.RegisterRoute("orders", typeof(OrdersPage))`
    in `MainWindow`, plus a `NavigationViewItem` (menu or footer) and a
    selection-sync case (note: the built-in Settings item needs the explicit
@@ -99,8 +101,8 @@ when the page needs custom wiring halfway).
 | `-Icon` | Nav icon (a WinUI `Symbol` member): Home, Document, Shop, Mail, Calendar, People, Globe, Pictures, Video, Camera, Map, Phone | `Document` |
 
 The script scaffolds `devtem-page` with your title/icon, pastes the strings
-(EN + `TODO-translate` es/fr), registers the VM, adds route + nav item +
-label, then builds (0 warnings) and runs the tests. It refuses dirty trees,
+(EN + `TODO-translate` es/fr) into `Services/Localization/`, registers the
+VM, adds route + bound nav item, then builds (0 warnings) and runs the tests. It refuses dirty trees,
 and any failure rolls the tree back. Afterwards: replace the
 `TODO-translate` markers (grep for them), run the app, check the new nav item.
 
@@ -118,25 +120,26 @@ This generates 5 files (`Sample` → `Orders`):
 
 | File | Contents |
 | --- | --- |
-| `Pages/OrdersPage.xaml` (+ `.xaml.cs`) | Card layout, `INavigationAware`, `ApplyLocalization`, responsive switch |
+| `Pages/OrdersPage.xaml` (+ `.xaml.cs`) | Card layout, `INavigationAware`, live loc bindings, responsive switch |
 | `ViewModels/OrdersPageViewModel.cs` | Transient `[ObservableProperty]`/`[RelayCommand]` VM + `NavSymbol` |
 | `Tests/ViewModels/OrdersPageViewModelTests.cs` | VM unit tests + icon/coverage tests |
 | `OrdersPage.strings.md` | Ready-to-paste keys (EN + `TODO-translate` es/fr) — paste, then delete |
 
 Wire-up (4 steps):
 
-1. **Strings** — paste the snippet into all three dictionaries in
-   `LocalizationService` and delete the file (the coverage test fails until
-   every language has the keys). es/fr land as `TODO-translate` markers —
-   translate them before release.
+1. **Strings** — paste the snippet into `Services/Localization/EnStrings.cs`,
+   `EsStrings.cs`, `FrStrings.cs` and delete the file (the coverage test
+   fails until every language has the keys). es/fr land as `TODO-translate`
+   markers — translate them before release.
 2. **DI** — register the VM in `ServiceLocator.Initialize()`:
    ```csharp
    services.AddTransient<OrdersPageViewModel>();
    ```
 3. **Route + nav** — in `MainWindow`: `RegisterRoute("orders",
    typeof(OrdersPage))`, add a `NavigationViewItem` (`Tag="orders"`,
-   `<SymbolIcon Symbol="Shop"/>`), and its label in
-   `ApplyNavLocalization()` (the `NavOrders` key is in the snippet).
+   `Content="{loc:Loc Key=NavOrders}"`, `<SymbolIcon Symbol="Shop"/>`).
+   The label binds — no code-behind wiring (note: the built-in Settings
+   item still needs its explicit branch in `OnNavigated`).
 4. **Verify** — `dotnet build -c Debug -p:Platform=x64` (0 warnings),
    then `dotnet test` (the new `Strings_AreTranslated` +
    `NavSymbol_MatchesChosenIcon` tests prove the keys and icon landed).
@@ -253,7 +256,7 @@ dotnet new update                     # update all template packages
   shift the layout: viewport `Grid` → `StackPanel` with `MaxWidth`.
 - Text always `TextWrapping="Wrap"`; horizontal rows either fit provably or
   use `WrapPanel`; `ScrollViewer` horizontal scrollbar stays `Disabled`.
-- Breakpoints live in `Services/ResponsiveLayout.cs` (single source) and are
+- Breakpoints live in `Services/Helpers/ResponsiveLayout.cs` (single source) and are
   unit-tested; the nav pane compacts below 860px window width.
 - Verify with screenshots: switch EN ↔ ES at 900px and at 1920px; card edges
   must be pixel-identical (see `Tests/` ABA approach in git history).
@@ -262,7 +265,7 @@ dotnet new update                     # update all template packages
 
 Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
 `<InformationalVersion>` (`-beta` suffix on beta releases so fresh installs
-default to the beta channel). Commit, push, tag (`v0.0.4-beta`), push the tag
+default to the beta channel). Commit, push, tag (`v0.0.5-beta`), push the tag
 (CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
 is in `AGENTS.md` ("Branches & releases").
 

@@ -55,7 +55,7 @@ public class SamplePageViewModelTests
     public void Strings_AreTranslated()
     {
         // Fails until the SampleTitle/SampleDescription keys are added to all
-        // three dictionaries in LocalizationService (see ApplyLocalization
+        // three dictionaries in Services/Localization (see wire-up step 2
         // in the generated page code-behind).
         var loc = LocalizationService.Current;
         foreach (var lang in new[] { "en-US", "es-ES", "fr-FR" })

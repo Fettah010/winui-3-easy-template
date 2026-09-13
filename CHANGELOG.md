@@ -4,6 +4,23 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+## [0.0.5-beta] — unreleased
+
+Internal restructure release. No behavior changes — same features, cleaner
+layers, all proven by the full verification tier.
+
+### Changed
+
+- Localization: per-language files, XAML bindings (`{loc:Loc}`), instant
+  switch everywhere, no hardcoded versions in strings.
+- Settings update flow moved to the ViewModel (tested: 9 new tests);
+  unit total 116 → 131.
+- Window chrome, tray, and app orchestration decomposed into focused
+  services (`WindowChromeService`, `WindowActivator`, `FirstRunDialogService`,
+  `AutoStartService`, `BackgroundUpdateService`, `Services/Helpers/`).
+- Restart and update prompts fully translated (last i18n gap closed).
+- Toast cards are a XAML `NotificationCard` control now.
+
 ## [0.0.4-beta] — unreleased
 
 Template-correctness and CI release. No app behavior changes.

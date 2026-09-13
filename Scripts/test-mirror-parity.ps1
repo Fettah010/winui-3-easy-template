@@ -69,6 +69,7 @@ $conditioned = @(
     "Pages\SettingsPage.xaml",
     "Pages\SettingsPage.xaml.cs",
     "Scripts\init-template.ps1",
+    "Services\BackgroundUpdateService.cs",
     "Services\LocalizationService.cs",
     "Services\ServiceLocator.cs",
     "Services\SystemTrayService.cs",

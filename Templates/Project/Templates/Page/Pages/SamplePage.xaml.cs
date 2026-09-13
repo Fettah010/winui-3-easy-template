@@ -17,14 +17,15 @@ public sealed partial class SamplePage : Page, INavigationAware
         //     services.AddTransient<SamplePageViewModel>();
         ViewModel = ServiceLocator.GetRequiredService<SamplePageViewModel>();
         DataContext = ViewModel;
-        ApplyLocalization();
     }
 
     public void OnNavigatedTo(object? parameter)
     {
-        // The page is cached: refresh strings in case the language changed
-        // while the user was on another page.
-        ApplyLocalization();
+        // Labels bind live ({loc:Loc} in the XAML) — nothing to refresh.
+        // Wire-up step 2: paste SamplePage.strings.md into
+        // Services/Localization/{En,Es,Fr}Strings.cs, then delete the
+        // snippet. The generated test stub fails until you do (or run
+        // Scripts/add-page.ps1, which does every step for you).
         UpdateResponsiveLayout();
     }
 
@@ -49,16 +50,5 @@ public sealed partial class SamplePage : Page, INavigationAware
         ContentPanel.Padding = narrow
             ? new Thickness(16, 16, 16, 24)
             : new Thickness(32, 24, 32, 32);
-    }
-
-    private void ApplyLocalization()
-    {
-        // Wire-up step 2: paste SamplePage.strings.md into all three
-        // dictionaries in LocalizationService (en-US/es-ES/fr-FR), then
-        // delete the snippet. The generated test stub fails until you do
-        // (or run Scripts/add-page.ps1, which does every step for you).
-        var loc = LocalizationService.Current;
-        TitleText.Text = loc.GetString("SampleTitle");
-        DescriptionText.Text = loc.GetString("SampleDescription");
     }
 }

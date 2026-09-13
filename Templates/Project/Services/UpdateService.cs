@@ -9,14 +9,16 @@ namespace DevTemWinUi3.Services;
 /// <summary>
 /// Thin wrapper around the Velopack <see cref="UpdateManager"/> so pages
 /// stay simple and the update source can be swapped/reused from one place.
+/// Implements <see cref="IUpdateService"/> (the ViewModel seam): the pending
+/// update is held internally, so no Velopack type leaks to consumers.
 /// Process-lifetime singleton (never disposed in practice); implements
 /// <see cref="IDisposable"/> to own its gate correctly (CA1001).
 /// </summary>
-public sealed class UpdateService : IDisposable
+public sealed class UpdateService : IUpdateService, IDisposable
 {
     // GitHub Releases feed that hosts this app's updates. Releases are
     // created with Scripts/build-and-release.ps1 (vpk upload github).
-    // Single source of truth: Services/AppMetadata.cs (rewritten per app).
+    // Single source of truth: Services/Helpers/AppMetadata.cs (rewritten per app).
     public static string GitHubRepoUrl => AppMetadata.RepoUrl;
 
     public const string NotInstalledMessage =
@@ -138,18 +140,47 @@ public sealed class UpdateService : IDisposable
         }
     }
 
-    public Task<UpdateInfo?> CheckForUpdatesAsync() => Manager.CheckForUpdatesAsync();
+    private UpdateInfo? _pendingUpdate;
 
-    public Task DownloadUpdatesAsync(UpdateInfo update, Action<int>? progress = null) =>
-        Manager.DownloadUpdatesAsync(update, progress, CancellationToken.None);
+    public bool HasPendingUpdate => _pendingUpdate is not null;
 
     /// <summary>
-    /// Applies the update and restarts the app. WinUI apps must terminate the
-    /// current process so the updater can swap files safely.
+    /// Checks the feed and stashes any update as the pending one (replacing
+    /// any previous pending update). The result carries only the version —
+    /// no Velopack types leak to consumers.
     /// </summary>
-    public void ApplyUpdatesAndRestart(UpdateInfo update)
+    public async Task<UpdateCheckResult> CheckAsync()
     {
-        Manager.ApplyUpdatesAndRestart(update);
+        var update = await Manager.CheckForUpdatesAsync();
+        _pendingUpdate = update;
+        if (update is null)
+            return new UpdateCheckResult(false, null);
+        return new UpdateCheckResult(true, update.TargetFullRelease.Version?.ToString());
+    }
+
+    /// <summary>
+    /// Downloads the pending update (from the last <see cref="CheckAsync"/>).
+    /// No-op when nothing is pending.
+    /// </summary>
+    public Task DownloadPendingUpdateAsync(Action<int>? progress = null)
+    {
+        var pending = _pendingUpdate;
+        if (pending is null)
+            return Task.CompletedTask;
+        return Manager.DownloadUpdatesAsync(pending, progress, CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Applies the pending update and restarts the app. WinUI apps must
+    /// terminate the current process so the updater can swap files safely.
+    /// No-op when nothing is pending.
+    /// </summary>
+    public void ApplyPendingUpdateAndRestart()
+    {
+        var pending = _pendingUpdate;
+        if (pending is null)
+            return;
+        Manager.ApplyUpdatesAndRestart(pending);
         Environment.Exit(0);
     }
 

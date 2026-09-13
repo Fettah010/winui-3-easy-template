@@ -11,15 +11,12 @@ public sealed partial class HomePage : Page, INavigationAware
     public HomePage()
     {
         this.InitializeComponent();
-        ApplyLocalization();
-        ApplyFeatureVisibility();
     }
 
     public void OnNavigatedTo(object? parameter)
     {
-        // The page is cached: refresh strings in case the language changed
-        // while the user was on another page.
-        ApplyLocalization();
+        // The page is cached but every label is a live loc binding now —
+        // nothing to refresh on return.
         UpdateResponsiveLayout();
     }
 
@@ -61,80 +58,12 @@ public sealed partial class HomePage : Page, INavigationAware
         Grid.SetColumn(QuickCard, narrow ? 0 : 1);
 
         FeatureCol1.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
-
-        ApplyFeatureVisibility();
-        LayoutFeatureCards(narrow);
-    }
-
-    /// <summary>
-    /// Collapses UI for features scaffolded off (AppFeatures). Runs pre-render
-    /// (ctor) and on every layout pass so cached pages stay correct.
-    /// XAML keeps no conditionals by design: the template engine skips
-    /// markers in markup files.
-    /// </summary>
-    private void ApplyFeatureVisibility()
-    {
-        var updates = AppFeatures.Updates ? Visibility.Visible : Visibility.Collapsed;
-        var tray = AppFeatures.Tray ? Visibility.Visible : Visibility.Collapsed;
-
-        CheckUpdatesQuickButton.Visibility = updates;
-        ReleasesLinkButton.Visibility = updates;
-        FeatureCard1.Visibility = updates;
-        FeatureCard4.Visibility = tray;
-        ShipSection.Visibility = updates;
-    }
-
-    /// <summary>
-    /// Fills the feature grid row-major from the visible cards (card1..4
-    /// order, skipping collapsed features) in wide mode, stacks rows in
-    /// narrow mode. Identical to the static layout when all features are on.
-    /// </summary>
-    private void LayoutFeatureCards(bool narrow)
-    {
-        var cards = new FrameworkElement[] { FeatureCard1, FeatureCard2, FeatureCard3, FeatureCard4 };
-        int slot = 0;
-        foreach (var card in cards)
-        {
-            if (card.Visibility != Visibility.Visible)
-                continue;
-            if (narrow)
-            {
-                Grid.SetRow(card, slot);
-                Grid.SetColumn(card, 0);
-            }
-            else
-            {
-                Grid.SetRow(card, slot / 2);
-                Grid.SetColumn(card, slot % 2);
-            }
-            slot++;
-        }
-    }
-
-    private void ApplyLocalization()
-    {
-        var loc = LocalizationService.Current;
-        HomeTitleText.Text = loc.GetString("HomeTitle");
-        HomeDescText.Text = loc.GetString("HomeDescription");
-        CheckUpdatesQuickButton.Content = loc.GetString("HomeCheckUpdates");
-        OpenSettingsQuickButton.Content = loc.GetString("HomeOpenSettings");
-        ReleasesLinkButton.Content = loc.GetString("HomeReleasesLink");
-        StatusTitleText.Text = loc.GetString("HomeStatusOk");
-        QuickActionsText.Text = loc.GetString("HomeQuickActions");
-        QuickSettingsButton.Content = loc.GetString("NavSettings");
-        QuickAboutButton.Content = loc.GetString("NavAbout");
-        IncludedText.Text = loc.GetString("HomeIncluded");
-        FeatUpdatesTitle.Text = loc.GetString("HomeFeatUpdatesTitle");
-        FeatUpdatesDesc.Text = loc.GetString("HomeFeatUpdatesDesc");
-        FeatSettingsTitle.Text = loc.GetString("HomeFeatSettingsTitle");
-        FeatSettingsDesc.Text = loc.GetString("HomeFeatSettingsDesc");
-        FeatDiagTitle.Text = loc.GetString("HomeFeatDiagnosticsTitle");
-        FeatDiagDesc.Text = loc.GetString("HomeFeatDiagnosticsDesc");
-        FeatTrayTitle.Text = loc.GetString("HomeFeatTrayTitle");
-        FeatTrayDesc.Text = loc.GetString("HomeFeatTrayDesc");
-        ShipTitleText.Text = loc.GetString("HomeShipTitle");
-        ShipBodyText.Text = loc.GetString("HomeShipBody");
-        ShipNoteText.Text = loc.GetString("HomeShipNote");
+        Grid.SetRow(FeatureCard2, narrow ? 1 : 0);
+        Grid.SetColumn(FeatureCard2, narrow ? 0 : 1);
+        Grid.SetRow(FeatureCard3, narrow ? 2 : 1);
+        Grid.SetColumn(FeatureCard3, 0);
+        Grid.SetRow(FeatureCard4, narrow ? 3 : 1);
+        Grid.SetColumn(FeatureCard4, narrow ? 0 : 1);
     }
 
     private void CheckUpdatesQuickButton_Click(object sender, RoutedEventArgs e)

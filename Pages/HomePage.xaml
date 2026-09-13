@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:wrap="using:DevTemWinUi3.Controls"
+    xmlns:loc="using:DevTemWinUi3.Controls"
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
     Loaded="HomePage_Loaded"
@@ -29,7 +30,7 @@
                 BorderThickness="1"
                 CornerRadius="12"
                 Padding="24">
-                <Grid x:Name="HeroGrid" ColumnSpacing="24" RowSpacing="16">
+                <Grid ColumnSpacing="24" RowSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition x:Name="HeroLogoCol" Width="Auto"/>
                         <ColumnDefinition x:Name="HeroTextCol" Width="*"/>
@@ -40,7 +41,6 @@
                     </Grid.RowDefinitions>
 
                     <Border
-                        x:Name="HeroLogo"
                         Grid.Column="0" Grid.Row="0"
                         Width="84" Height="84"
                         CornerRadius="20"
@@ -57,7 +57,7 @@
 
                     <StackPanel x:Name="HeroText" Grid.Column="1" Grid.Row="0" Spacing="8" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <TextBlock x:Name="HomeTitleText" AutomationProperties.AutomationId="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock AutomationProperties.AutomationId="HomeTitleText" Text="{loc:Loc Key=HomeTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             <Border
                                 VerticalAlignment="Center"
                                 CornerRadius="10"
@@ -71,24 +71,20 @@
                             </Border>
                         </StackPanel>
                         <TextBlock
-                            x:Name="HomeDescText"
-                            Text="A modern Windows 11 app built with WinUI 3, Community Toolkit and Velopack auto-updates."
+                            Text="{loc:Loc Key=HomeDescription}"
                             Style="{ThemeResource BodyTextBlockStyle}"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             TextWrapping="Wrap"/>
-                        <wrap:WrapPanel x:Name="HeroActions" HorizontalSpacing="8" VerticalSpacing="8">
+                        <wrap:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
                             <Button
-                                x:Name="CheckUpdatesQuickButton"
-                                Content="Check for updates"
+                                Content="{loc:Loc Key=HomeCheckUpdates}"
                                 Style="{ThemeResource AccentButtonStyle}"
                                 Click="CheckUpdatesQuickButton_Click"/>
                             <Button
-                                x:Name="OpenSettingsQuickButton"
-                                Content="Open Settings"
+                                Content="{loc:Loc Key=HomeOpenSettings}"
                                 Click="OpenSettingsQuickButton_Click"/>
                             <HyperlinkButton
-                                x:Name="ReleasesLinkButton"
-                                Content="How releases work"
+                                Content="{loc:Loc Key=HomeReleasesLink}"
                                 NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"/>
                         </wrap:WrapPanel>
                     </StackPanel>
@@ -96,7 +92,7 @@
             </Border>
 
             <!-- Status + quick actions -->
-            <Grid x:Name="StatusGrid" ColumnSpacing="16" RowSpacing="16">
+            <Grid ColumnSpacing="16" RowSpacing="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition x:Name="StatusCol0" Width="*"/>
                     <ColumnDefinition x:Name="StatusCol1" Width="*"/>
@@ -107,7 +103,6 @@
                 </Grid.RowDefinitions>
 
                 <Border
-                    x:Name="StatusCard"
                     Grid.Column="0" Grid.Row="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -129,8 +124,8 @@
                             VerticalAlignment="Center"/>
 
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock x:Name="StatusTitleText" Text="All systems operational" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
-                            <TextBlock x:Name="StatusCaptionText"
+                            <TextBlock Text="{loc:Loc Key=HomeStatusOk}" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock
                                        Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -141,7 +136,6 @@
                              renders as an egg/capsule, so use an explicit ring. -->
                         <Border
                             Grid.Column="2"
-                            x:Name="StatusBadge"
                             Width="22" Height="22"
                             CornerRadius="11"
                             Background="{ThemeResource SystemFillColorSuccessBrush}"
@@ -166,14 +160,13 @@
                     Padding="16">
                     <StackPanel Spacing="8" VerticalAlignment="Center">
                         <TextBlock
-                            x:Name="QuickActionsText"
-                            Text="QUICK ACTIONS"
+                            Text="{loc:Loc Key=HomeQuickActions}"
                             Style="{ThemeResource CaptionTextBlockStyle}"
                             FontWeight="SemiBold"
                             Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="QuickSettingsButton" Content="Settings" Click="OpenSettingsQuickButton_Click"/>
-                            <Button x:Name="QuickAboutButton" Content="About" Click="OpenAboutQuickButton_Click"/>
+                            <Button Content="{loc:Loc Key=NavSettings}" Click="OpenSettingsQuickButton_Click"/>
+                            <Button Content="{loc:Loc Key=NavAbout}" Click="OpenAboutQuickButton_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -182,13 +175,12 @@
             <!-- Feature grid -->
             <StackPanel Spacing="8">
                 <TextBlock
-                    x:Name="IncludedText"
-                    Text="WHAT'S INCLUDED"
+                    Text="{loc:Loc Key=HomeIncluded}"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <Grid x:Name="FeatureGrid" ColumnSpacing="16" RowSpacing="16">
+                <Grid ColumnSpacing="16" RowSpacing="16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition x:Name="FeatureCol0" Width="*"/>
                         <ColumnDefinition x:Name="FeatureCol1" Width="*"/>
@@ -201,7 +193,6 @@
                     </Grid.RowDefinitions>
 
                     <Border
-                        x:Name="FeatureCard1"
                         Grid.Row="0" Grid.Column="0"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -210,10 +201,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE74E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock x:Name="FeatUpdatesTitle" Text="Velopack auto-updates" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatUpdatesTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
-                                x:Name="FeatUpdatesDesc"
-                                Text="Stable / Beta channels over GitHub Releases with one-click install and restart."
+                                Text="{loc:Loc Key=HomeFeatUpdatesDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap"/>
@@ -230,10 +220,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE771;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock x:Name="FeatSettingsTitle" Text="Settings that persist" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatSettingsTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
-                                x:Name="FeatSettingsDesc"
-                                Text="Theme, language, update channel, tray and autostart — saved locally, restored on launch."
+                                Text="{loc:Loc Key=HomeFeatSettingsDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap"/>
@@ -250,10 +239,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xEADF;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock x:Name="FeatDiagTitle" Text="Diagnostics built in" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatDiagnosticsTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
-                                x:Name="FeatDiagDesc"
-                                Text="Serilog rolling logs plus notification toasts so update checks never fail silently."
+                                Text="{loc:Loc Key=HomeFeatDiagnosticsDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap"/>
@@ -270,10 +258,9 @@
                         Padding="16">
                         <StackPanel Spacing="8">
                             <FontIcon Glyph="&#xE96E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock x:Name="FeatTrayTitle" Text="Tray + native shell" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatTrayTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
-                                x:Name="FeatTrayDesc"
-                                Text="Mica backdrop, custom title bar, minimize-to-tray with quick Settings and update actions."
+                                Text="{loc:Loc Key=HomeFeatTrayDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 TextWrapping="Wrap"/>
@@ -291,23 +278,20 @@
                 Padding="16">
                 <StackPanel Spacing="8">
                     <TextBlock
-                        x:Name="ShipTitleText"
-                        Text="SHIP YOUR FIRST RELEASE"
+                        Text="{loc:Loc Key=HomeShipTitle}"
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         FontWeight="SemiBold"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                     <TextBlock
-                        x:Name="ShipBodyText"
-                        Text="1. Bump Version in DevTemWinUi3.csproj  →  2. git tag v0.0.4-beta + push  →  3. CI builds, packs and publishes to GitHub Releases."
+                        Text="{loc:Loc Property=ShipBody}"
                         Style="{ThemeResource BodyTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap"/>
                     <TextBlock
-                        x:Name="ShipNoteText"
                         Style="{ThemeResource CaptionTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                         TextWrapping="Wrap"
-                        Text="Publishing scripts live in /Scripts. Update checks run only in installed builds."/>
+                        Text="{loc:Loc Key=HomeShipNote}"/>
                 </StackPanel>
             </Border>
 

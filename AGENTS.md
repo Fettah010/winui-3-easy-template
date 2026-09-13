@@ -5,7 +5,7 @@ first before making changes.
 
 ## Session bootstrap (agents — do this before touching anything)
 
-1. Read `AGENTS.md` → `docs/STATE.md` → `docs/RELEASE-PLAN.md`, in order.
+1. Read `AGENTS.md` → `docs/STATE.md` → `docs/RESTRUCTURE-PLAN.md`, in order.
 2. `git status`, `git log --oneline -5`, newest tags.
 3. Confirm versions: csproj `<Version>`/`<InformationalVersion>` vs tags.
 4. `dotnet build -c Debug -p:Platform=x64` — the tree must be green
@@ -14,9 +14,9 @@ first before making changes.
    when you finish.
 
 Doc map: `AGENTS.md` conventions (stable) · `docs/STATE.md` current facts
-(mutable) · `docs/RELEASE-PLAN.md` roadmap · `docs/WORKFLOW.md`
-definition-of-done per change type · `docs/DECISIONS.md` why things are
-the way they are.
+(mutable) · `docs/RESTRUCTURE-PLAN.md` active plan + audit · `docs/WORKFLOW.md`
+definition-of-done per change type (incl. release runbook) · `docs/DECISIONS.md`
+why things are the way they are.
 
 ## What this is
 
@@ -38,23 +38,33 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | Path | Purpose |
 | --- | --- |
 | `Program.cs` | Entry point: `LoggingService.Initialize()`, `VelopackApp.Build()`, global exception handlers. |
-| `App.xaml` / `App.xaml.cs` | XAML app, UI-thread exception logging, auto-update check on startup. |
-| `MainWindow.xaml(.cs)` | Native Mica backdrop + custom title bar; NavigationView with Home/Settings pages. |
+| `App.xaml` / `App.xaml.cs` | XAML app, UI-thread exception logging, launch orchestration (splash → window → protocol). |
+| `MainWindow.xaml(.cs)` | Composition root (routes, state, wiring); chrome in `WindowChromeService`, dialogs in `FirstRunDialogService`. |
+| `Services/WindowChromeService.cs` | Mica, title bar, theme-aware colors/icon, native min size, entrance animation (`Native/` holds the P/Invoke). |
+| `Services/WindowActivator.cs` | Single show-and-activate path (tray, toast, second instance). |
+| `Services/SystemTrayService.cs` | Minimize-to-tray icon/window/menu (P/Invoke in `Native/TrayNative.cs`, autostart in `AutoStartService`). |
+| `Services/FirstRunDialogService.cs` | Welcome / what's-new dialogs. |
+| `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (restart prompt fully localized). |
+| `Services/DatabaseInitializer.cs` | Deferred database init (best-effort, idempotent). |
 | `Pages/HomePage.*` | Landing page. |
 | `Pages/SettingsPage.*` | App settings: theme selector, update channel, auto-check toggle, app info. |
 | `Controls/WrapPanel.cs` + `Controls/WrapLayout.cs` | Dependency-free wrap panel (button rows) with pure, unit-tested layout math. |
-| `Services/ResponsiveLayout.cs` | Breakpoints + DPI math: min window 720x540, compact pane <860, narrow page <700. |
+| `Controls/LocExtension.cs` | `{loc:Loc Key=…}` XAML markup extension — one-way binding to `LocalizationService[key]`, live on language switch. |
+| `Controls/NotificationCard.xaml(.cs)` | Toast card visuals (layout in XAML, lifetime in `NotificationService`). |
+| `Services/Helpers/ResponsiveLayout.cs` | Breakpoints + DPI math: min window 720x540, compact pane <860, narrow page <700. |
 | `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
 | `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--updates/--database` flags). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
-| `Services/UpdateService.cs` | Thin wrapper over Velopack `UpdateManager`. |
+| `Services/UpdateService.cs` | Velopack `UpdateManager` behind `IUpdateService` (holds the pending update; VMs/tests never touch Velopack types). |
+| `Services/Abstractions/` | `IUpdateService`/`UpdateCheckResult`/`IFilePickerService` seams (VM testability). |
+| `Services/FilePickerService.cs` | WinRT save/open pickers with window association for unpackaged apps. |
 | `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
 | `Services/CrashReportingService.cs` | Sentry (DSN-gated, off by default); hooks in `Program.cs` + `App.xaml.cs`. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
-| `Services/AppInfo.cs` | Assembly-version accessors. |
+| `Services/Helpers/AppInfo.cs` | Assembly-version accessors. |
 | `Services/DesktopToastService.cs` | OS Action Center toasts (tray-minimize, not-installed); click reopens the app. |
-| `Services/LocalizationService.cs` | en-US/es-ES/fr-FR dictionaries, instant switch via LanguageChanged, persisted choice. |
+| `Services/LocalizationService.cs` | Lookup + language state (INPC indexer for XAML binding, persisted choice). Dictionaries live in `Services/Localization/` (one file per language, no hardcoded versions). |
 | `Services/NotificationService.cs` | In-app toast cards (bottom-right host). |
 | `Assets/app.ico` | App + installer + tray + shortcut icon (single source, `vpk --icon`). |
 | `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
@@ -88,7 +98,7 @@ main          ← Development branch (latest code)
 | Branch | Points to | Purpose |
 |--------|-----------|---------|
 | `main` | Latest commit | Development |
-| `beta` | v0.0.4-beta release | Beta channel |
+| `beta` | v0.0.5-beta release | Beta channel |
 | `stable` | v0.0.2 release | Stable channel |
 
 ### How releases work
@@ -107,8 +117,8 @@ main          ← Development branch (latest code)
    # 2. Bump version in DevTemWinUi3.csproj (Version, AssemblyVersion, FileVersion)
    
     # 3. Tag and push (choose one):
-    git tag v0.0.4-beta        # for beta release
-    git push origin v0.0.4-beta
+    git tag v0.0.5-beta        # for beta release
+    git push origin v0.0.5-beta
    
    # OR
    
@@ -124,7 +134,7 @@ main          ← Development branch (latest code)
 4. **After release, update the channel branch:**
     ```powershell
     # For beta:
-    git branch -f beta v0.0.4-beta
+    git branch -f beta v0.0.5-beta
     git push origin beta --force
    
    # For stable:
@@ -162,9 +172,9 @@ is WinExe so it never shows a terminal window on its own.
 
 ## Versioning
 
-Current version: **0.0.4-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.5-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
-beta releases carry the `-beta` suffix (e.g. `0.0.4-beta`) so fresh installs
+beta releases carry the `-beta` suffix (e.g. `0.0.5-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).
 
 ## Known gotchas

@@ -115,8 +115,10 @@
           "condition": "(!updates)",
           "exclude": [
             "Services/UpdateService.cs",
+            "Services/BackgroundUpdateService.cs",
             "Build/Features.Updates.props",
             "Tests/Services/UpdateServiceTests.cs",
+            "Tests/Services/BackgroundUpdateServiceTests.cs",
             ".github/workflows/release.yml",
             "Scripts/build-and-release.ps1",
             "Scripts/local-smoke-test.ps1",
@@ -127,9 +129,11 @@
           "condition": "(!database)",
           "exclude": [
             "Services/DatabaseService.cs",
+            "Services/DatabaseInitializer.cs",
             "Services/ApiService.cs",
             "Build/Features.Database.props",
             "Tests/Services/DatabaseServiceTests.cs",
+            "Tests/Services/DatabaseInitializerTests.cs",
             "Tests/Services/ApiServiceTests.cs"
           ]
         }

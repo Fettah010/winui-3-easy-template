@@ -19,23 +19,35 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
         ViewModel = ServiceLocator.GetRequiredService<DiagnosticsPageViewModel>();
         DataContext = ViewModel;
 
-        ApplyLocalization();
+        // Composed text below cannot bind: re-render it on language switch.
+        // (Unsubscribed in OnNavigatedFrom: this page is not cached, so a
+        // static-event subscription would leak every visit.)
+        LocalizationService.Current.LanguageChanged += OnLanguageChanged;
+        RenderAll();
     }
 
-    private void ApplyLocalization()
+    public void OnNavigatedTo(object? parameter)
     {
-        var loc = LocalizationService.Current;
-        DiagnosticsTitleText.Text = loc.GetString("DiagnosticsTitle");
-        DiagnosticsDescText.Text = loc.GetString("DiagnosticsDesc");
-        DiagnosticsStatusLabel.Text = loc.GetString("DiagnosticsStatus");
-        DiagnosticsLogsLabel.Text = loc.GetString("DiagnosticsLogs");
+        ViewModel.Refresh();
+        RenderAll();
+    }
 
-        StatusCard.Header = loc.GetString("DiagnosticsStatus");
-        LogsCard.Header = loc.GetString("DiagnosticsLogs");
-        RefreshLogsButton.Content = loc.GetString("DiagnosticsRefresh");
-        OpenLogFolderButton.Content = loc.GetString("DiagnosticsOpenFolder");
-        AutomationProperties.SetName(LogFileComboBox, loc.GetString("DiagnosticsLogs"));
+    public void OnNavigatedFrom()
+    {
+        LocalizationService.Current.LanguageChanged -= OnLanguageChanged;
+    }
 
+    private void OnLanguageChanged(object? sender, EventArgs e) => RenderAll();
+
+    /// <summary>
+    /// Re-applies everything that cannot live in XAML bindings: the
+    /// localized combo-box name and the composed status/placeholder text
+    /// (kept in the page so the VM stays UI-free and testable).
+    /// </summary>
+    private void RenderAll()
+    {
+        AutomationProperties.SetName(LogFileComboBox,
+            LocalizationService.Current.GetString("DiagnosticsLogs"));
         RenderStatus();
         RenderLogPlaceholder();
     }
@@ -66,16 +78,6 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
     {
         if (ViewModel.LogFiles.Count == 0 && string.IsNullOrEmpty(ViewModel.LogText))
             LogText.Text = LocalizationService.Current.GetString("DiagnosticsNoLogs");
-    }
-
-    public void OnNavigatedTo(object? parameter)
-    {
-        ViewModel.Refresh();
-        ApplyLocalization();
-    }
-
-    public void OnNavigatedFrom()
-    {
     }
 
     private void RefreshLogsButton_Click(object sender, RoutedEventArgs e)

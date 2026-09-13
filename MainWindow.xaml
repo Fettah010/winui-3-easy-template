@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:loc="using:DevTemWinUi3.Controls"
     mc:Ignorable="d"
     Title="DevTem-WinUI 3">
 
@@ -43,7 +44,7 @@
                         Stretch="UniformToFill"/>
                 </Border>
                 <TextBlock
-                    Text="DevTem-WinUI 3"
+                    Text="{loc:Loc Key=AppName}"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     VerticalAlignment="Center"/>
@@ -78,7 +79,7 @@
             OpenPaneLength="240">
 
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Name="NavHomeItem" AutomationProperties.AutomationId="NavHomeItem" Content="Home" Tag="home">
+                <NavigationViewItem AutomationProperties.AutomationId="NavHomeItem" Content="{loc:Loc Key=NavHome}" Tag="home">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
@@ -86,12 +87,12 @@
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem x:Name="NavAboutItem" AutomationProperties.AutomationId="NavAboutItem" Content="About" Tag="about">
+                <NavigationViewItem AutomationProperties.AutomationId="NavAboutItem" Content="{loc:Loc Key=NavAbout}" Tag="about">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="NavDiagnosticsItem" AutomationProperties.AutomationId="NavDiagnosticsItem" Content="Diagnostics" Tag="diagnostics">
+                <NavigationViewItem AutomationProperties.AutomationId="NavDiagnosticsItem" Content="{loc:Loc Key=NavDiagnostics}" Tag="diagnostics">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Repair"/>
                     </NavigationViewItem.Icon>
