@@ -1,0 +1,41 @@
+name: ui-tests
+
+# FlaUI smoke tests: launch the real exe, navigate, switch theme/language.
+# Runs once against the default app — never on the template matrix
+# (template flag-off runtime proof stays manual screenshots, per FLAUI-PLAN).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "UI/**"
+      - "MainWindow.xaml*"
+      - "Pages/*.xaml"
+      - ".github/workflows/ui-tests.yml"
+  pull_request:
+    paths:
+      - "UI/**"
+      - "MainWindow.xaml*"
+      - "Pages/*.xaml"
+      - ".github/workflows/ui-tests.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build solution (app + unit + smoke)
+        run: dotnet build DevTemWinUi3.sln -c Debug -p:Platform=x64
+      - name: FlaUI smoke tests
+        run: dotnet test UI/DevTemWinUi3.SmokeTests/DevTemWinUi3.SmokeTests.csproj -c Debug --no-build -p:Platform=x64
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-screenshots
+          path: UI/**/TestResults/**

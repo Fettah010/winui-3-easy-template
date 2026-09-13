@@ -57,7 +57,7 @@
 
                     <StackPanel x:Name="HeroText" Grid.Column="1" Grid.Row="0" Spacing="8" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <TextBlock x:Name="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="HomeTitleText" AutomationProperties.AutomationId="HomeTitleText" Text="DevTem-WinUI 3" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             <Border
                                 VerticalAlignment="Center"
                                 CornerRadius="10"

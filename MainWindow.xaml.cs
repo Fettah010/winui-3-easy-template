@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using DevTemWinUi3.Pages;
@@ -327,7 +328,13 @@ public sealed partial class MainWindow : Window
             NavHomeItem.Content = loc.GetString("NavHome");
             NavAboutItem.Content = loc.GetString("NavAbout");
             if (RootNavigationView.SettingsItem is NavigationViewItem settingsItem)
+            {
                 settingsItem.Content = loc.GetString("NavSettings");
+                // Stable hook for the FlaUI smoke tests (UI/): the built-in
+                // settings item has no XAML declaration, so the Id is set
+                // here alongside its localized label. Names localize, Ids don't.
+                AutomationProperties.SetAutomationId(settingsItem, "NavSettingsItem");
+            }
         }
         catch { }
     }

@@ -6,6 +6,8 @@ Project("{9A19103F-16F7-4638-BC34-F4D44401C931}") = "DevTemWinUi3", "DevTemWinUi
 EndProject
 Project("{9A19103F-16F7-4638-BC34-F4D44401C931}") = "DevTemWinUi3.Tests", "Tests\DevTemWinUi3.Tests.csproj", "{10CD840B-2D3F-4D3B-A804-89CC4C699AD6}"
 EndProject
+Project("{9A19103F-16F7-4638-BC34-F4D44401C931}") = "DevTemWinUi3.SmokeTests", "UI\DevTemWinUi3.SmokeTests\DevTemWinUi3.SmokeTests.csproj", "{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -40,6 +42,18 @@ Global
 		{10CD840B-2D3F-4D3B-A804-89CC4C699AD6}.Release|x64.Build.0 = Release|Any CPU
 		{10CD840B-2D3F-4D3B-A804-89CC4C699AD6}.Release|x86.ActiveCfg = Release|Any CPU
 		{10CD840B-2D3F-4D3B-A804-89CC4C699AD6}.Release|x86.Build.0 = Release|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Debug|x64.Build.0 = Debug|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Debug|x86.Build.0 = Debug|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Release|ARM64.Build.0 = Release|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Release|x64.ActiveCfg = Release|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Release|x64.Build.0 = Release|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Release|x86.ActiveCfg = Release|Any CPU
+		{7B4E1A2C-9D3F-4A5B-8C6D-2E1F0A3B4C5D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

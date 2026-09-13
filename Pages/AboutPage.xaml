@@ -25,7 +25,7 @@
 
             <!-- Header -->
             <StackPanel Spacing="4">
-                <TextBlock x:Name="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock x:Name="AboutTitleText" AutomationProperties.AutomationId="AboutTitleText" Text="About" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                 <TextBlock
                     x:Name="AboutSubtitleText"
                     Text="Everything behind DevTem — version, stack, license and links."

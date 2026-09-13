@@ -47,7 +47,8 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
 | `run-dev.vbs` / `run-dev.bat` | Dev-only `dotnet run` launchers (repo-relative paths). The desktop shortcut targets the built exe directly (fast cold start). |
 | `.github/workflows/release.yml` | CI release pipeline (tag push `v*` or manual `workflow_dispatch`). |
-| `Tests/` | xunit test project. |
+| `Tests/` | MSTest unit test project (headless). |
+| `UI/DevTemWinUi3.SmokeTests/` | MSTest + FlaUI smoke tests (launch the real exe, navigate, theme/language). |
 | `README.md` | User-facing docs/questions. |
 | `AGENTS.md` | This file - guidance for AI agents. |
 

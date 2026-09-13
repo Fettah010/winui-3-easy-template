@@ -49,6 +49,14 @@
     <Content Remove="Tests\**" />
   </ItemGroup>
 
+  <!-- FlaUI smoke tests drive the built exe; they are never app code. -->
+  <ItemGroup>
+    <Compile Remove="UI\**" />
+    <None Remove="UI\**" />
+    <Content Remove="UI\**" />
+    <Page Remove="UI\**" />
+  </ItemGroup>
+
   <!-- Template packaging project: ships templates, never app code. Its obj/
        AssemblyInfo must never join this compilation (CS0579 duplicates). -->
   <ItemGroup>

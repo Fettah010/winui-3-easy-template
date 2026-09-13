@@ -78,7 +78,7 @@
             OpenPaneLength="240">
 
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Name="NavHomeItem" Content="Home" Tag="home">
+                <NavigationViewItem x:Name="NavHomeItem" AutomationProperties.AutomationId="NavHomeItem" Content="Home" Tag="home">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
@@ -86,7 +86,7 @@
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem x:Name="NavAboutItem" Content="About" Tag="about">
+                <NavigationViewItem x:Name="NavAboutItem" AutomationProperties.AutomationId="NavAboutItem" Content="About" Tag="about">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>

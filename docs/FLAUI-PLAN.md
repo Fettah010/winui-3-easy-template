@@ -5,7 +5,12 @@ Nothing below is implemented; this file is the spec to implement from.
 
 ## 0. FlaUI Smoke Tests (first)
 
-Status: planned, not started.
+Status: IMPLEMENTED — `UI/DevTemWinUi3.SmokeTests/` (MSTest + FlaUI 5.0.0),
+`.github/workflows/ui-tests.yml`, AutomationIds on nav items / combos /
+page titles (app + `Templates/Project/` mirror). 4/4 green in ~24s local
+(60s budget); theme + language restored after every run; failure screenshots
+into `TestResults/` uploaded as CI artifacts. Guards: inconclusive when the
+app exe is unbuilt or another instance runs (single-instance safety).
 Context: all 93 unit tests run headless; nothing proves the app *runs*.
 FlaUI (UI Automation) automates the eyeball check (see UPGRADE-ROADMAP §4).
 
