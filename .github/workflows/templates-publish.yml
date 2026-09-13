@@ -1,7 +1,9 @@
 name: templates-publish
 
 # Tag templates-vX.Y.Z (cut from green main) packs DevTem.Templates with
-# that version and pushes it to NuGet (NUGET_API_KEY secret).
+# that version and pushes it to NuGet via Trusted Publishing (OIDC — no API
+# key stored anywhere). One-time setup on nuget.org: Trusted Publishing >
+# Create > package DevTem.Templates, this repo, workflow templates-publish.yml.
 # Separate file on purpose: no paths filter, so the tag always publishes.
 
 on:
@@ -13,6 +15,10 @@ jobs:
   publish:
     runs-on: windows-latest
     timeout-minutes: 15
+    # OIDC token for NuGet Trusted Publishing (no secrets involved).
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -24,5 +30,5 @@ jobs:
           $version = "${{ github.ref_name }}".Replace("templates-v", "")
           if ([string]::IsNullOrWhiteSpace($version)) { $version = "0.1.0" }
           dotnet pack Packaging/DevTem.Templates -c Release -p:Version=$version -o nupkgs
-      - name: Push to NuGet
-        run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Push to NuGet (Trusted Publishing, keyless)
+        run: dotnet nuget push "nupkgs/*.nupkg" --source https://api.nuget.org/v3/index.json --skip-duplicate

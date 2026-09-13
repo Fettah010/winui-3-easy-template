@@ -168,10 +168,15 @@ git push origin templates-v0.2.0
 # CI (templates-publish.yml): dotnet pack -p:Version=0.2.0, push to NuGet
 ```
 
-Prerequisites (one time): create the `DevTem.Templates` package on nuget.org
-(reserved by the first push), add a `NUGET_API_KEY` repo secret. Local dry
-run before tagging: `dotnet pack Packaging/DevTem.Templates -o nupkgs`,
-then install the file and scaffold once.
+Prerequisites (one time, no secrets): on nuget.org go to your account →
+Trusted Publishing → Create, and register a policy for package
+`DevTem.Templates` from this repo + workflow `templates-publish.yml`.
+The first push through that policy also reserves the package ID for you.
+CI (`templates-publish.yml`) authenticates with OIDC — there is no API key
+to create, store, or rotate. (Manual `dotnet nuget push` from your machine
+still needs a classic API key; prefer tags so every release is traceable.)
+Local dry run before tagging: `dotnet pack Packaging/DevTem.Templates -o
+nupkgs`, then install the file and scaffold once.
 
 Users update with one command (VS picks it up in its dialog too):
 
