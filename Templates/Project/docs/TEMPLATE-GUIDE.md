@@ -55,47 +55,77 @@ renders them from `Logo.png` at pack time.
 
 ## 2. Add a page (6 steps, all required)
 
-## 2b. Scaffold a page (dotnet new, recommended)
+## 2b. Scaffold a page (recommended)
 
-The 6-step recipe above ships as an item template. Enable it once (its
-template config ships dormant as `config.hold/template.json.hold`, so
-installing the project template does not register a stale global copy),
-then scaffold from the repo root:
+Two flows. Flow A does everything; Flow B is the same pieces by hand (use it
+when the page needs custom wiring halfway).
+
+### Flow A — one command
+
+```powershell
+.\Scripts\add-page.ps1 -Name Orders -Title "Order History" -Icon Shop
+```
+
+| Argument | Meaning | Default |
+| --- | --- | --- |
+| `-Name` | PascalCase page name (single word recommended) | (required) |
+| `-Title` | Page title + nav label | `-Name` |
+| `-Icon` | Nav icon (a WinUI `Symbol` member): Home, Document, Shop, Mail, Calendar, People, Globe, Pictures, Video, Camera, Map, Phone | `Document` |
+
+The script scaffolds `devtem-page` with your title/icon, pastes the strings
+(EN + `TODO-translate` es/fr), registers the VM (rewriting the
+`DevTemWinUi3.*` namespaces to yours automatically), adds route + nav item +
+label, then builds (0 warnings) and runs the tests. It refuses dirty trees,
+and any failure rolls the tree back. Afterwards: replace the
+`TODO-translate` markers (grep for them), run the app, check the new nav item.
+
+Needs a `devtem-page` template: install once via
+`dotnet new install DevTem.Templates` (NuGet). If your app came from this
+repo you can point at its item template instead:
+`.\Scripts\add-page.ps1 -TemplateSource .\Templates\Page` — not needed for
+scaffolded apps (that folder is not shipped).
+
+### Flow B — manual (~5 minutes)
+
+The 6-step recipe above ships as an item template. Its config ships dormant
+as `config.hold/template.json.hold` (so installing the project template does
+not register a stale global copy) — activate, install, then scaffold:
 
 ```powershell
 Rename-Item .\Templates\Page\config.hold\template.json.hold template.json
 Rename-Item .\Templates\Page\config.hold .template.config
 dotnet new install .\Templates\Page
-dotnet new devtem-page -n Orders
+dotnet new devtem-page -n Orders --title "Order History" --icon Shop
 ```
 
-This generates 4 files (`Sample` → `Orders`):
+This generates 5 files (`Sample` → `Orders`):
 
 | File | Contents |
 | --- | --- |
 | `Pages/OrdersPage.xaml` (+ `.xaml.cs`) | Card layout, `INavigationAware`, `ApplyLocalization`, responsive switch |
-| `ViewModels/OrdersPageViewModel.cs` | Transient `[ObservableProperty]`/`[RelayCommand]` VM |
-| `Tests/ViewModels/OrdersPageViewModelTests.cs` | VM unit tests + translation-coverage test |
+| `ViewModels/OrdersPageViewModel.cs` | Transient `[ObservableProperty]`/`[RelayCommand]` VM + `NavSymbol` |
+| `Tests/ViewModels/OrdersPageViewModelTests.cs` | VM unit tests + icon/coverage tests |
+| `OrdersPage.strings.md` | Ready-to-paste keys (EN + `TODO-translate` es/fr) — paste, then delete |
 
-Wire-up (4 steps, ~5 minutes):
+Wire-up (5 steps):
 
-1. **Strings** — add `OrdersTitle`/`OrdersDescription` to all three
-   dictionaries in `LocalizationService` (the coverage test fails until
-   every language has them):
-   ```csharp
-   ["OrdersTitle"] = "Orders",       // es: "Pedidos", fr: "Commandes"
-   ["OrdersDescription"] = "...",    // es/fr translations
-   ```
+0. **Namespaces** — replace `DevTemWinUi3` with your root namespace in the
+   4 code files (`x:Class`, usings, namespaces). Flow A does this for you.
+1. **Strings** — paste the snippet into all three dictionaries in
+   `LocalizationService` and delete the file (the coverage test fails until
+   every language has the keys). es/fr land as `TODO-translate` markers —
+   translate them before release.
 2. **DI** — register the VM in `ServiceLocator.Initialize()`:
    ```csharp
    services.AddTransient<OrdersPageViewModel>();
    ```
 3. **Route + nav** — in `MainWindow`: `RegisterRoute("orders",
-   typeof(OrdersPage))`, add a `NavigationViewItem` (`Tag="orders"`),
-   and its label in `ApplyNavLocalization()` (+ a `NavOrders` string key).
+   typeof(OrdersPage))`, add a `NavigationViewItem` (`Tag="orders"`,
+   `<SymbolIcon Symbol="Shop"/>`), and its label in
+   `ApplyNavLocalization()` (the `NavOrders` key is in the snippet).
 4. **Verify** — `dotnet build -c Debug -p:Platform=x64` (0 warnings),
-   then `dotnet test` (the new `Strings_AreTranslated` test proves the
-   keys landed in all three languages).
+   then `dotnet test` (the new `Strings_AreTranslated` +
+   `NavSymbol_MatchesChosenIcon` tests prove the keys and icon landed).
 
 Uninstall when done: `dotnet new uninstall .\Templates\Page`.
 

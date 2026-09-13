@@ -78,6 +78,8 @@ so the shape is one terminal command from VS's own terminal.
 
 ## P6 — Page scaffolding upgrade (titles, icons, one-command add)
 
+Status: IMPLEMENTED (`92cb386` Layer 1, Layer 2 this commit).
+
 Problem: `devtem-page -n Orders` + 4 manual wire-up steps; no title/icon
 params; nav icon hardcoded by hand.
 
@@ -95,6 +97,12 @@ Layer 2 — `Scripts\add-page.ps1 -Name Orders -Title "Order History" -Icon Shop
 runs the template, inserts loc strings (3 dicts), AddTransient, route +
 `<NavigationViewItem>` with `<SymbolIcon>`, nav-label line; builds + runs
 page tests; refuses dirty trees (rollback-safe).
+IMPLEMENTED: clean-tree guard (tracked edits only) + snapshot rollback,
+namespace rewrite for renamed apps, tolerant template install, failure
+output tails. Dogfooded in-repo (OrdersProbe: green, screenshotted, removed)
+and in-matrix (OrdersSmoke in allon). Two deviations found by running:
+$PSScriptRoot is invisible in param defaults (fixed here + P5 script), and
+the nav insert must go BEFORE </NavigationView.MenuItems> (WMC0035).
 - VS story (honest): dialog scaffold + 4 manual steps, OR one terminal
   command for zero manual steps. No custom VSIX wizard (rejected: duplication).
 - Verify: scaffold → build → coverage green → screenshot → fresh `add-page`

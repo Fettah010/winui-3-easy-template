@@ -24,11 +24,14 @@ param(
     [Parameter(Mandatory = $true, HelpMessage = "Square source PNG, >= 512px per side.")]
     [string]$Source,
 
-    [string]$AssetsDir = (Join-Path $PSScriptRoot "..\Assets")
+    # NOTE: $PSScriptRoot is NOT visible in parameter defaults (they evaluate
+    # in the caller's scope), so the default resolves in the body below.
+    [string]$AssetsDir = ""
 )
 
 $ErrorActionPreference = "Stop"
 
+if ($AssetsDir -eq "") { $AssetsDir = Join-Path $PSScriptRoot "..\Assets" }
 $AssetsDir = (Resolve-Path $AssetsDir).Path
 $MinSourceSize = 512
 $IcoSizes = @(16, 24, 32, 48, 64, 128, 256)

@@ -1,7 +1,7 @@
 # Scaffold matrix for the dotnet-new templates: installs both templates from
-# this repo, scaffolds all-on / all-off / no-tray / no-updates (plus a
-# devtem-page sample inside all-on), then builds (0 warnings, 0 errors) and
-# tests each scaffold. Fails the run on the first broken combo.
+# this repo, scaffolds all-on / all-off / no-tray / no-updates, wires a page
+# end-to-end inside all-on via add-page.ps1, then builds (0 warnings,
+# 0 errors) and tests each scaffold. Fails the run on the first broken combo.
 #
 #   powershell -File Scripts/test-templates.ps1                 # full matrix
 #   powershell -File Scripts/test-templates.ps1 -Combos allon,alloff
@@ -58,13 +58,13 @@ try {
             "--output", $outDir) + $c.Flags
         if (-not (Invoke-Step "scaffold $combo" { & dotnet new @scaffoldArgs })) { continue }
 
-        # Item-template proof: a page scaffolded inside the all-on app must build too.
+        # Item-template proof: add-page.ps1 wires a page end-to-end inside the
+        # all-on app (scaffold + strings + DI + route/nav + its own build +
+        # test). Not a git repo down here, so snapshot rollback applies.
         if ($combo -eq "allon") {
-            if (-not (Invoke-Step "scaffold Orders page in allon" {
-                    & dotnet new devtem-page -n Orders --output (Join-Path $outDir "Pages_TemplateProbe")
+            if (-not (Invoke-Step "add-page smoke in allon" {
+                    & (Join-Path $repoRoot "Scripts\add-page.ps1") -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\Page") -Name OrdersSmoke -Title "Smoke Orders" -Icon Shop
                 })) { continue }
-            # Probe goes to a throwaway dir (not wired into the build); remove it.
-            Remove-Item -LiteralPath (Join-Path $outDir "Pages_TemplateProbe") -Recurse -Force
         }
 
         $buildLog = ""
