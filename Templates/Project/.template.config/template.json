@@ -10,10 +10,15 @@
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
   "symbols": {
     "displayName": {
       "type": "parameter",
       "datatype": "string",
+      "displayName": "Display name",
       "defaultValue": "My App",
       "replaces": "DevTem-WinUI 3",
       "description": "Display name used in titles, toasts and the installer."
@@ -21,6 +26,7 @@
     "company": {
       "type": "parameter",
       "datatype": "string",
+      "displayName": "Company",
       "defaultValue": "Contoso",
       "replaces": "Fettah",
       "description": "Pack author."
@@ -28,6 +34,7 @@
     "repo": {
       "type": "parameter",
       "datatype": "string",
+      "displayName": "GitHub repository",
       "defaultValue": "myorg/my-app",
       "replaces": "Fettah010/winui-3-easy-template",
       "description": "GitHub repo path (org/name) used for feeds, links and CI."
@@ -35,6 +42,7 @@
     "scheme": {
       "type": "parameter",
       "datatype": "string",
+      "displayName": "Deep-link URI scheme",
       "defaultValue": "myapp://",
       "replaces": "devtem://",
       "description": "Deep-link URI scheme, including :// (e.g. --scheme acme://)."
@@ -42,6 +50,7 @@
     "tray": {
       "type": "parameter",
       "datatype": "bool",
+      "displayName": "System tray",
       "defaultValue": "true",
       "replaces": "__TRAY__",
       "description": "Include minimize-to-tray, autostart and desktop toasts (--tray false to drop)."
@@ -49,6 +58,7 @@
     "updates": {
       "type": "parameter",
       "datatype": "bool",
+      "displayName": "Velopack auto-updates",
       "defaultValue": "true",
       "replaces": "__UPDATES__",
       "description": "Include Velopack auto-updates, channels and the release pipeline (--updates false to drop)."
@@ -56,6 +66,7 @@
     "database": {
       "type": "parameter",
       "datatype": "bool",
+      "displayName": "SQLite + HTTP data layer",
       "defaultValue": "true",
       "replaces": "__DATABASE__",
       "description": "Include the SQLite + HTTP data layer (--database false to drop)."

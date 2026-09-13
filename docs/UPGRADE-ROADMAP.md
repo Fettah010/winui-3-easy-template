@@ -45,16 +45,6 @@ MATRIX PASSED (4 combos + page probe, 0 warnings each).
   Verified: DryRun green (staging + manifest sync inspected), matrix green,
   Settings screenshot. Full makeappx/sign proof happens in CI (no SDK here).
 
-- [ ] Periodic update checks while trayed (timer honoring the auto-check
-  setting). Small, completes the tray story. Today: startup + manual only.
-- [ ] Crash reporting (Sentry) — biggest diagnostics gap left; Serilog files
-  only help if users send them. (Was ROADMAP #3.)
-- [ ] MSIX/packaged option (Store distribution, clean uninstall) — biggest
-  capability unlock; possibly a `--packaging` flag. Large effort.
-- [ ] Code-signing guidance (SmartScreen flags unsigned Velopack
-  installers): docs + script hooks for cert signing. Cheap, unblocks real
-  releases.
-
 ## 3. Professional polish `[x]`
 
 - [x] `.sln` (classic; slnx cannot express the x86/x64/ARM64 mapping) +
@@ -69,20 +59,19 @@ MATRIX PASSED (4 combos + page probe, 0 warnings each).
   JsonSerializerOptions, P/Invoke marshaling, UpdateService IDisposable).
   Verified: solution build 0 warnings, 93/93, matrix green, live runs.
 
-- [ ] Add a `.sln` (+ rename handling in `init-template.ps1`) — VS opens
-  solutions, not csprojs.
-- [ ] Accessibility audit: automation properties on nav/buttons,
-  screen-reader pass, high-contrast check.
-- [ ] Enforce the bars in-repo: `TreatWarningsAsErrors`, NetAnalyzers,
-  EditorConfig — "0 warnings" is tribal knowledge today; make the build
-  enforce it.
+## 4. Later / heavier `[~]`
 
-## 4. Later / heavier `[ ]`
-
-- [ ] VSIX extension (File → New Project UI) after NuGet distribution
-  proves demand.
-- [ ] FlaUI smoke test in CI (launch → navigate → screenshot). Valuable but
-  flaky; after the template matrix.
+- [x] Visual Studio distribution — DECISION, no separate VSIX: VS's New
+  Project dialog runs the same template engine, so the `DevTem.Templates`
+  NuGet package IS the VS channel (bool params render as checkboxes, text
+  params as fields). Shipped: `icon.png` in both `.template.config` dirs,
+  `displayName` on all 7 symbols, `tags {language,type}` on the project
+  template. Known limit: item templates never appear in Add → New Item
+  (VS-only surface) — `devtem-page` stays CLI. Verified: `[C#]` tag,
+  help output, all-on scaffold 93/93, icons inside the nupkg.
+- [ ] FlaUI smoke test in CI — spec frozen in `docs/FLAUI-PLAN.md`
+  (tiny suite: launch, navigate pages, theme + language switch; needs
+  AutomationIds on nav items first).
 
 ## Conventions for all work
 

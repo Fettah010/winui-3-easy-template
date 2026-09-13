@@ -62,6 +62,10 @@ dotnet new install .\Templates\Page
 dotnet new devtem-page -n Orders
 ```
 
+(Visual Studio note: item templates don't appear in Add → New Item —
+that dialog is VS-only territory. Use the CLI above; it works inside
+the VS terminal too.)
+
 This generates 4 files (`Sample` → `Orders`):
 
 | File | Contents |
@@ -109,6 +113,13 @@ pushes to NuGet); every push touching templates runs the scaffold matrix
 (`Scripts/test-templates.ps1`: all flag combos built with 0 warnings and
 tested).
 
+**Visual Studio (no VSIX needed).** VS's New Project dialog runs the same
+template engine: after `dotnet new install` (path or NuGet package),
+`devtem-winui` appears in File → New → Project with its icon, and the
+parameters render as dialog fields (text) and checkboxes (the three flags,
+checked by default). No separate extension to build or maintain — the NuGet
+package IS the Visual Studio distribution channel.
+
 | Parameter | Replaces | Example |
 | --- | --- | --- |
 | `-n` | Namespace, file names, mutex/registry/folders | `AcmeDesk` |
@@ -142,6 +153,28 @@ Engine gotchas learned while building it (do not regress):
   package does not register a stale global `devtem-page`; scaffolded apps
   rename it back per §2b.
 - `init-template.ps1` still works in scaffolded apps for re-branding.
+
+### Releasing template updates (upload + smooth updates)
+
+The whole flow is automated; the maintainer only cuts a tag:
+
+```powershell
+git tag templates-v0.2.0
+git push origin templates-v0.2.0
+# CI (templates-publish.yml): dotnet pack -p:Version=0.2.0, push to NuGet
+```
+
+Prerequisites (one time): create the `DevTem.Templates` package on nuget.org
+(reserved by the first push), add a `NUGET_API_KEY` repo secret. Local dry
+run before tagging: `dotnet pack Packaging/DevTem.Templates -o nupkgs`,
+then install the file and scaffold once.
+
+Users update with one command (VS picks it up in its dialog too):
+
+```powershell
+dotnet new update --check-only        # what's new
+dotnet new update                     # update all template packages
+```
 
 ## 3. Add a setting
 
