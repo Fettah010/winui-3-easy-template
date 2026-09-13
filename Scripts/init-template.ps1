@@ -39,7 +39,7 @@ $replacements = @(
     @("DevTem", $AppName)
 )
 
-$extensions = @("*.cs", "*.xaml", "*.ps1", "*.yml", "*.md", "*.csproj", "*.manifest", "*.vbs", "*.bat")
+$extensions = @("*.cs", "*.xaml", "*.ps1", "*.yml", "*.md", "*.csproj", "*.manifest", "*.vbs", "*.bat", "*.sln")
 # docs/archive is frozen reference; everything else (incl. README/AGENTS) is rewritten.
 $skipDirs = @(".git", "bin", "obj", "docs\archive")
 $selfName = Split-Path $PSCommandPath -Leaf
@@ -83,6 +83,15 @@ if ((Test-Path -LiteralPath $oldCsproj) -and $SafeName -ne "DevTemWinUi3") {
         [System.IO.File]::WriteAllText($newTestCsproj, $testText)
     }
     Write-Host "Renamed project files to $SafeName[.Tests].csproj" -ForegroundColor Green
+}
+
+# Rename the solution alongside the projects (its project paths carry the
+# SafeName, already rewritten by the pass above).
+$oldSln = Join-Path $root "DevTemWinUi3.sln"
+$newSln = Join-Path $root "$SafeName.sln"
+if ((Test-Path -LiteralPath $oldSln) -and $SafeName -ne "DevTemWinUi3") {
+    Move-Item -LiteralPath $oldSln -Destination $newSln -Force
+    Write-Host "Renamed solution to $SafeName.sln" -ForegroundColor Green
 }
 
 # Verify: no template identity may remain (outside archive + this script).
