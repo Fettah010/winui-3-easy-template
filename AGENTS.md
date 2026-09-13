@@ -5,7 +5,7 @@ first before making changes.
 
 ## Session bootstrap (agents — do this before touching anything)
 
-1. Read `AGENTS.md` → `docs/STATE.md` → `docs/TEMPLATE-REUSABILITY-ROADMAP.md`, in order.
+1. Read `AGENTS.md` → `docs/STATE.md` → `docs/DISCOVERY-PLAN.md`, in order.
 2. `git status`, `git log --oneline -5`, newest tags.
 3. Confirm versions: csproj `<Version>`/`<InformationalVersion>` vs tags.
 4. `dotnet build -c Debug -p:Platform=x64` — the tree must be green
@@ -14,7 +14,7 @@ first before making changes.
    when you finish.
 
 Doc map: `AGENTS.md` conventions (stable) · `docs/STATE.md` current facts
-(mutable) · `docs/TEMPLATE-REUSABILITY-ROADMAP.md` active template plan ·
+(mutable) · `docs/DISCOVERY-PLAN.md` active template plan ·
 `docs/WORKFLOW.md` definition-of-done per change type (incl. release runbook) ·
 `docs/DECISIONS.md` why things are the way they are.
 

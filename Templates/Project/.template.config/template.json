@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional Velopack auto-updates, optional SQLite and HTTP services, 3-language UI, persisted settings, Serilog, and release tooling. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional Velopack auto-updates, optional SQLite and HTTP services, 3-language UI, persisted settings, Serilog, release tooling, and profile-aware documentation. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,

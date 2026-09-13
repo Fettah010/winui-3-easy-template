@@ -1,7 +1,7 @@
 {
   "$schema": "http://json.schemastore.org/template",
-  "author": "WinUI 3 template contributors",
-  "classifications": [ "WinUI", "WinUI 3", "Page", "MVVM" ],
+  "author": "Fettah010",
+  "classifications": [ "WinUI", "WinUI 3", "Page", "MVVM", "Template", "C#" ],
   "identity": "WinUI3.Page.MvvmI18n",
   "groupIdentity": "WinUI3.Page",
   "name": "WinUI 3 MVVM content page (i18n + responsive)",

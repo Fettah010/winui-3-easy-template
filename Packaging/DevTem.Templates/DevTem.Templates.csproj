@@ -9,10 +9,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageType>Template</PackageType>
     <PackageId>DevTem.Templates</PackageId>
-    <Title>DevTem WinUI 3 templates</Title>
-    <Authors>DevTem contributors</Authors>
-    <Description>WinUI 3 desktop app template with tray, Velopack auto-updates, SQLite, i18n, deep-link registration, settings backup and diagnostics (dotnet new devtem-winui) plus an MVVM content-page item template (dotnet new devtem-page).</Description>
-    <PackageTags>winui;winui3;windows;desktop;dotnet-new;templates;mvvm</PackageTags>
+    <Title>DevTem WinUI 3 starter templates (MVVM desktop app + page)</Title>
+    <Authors>Fettah010</Authors>
+    <Description>Production-ready WinUI 3 starter for .NET: a full MVVM desktop app (Mica window, system tray, Velopack auto-updates, SQLite + HTTP data layer, 3-language UI, persisted settings, Serilog, release pipeline) plus an MVVM content-page scaffolder. dotnet new devtem-winui / dotnet new devtem-page. Beyond blank templates: tray, i18n, deep links, settings backup, diagnostics.</Description>
+    <PackageTags>winui;winui-3;winui3;windows;windows-app-sdk;winappsdk;desktop;desktop-app;dotnet-new;template;templates;starter;starter-kit;boilerplate;mvvm;csharp;sqlite;velopack;auto-update;tray;i18n;localization</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
