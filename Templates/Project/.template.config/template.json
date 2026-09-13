@@ -4,7 +4,7 @@
   "classifications": [ "WinUI", "WinUI 3", "Desktop", "MVVM" ],
   "identity": "WinUI3.App.TrayUpdatesDb",
   "groupIdentity": "WinUI3.App",
-  "name": "WinUI 3 Desktop App",
+  "name": "DevTem",
   "shortName": "devtem-winui",
   "description": "Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates, SQLite + HTTP data layer, 3-language UI, persisted settings, Serilog, release pipeline. Identity (namespace, display name, company, repo, URI scheme) and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
