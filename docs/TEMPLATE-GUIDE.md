@@ -129,6 +129,10 @@ package IS the Visual Studio distribution channel.
 | `--scheme` | Deep-link scheme | `acme://` |
 | `--tray/--updates/--database` | Feature on/off (`false` drops it) | `--tray false` |
 
+Names with spaces work: `-n "My App"` produces `My_App` identifiers and
+project files (engine sanitization), and the build stays clean — the test
+matrix covers a spaced name every run.
+
 How flags work (verified over all-on, all-off, and mixed scaffolds):
 
 - **Files**: services, tests, release scripts and feature packages are

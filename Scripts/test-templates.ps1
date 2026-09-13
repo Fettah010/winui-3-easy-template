@@ -21,10 +21,10 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("devtem-matrix-" + [Sys
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
 $comboDefs = @{
-    "allon"  = @{ Name = "AcmeDesk";  Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @() }
-    "alloff" = @{ Name = "BareApp";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false") }
-    "notray" = @{ Name = "NoTrayApp"; Display = "NoTray App"; Company = "Nt";   Repo = "nt/app";        Scheme = "nt://";   Flags = @("--tray", "false") }
-    "noupd"  = @{ Name = "NoUpdApp";  Display = "NoUpd App";  Company = "Nu";   Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false") }
+    "allon"  = @{ Name = "AcmeDesk";  Safe = "AcmeDesk";  Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @() }
+    "alloff" = @{ Name = "Bare App";  Safe = "Bare_App";  Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false") }
+    "notray" = @{ Name = "NoTrayApp"; Safe = "NoTrayApp"; Display = "NoTray App"; Company = "Nt";   Repo = "nt/app";        Scheme = "nt://";   Flags = @("--tray", "false") }
+    "noupd"  = @{ Name = "NoUpdApp";  Safe = "NoUpdApp";  Display = "NoUpd App";  Company = "Nu";   Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false") }
 }
 
 $failed = 0
@@ -90,7 +90,7 @@ try {
         }
         Write-Host "build ${combo}: 0 warnings, 0 errors" -ForegroundColor Green
 
-        $testOut = & dotnet test (Join-Path $outDir "Tests\$($c.Name).Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q 2>&1 | Out-String
+        $testOut = & dotnet test (Join-Path $outDir "Tests\$($c.Safe).Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0 -or $testOut -notmatch 'Passed!' -or $testOut -match 'Failed:\s+[1-9]') {
             Write-Host "FAILED: tests for $combo" -ForegroundColor Red
             Write-Host $testOut

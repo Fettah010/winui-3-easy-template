@@ -19,9 +19,11 @@ public class AppMetadataTests
     [TestMethod]
     public void SafeName_IsIdentifierSafe()
     {
-        // Usable in mutex names, registry values, and folder names.
-        Assert.IsTrue(char.IsLetter(AppMetadata.SafeName[0]));
-        Assert.IsTrue(AppMetadata.SafeName.All(char.IsLetterOrDigit));
+        // Usable in mutex names, registry values, folder names, namespaces
+        // and file names. The engine sanitizes spaced names with underscores
+        // ("My App" -> My_App), so underscores are legal here.
+        Assert.IsTrue(char.IsLetter(AppMetadata.SafeName[0]) || AppMetadata.SafeName[0] == '_');
+        Assert.IsTrue(AppMetadata.SafeName.All(c => char.IsLetterOrDigit(c) || c == '_'));
         Assert.DoesNotContain(" ", AppMetadata.SafeName);
     }
 

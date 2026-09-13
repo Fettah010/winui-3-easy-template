@@ -4,7 +4,7 @@
   "classifications": [ "WinUI", "WinUI 3", "Desktop", "MVVM" ],
   "identity": "WinUI3.App.TrayUpdatesDb",
   "groupIdentity": "WinUI3.App",
-  "name": "WinUI 3 desktop app (tray, Velopack updates, SQLite, i18n)",
+  "name": "WinUI 3 Desktop App",
   "shortName": "devtem-winui",
   "description": "Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates, SQLite + HTTP data layer, 3-language UI, persisted settings, Serilog, release pipeline. Identity (namespace, display name, company, repo, URI scheme) and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
@@ -15,6 +15,20 @@
     "type": "project"
   },
   "symbols": {
+    "safeName": {
+      "type": "generated",
+      "generator": "regex",
+      "datatype": "string",
+      "fileRename": "__SafeName__",
+      "parameters": {
+        "source": "name",
+        "steps": [
+          { "regex": "^[^A-Za-z]+", "replacement": "_" },
+          { "regex": "[^A-Za-z0-9_]", "replacement": "_" }
+        ]
+      },
+      "description": "Identifier-safe form of the project name. Renames the project files so they always match the (sanitized) references inside content — spaced names like 'My App' become My_App.csproj everywhere."
+    },
     "displayName": {
       "type": "parameter",
       "datatype": "string",

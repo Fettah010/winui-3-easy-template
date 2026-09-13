@@ -16,7 +16,12 @@
          instance members through Current for DI/testability (P2 design), so
          the rule would fight the architecture. New stateless helpers should
          still prefer static. -->
-    <NoWarn>$(NoWarn);CA1822</NoWarn>
+    <!-- CA1707 (no underscores in identifiers): scaffolded namespaces and
+         assembly names come from user input that the engine sanitizes with
+         underscores ("My App" -> My_App), so the rule cannot hold for
+         generated identity. Higher analysis modes escalate it; suppress here
+         so EVERY valid name builds. -->
+    <NoWarn>$(NoWarn);CA1822;CA1707</NoWarn>
   </PropertyGroup>
 
 </Project>
