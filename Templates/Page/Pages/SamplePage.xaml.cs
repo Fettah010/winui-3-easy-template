@@ -53,9 +53,10 @@ public sealed partial class SamplePage : Page, INavigationAware
 
     private void ApplyLocalization()
     {
-        // Wire-up step 2: add SampleTitle/SampleDescription to all three
-        // dictionaries in LocalizationService (en-US/es-ES/fr-FR).
-        // The generated test stub fails until you do.
+        // Wire-up step 2: paste SamplePage.strings.md into all three
+        // dictionaries in LocalizationService (en-US/es-ES/fr-FR), then
+        // delete the snippet. The generated test stub fails until you do
+        // (or run Scripts/add-page.ps1, which does every step for you).
         var loc = LocalizationService.Current;
         TitleText.Text = loc.GetString("SampleTitle");
         DescriptionText.Text = loc.GetString("SampleDescription");

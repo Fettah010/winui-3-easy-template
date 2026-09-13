@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DevTemWinUi3.Tests.ViewModels;
@@ -41,6 +42,13 @@ public class SamplePageViewModelTests
         var vm = new SamplePageViewModel { Headline = "hello" };
         vm.ResetCommand.Execute(null);
         Assert.AreEqual(string.Empty, vm.Headline);
+    }
+
+    [TestMethod]
+    public void NavSymbol_MatchesChosenIcon()
+    {
+        var vm = new SamplePageViewModel();
+        Assert.AreEqual(Symbol.TemplateIcon, vm.NavSymbol);
     }
 
     [TestMethod]

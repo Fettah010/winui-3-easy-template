@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml.Controls;
 
 namespace DevTemWinUi3.ViewModels;
 
@@ -12,6 +13,12 @@ namespace DevTemWinUi3.ViewModels;
 /// </summary>
 public partial class SamplePageViewModel : ObservableObject
 {
+    /// <summary>
+    /// The page's nav icon (chosen at scaffold time via --icon). Used for
+    /// the NavigationViewItem's SymbolIcon; data-bound nav hosts can bind it.
+    /// </summary>
+    public Symbol NavSymbol => Symbol.TemplateIcon;
+
     [ObservableProperty]
     private string _headline = string.Empty;
 

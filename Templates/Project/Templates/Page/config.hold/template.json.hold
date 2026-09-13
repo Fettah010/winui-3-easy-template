@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.Page",
   "name": "WinUI 3 MVVM content page (i18n + responsive)",
   "shortName": "devtem-page",
-  "description": "Content Page + code-behind (INavigationAware, ApplyLocalization, responsive) + transient ViewModel + MSTest stub. After scaffolding: add the SampleTitle/SampleDescription strings, register the ViewModel, add the route (see docs/TEMPLATE-GUIDE.md).",
+  "description": "Content Page + code-behind (INavigationAware, ApplyLocalization, responsive) + transient ViewModel + MSTest stub + strings snippet. After scaffolding: paste SamplePage.strings.md into LocalizationService (then delete it), register the ViewModel, add the route - or run Scripts/add-page.ps1 once and skip every manual step (see docs/TEMPLATE-GUIDE.md).",
   "precedence": "0",
   "type": "item",
   "sourceName": "Sample",
@@ -15,6 +15,38 @@
   "primaryOutputs": [
     { "path": "Pages/SamplePage.xaml" }
   ],
+  "symbols": {
+    "title": {
+      "type": "parameter",
+      "datatype": "text",
+      "defaultValue": "Sample",
+      "replaces": "PageTitleFallback",
+      "displayName": "Page title",
+      "description": "Page title: XAML fallback text + en-US string (es/fr ship as TODO-translate in the strings snippet)."
+    },
+    "icon": {
+      "type": "parameter",
+      "datatype": "choice",
+      "choices": [
+        { "choice": "Home", "description": "House (landing pages)." },
+        { "choice": "Document", "description": "Paper sheet (default, generic content)." },
+        { "choice": "Shop", "description": "Storefront (orders, catalog)." },
+        { "choice": "Mail", "description": "Envelope (inbox, messages)." },
+        { "choice": "Calendar", "description": "Calendar (schedule, history)." },
+        { "choice": "People", "description": "Two figures (contacts, team)." },
+        { "choice": "Globe", "description": "Globe (network, web)." },
+        { "choice": "Pictures", "description": "Landscape photo (gallery)." },
+        { "choice": "Video", "description": "Film strip (media)." },
+        { "choice": "Camera", "description": "Camera (capture)." },
+        { "choice": "Map", "description": "Folded map (locations)." },
+        { "choice": "Phone", "description": "Handset (calls, devices)." }
+      ],
+      "defaultValue": "Document",
+      "replaces": "TemplateIcon",
+      "displayName": "Nav icon",
+      "description": "Nav icon, a WinUI Symbol member (choice list guarantees validity). The value is also exposed as ViewModel.NavSymbol."
+    }
+  },
   "tags": {
     "language": "C#",
     "type": "item"
