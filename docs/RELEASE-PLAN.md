@@ -8,11 +8,10 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ## Version decisions (locked)
 
-- Next beta is **`v0.0.3-beta`** — `v0.0.2-beta` and `v0.0.2` tags already
-  exist and Velopack versions must keep increasing. There is no "0.0.2
-  beta" left to cut.
-- csproj: `<Version>0.0.3</Version>`, `<AssemblyVersion>/<FileVersion>`
-  `0.0.3.0`, `<InformationalVersion>0.0.3-beta` (fresh installs track
+- `v0.0.3-beta` shipped. Current beta is **`v0.0.4-beta`** — Velopack
+  versions must keep increasing, so each beta bumps the patch.
+- csproj: `<Version>0.0.4</Version>`, `<AssemblyVersion>/<FileVersion>`
+  `0.0.4.0`, `<InformationalVersion>0.0.4-beta` (fresh installs track
   beta — intended for a beta).
 - Template package: **`templates-v0.1.2`** (0.1.1 already published;
   unreleased content since: P7, smoke hardening, `schemeName`,
@@ -39,10 +38,10 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 Release runbook (maintainer, after green main):
 
 ```powershell
-git tag v0.0.3-beta
-git push origin v0.0.3-beta
+git tag v0.0.4-beta
+git push origin v0.0.4-beta
 # CI builds, packs, publishes to GitHub Releases (beta channel)
-git branch -f beta v0.0.3-beta
+git branch -f beta v0.0.4-beta
 git push origin beta --force
 git tag templates-v0.1.2
 git push origin templates-v0.1.2

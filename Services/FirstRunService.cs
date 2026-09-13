@@ -57,10 +57,8 @@ public sealed class FirstRunService
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• Settings backup: reset, export, import
-• Diagnostics page with log viewer
-• Deep-link support (custom URI scheme)
-• Theme-aware tray and title icons
-• One-command page scaffolding (--title/--icon, add-page.ps1)";
+• Release pipeline hardening and template checks
+• Smoke-test reliability on busy desktops
+• Bug fixes and performance improvements";
     }
 }

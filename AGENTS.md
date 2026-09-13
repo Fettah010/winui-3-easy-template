@@ -88,7 +88,7 @@ main          ← Development branch (latest code)
 | Branch | Points to | Purpose |
 |--------|-----------|---------|
 | `main` | Latest commit | Development |
-| `beta` | v0.0.2-beta release | Beta channel |
+| `beta` | v0.0.4-beta release | Beta channel |
 | `stable` | v0.0.2 release | Stable channel |
 
 ### How releases work
@@ -107,8 +107,8 @@ main          ← Development branch (latest code)
    # 2. Bump version in DevTemWinUi3.csproj (Version, AssemblyVersion, FileVersion)
    
     # 3. Tag and push (choose one):
-    git tag v0.0.3-beta        # for beta release
-    git push origin v0.0.3-beta
+    git tag v0.0.4-beta        # for beta release
+    git push origin v0.0.4-beta
    
    # OR
    
@@ -124,7 +124,7 @@ main          ← Development branch (latest code)
 4. **After release, update the channel branch:**
     ```powershell
     # For beta:
-    git branch -f beta v0.0.3-beta
+    git branch -f beta v0.0.4-beta
     git push origin beta --force
    
    # For stable:
@@ -162,9 +162,9 @@ is WinExe so it never shows a terminal window on its own.
 
 ## Versioning
 
-Current version: **0.0.3-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.4-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
-beta releases carry the `-beta` suffix (e.g. `0.0.3-beta`) so fresh installs
+beta releases carry the `-beta` suffix (e.g. `0.0.4-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).
 
 ## Known gotchas

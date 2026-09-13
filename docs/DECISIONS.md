@@ -32,3 +32,6 @@ in git history; this file saves the next agent the archaeology.
   `docs/RELEASE-PLAN.md`, decisions live here.
 - **2026-09-13 — Agents never commit/push/tag unasked.** Releases are
   prepared fully, then handed over as exact commands for the human.
+- **2026-09-13 — v0.0.4-beta is a pipeline release.** No app behavior
+  changes since 0.0.3-beta (one P1/P2 commit); the what's-new dialog
+  says so honestly instead of repeating 0.0.3 highlights.

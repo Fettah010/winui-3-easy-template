@@ -40,8 +40,8 @@ the auto-check setting.
 
 ```powershell
 # Tag-based release
-git tag v0.0.3-beta
-git push origin v0.0.3-beta
+git tag v0.0.4-beta
+git push origin v0.0.4-beta
 ```
 
 #### Notifications
@@ -142,12 +142,12 @@ Releases, and your users get the update in-app.
 
 ```powershell
 # 1. Bump the version, commit, then tag and push a release
-git tag v0.0.3-beta
-git push origin v0.0.3-beta        # -> .github/workflows/release.yml runs
+git tag v0.0.4-beta
+git push origin v0.0.4-beta        # -> .github/workflows/release.yml runs
 ```
 
 Or run it manually from the **Actions** tab: *Run workflow* → enter the version
-(e.g. `0.0.3-beta`) → select *beta* channel.
+(e.g. `0.0.4-beta`) → select *beta* channel.
 
 ### Offline / local testing
 

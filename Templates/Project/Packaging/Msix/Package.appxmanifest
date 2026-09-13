@@ -19,7 +19,7 @@
   <Identity
     Name="DevTemWinUi3"
     Publisher="CN=DevTem"
-    Version="0.0.3.0"
+    Version="0.0.4.0"
     ProcessorArchitecture="x64" />
 
   <Properties>

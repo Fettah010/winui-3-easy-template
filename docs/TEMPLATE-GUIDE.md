@@ -262,7 +262,7 @@ dotnet new update                     # update all template packages
 
 Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
 `<InformationalVersion>` (`-beta` suffix on beta releases so fresh installs
-default to the beta channel). Commit, push, tag (`v0.0.3-beta`), push the tag
+default to the beta channel). Commit, push, tag (`v0.0.4-beta`), push the tag
 (CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
 is in `AGENTS.md` ("Branches & releases").
 

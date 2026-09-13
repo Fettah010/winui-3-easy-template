@@ -4,6 +4,29 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+## [0.0.4-beta] — unreleased
+
+Template-correctness and CI release. No app behavior changes.
+
+### Added
+
+- Mirror-parity check (`Scripts/test-mirror-parity.ps1`, CI-gated):
+  app vs template file sets, verbatim hashes, csproj version agreement,
+  nested page copy.
+- Matrix rename-engine proofs: per-combo manifest/`ProtocolPrefix`
+  assertions plus an `init-template` scratch re-brand.
+- `register-protocol.ps1` dry run (`-WhatIf`) + CI step.
+- Asset-mapping tables in both template guides; VS troubleshooting notes.
+
+### Fixed
+
+- `ui-tests` CI: sln mapped test projects to Any CPU, so `--no-build`
+  never found the DLL — x64 mappings in both slns (same latent trap
+  fixed in the template).
+- `register-protocol.ps1` PS 5.1 parse error (`"$Scheme://"`).
+- `schemeName` generator emitted a bare scheme (invalid manifest XML);
+  now emits the full `Name="…"` attribute.
+
 ## [0.0.3-beta] — unreleased
 
 ### Added
