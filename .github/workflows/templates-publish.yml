@@ -10,11 +10,16 @@ on:
   push:
     tags: ["templates-v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version for manual runs (tags derive it from the tag name)"
+        required: false
+        default: ""
 
 jobs:
   publish:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     # OIDC token for NuGet Trusted Publishing (no secrets involved).
     permissions:
       contents: read
@@ -27,8 +32,30 @@ jobs:
       - name: Pack DevTem.Templates
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".Replace("templates-v", "")
-          if ([string]::IsNullOrWhiteSpace($version)) { $version = "0.1.0" }
-          dotnet pack Packaging/DevTem.Templates -c Release -p:Version=$version -o nupkgs
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) { $version = "${{ github.ref_name }}".Replace("templates-v", "") }
+          if ([string]::IsNullOrWhiteSpace($version) -or $version -notmatch '^\d+\.\d+\.\d+') { $version = "0.1.0" }
+          $outDir = Join-Path $env:GITHUB_WORKSPACE "nupkgs"
+          dotnet pack (Join-Path $env:GITHUB_WORKSPACE "Packaging/DevTem.Templates") -c Release -p:Version=$version -o $outDir
+          if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed." }
+          $pkg = Get-ChildItem (Join-Path $outDir "*.nupkg") | Select-Object -First 1
+          if (-not $pkg) { throw "Pack produced no nupkg in $outDir." }
+          Write-Host "Packed: $($pkg.FullName) ($($pkg.Length) bytes)"
+      - name: Smoke-test packed templates (install, scaffold, build)
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
+          if (-not $pkg) { throw "No nupkg found — nothing to smoke-test." }
+          dotnet new install $pkg.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Template install from nupkg failed." }
+          $probe = Join-Path $env:RUNNER_TEMP "publish-smoke"
+          dotnet new devtem-winui -n SmokeCheck --output (Join-Path $probe "SmokeCheck")
+          if ($LASTEXITCODE -ne 0) { throw "Scaffold from nupkg failed." }
+          dotnet build (Join-Path $probe "SmokeCheck/SmokeCheck.sln") -c Debug -p:Platform=x64 --no-incremental -v q
+          if ($LASTEXITCODE -ne 0) { throw "Smoke scaffold does not build clean." }
       - name: Push to NuGet (Trusted Publishing, keyless)
-        run: dotnet nuget push "nupkgs/*.nupkg" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
+          if (-not $pkg) { throw "No nupkg found — refusing to push nothing." }
+          dotnet nuget push $pkg.FullName --source https://api.nuget.org/v3/index.json --skip-duplicate

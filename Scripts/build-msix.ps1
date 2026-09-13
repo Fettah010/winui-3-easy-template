@@ -105,7 +105,28 @@ foreach ($path in @($csproj, $manifestSrc, $logoSrc)) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing required file: $path" }
 }
 
-$makeappx = Get-Command makeappx.exe -ErrorAction SilentlyContinue
+function Find-SdkTool([string]$exeName) {
+    # The Windows SDK is never on PATH (neither locally nor on CI runners):
+    # probe PATH first, then every installed Kits version (newest first).
+    $found = Get-Command "$exeName.exe" -ErrorAction SilentlyContinue
+    if ($found) { return $found.Source }
+    $kitsRoots = @(
+        (Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"),
+        (Join-Path $env:ProgramFiles "Windows Kits\10\bin")
+    )
+    foreach ($kits in $kitsRoots) {
+        if (-not (Test-Path -LiteralPath $kits)) { continue }
+        $candidate = Get-ChildItem -LiteralPath $kits -Directory -ErrorAction SilentlyContinue |
+            Sort-Object Name -Descending |
+            ForEach-Object { Join-Path (Join-Path $_.FullName "x64") "$exeName.exe" } |
+            Where-Object { Test-Path -LiteralPath $_ } |
+            Select-Object -First 1
+        if ($candidate) { return $candidate }
+    }
+    return $null
+}
+
+$makeappx = Find-SdkTool "makeappx"
 if (-not $makeappx -and -not $DryRun) {
     throw "makeappx.exe not found. Install the Windows SDK (or run with -DryRun to validate staging only)."
 }
@@ -160,12 +181,12 @@ try {
     }
     $msix = Join-Path $OutputDir ("DevTemWinUi3_" + $Version + "_" + $arch + ".msix")
     Write-Host "==> makeappx pack"
-    & $makeappx.Source pack /d $appDir /p $msix /nv | Out-Null
+    & $makeappx pack /d $appDir /p $msix /nv | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "makeappx failed (exit $LASTEXITCODE)." }
     Write-Host "Packed: $msix"
 
     if (-not [string]::IsNullOrWhiteSpace($CertificatePath)) {
-        $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
+        $signtool = Find-SdkTool "signtool"
         if (-not $signtool) { throw "signtool.exe not found (Windows SDK required for signing)." }
         $signArgs = @("sign", "/fd", "SHA256", "/f", $CertificatePath, "/tr", $TimestampUrl, "/td", "SHA256")
         if (-not [string]::IsNullOrWhiteSpace($CertificatePassword)) {
@@ -173,7 +194,7 @@ try {
         }
         $signArgs += $msix
         Write-Host "==> signtool sign"
-        & $signtool.Source @signArgs | Out-Null
+        & $signtool @signArgs | Out-Null
         if ($LASTEXITCODE -ne 0) { throw "signtool failed (exit $LASTEXITCODE)." }
         Write-Host "Signed: $msix"
     }

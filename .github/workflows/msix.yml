@@ -14,6 +14,13 @@ on:
       - ".github/workflows/msix.yml"
       - "DevTemWinUi3.csproj"
       - "Assets/Logo.png"
+  pull_request:
+    paths:
+      - "Packaging/Msix/**"
+      - "Scripts/build-msix.ps1"
+      - ".github/workflows/msix.yml"
+      - "DevTemWinUi3.csproj"
+      - "Assets/Logo.png"
   workflow_dispatch:
 
 jobs:
