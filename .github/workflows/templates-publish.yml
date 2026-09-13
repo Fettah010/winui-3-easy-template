@@ -53,9 +53,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Scaffold from nupkg failed." }
           dotnet build (Join-Path $probe "SmokeCheck/SmokeCheck.sln") -c Debug -p:Platform=x64 --no-incremental -v q
           if ($LASTEXITCODE -ne 0) { throw "Smoke scaffold does not build clean." }
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: fettahDev
       - name: Push to NuGet (Trusted Publishing, keyless)
         shell: pwsh
         run: |
           $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
           if (-not $pkg) { throw "No nupkg found — refusing to push nothing." }
-          dotnet nuget push $pkg.FullName --source https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push $pkg.FullName --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
