@@ -8,6 +8,9 @@ nupkgs/
 # App runtime output (Serilog)
 Logs/
 
+# set-app-icon.ps1 backups (pre-rewrite icon originals)
+.icon-backup/
+
 # VS / user files
 .vs/
 *.user

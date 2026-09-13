@@ -32,8 +32,26 @@ The script also renames `DevTemWinUi3[.Tests].csproj` to match, and fails if
 any template identity remains. Frozen on purpose: `docs/archive/` (reference)
 and this guide (it documents the tokens).
 
-Manual spots the script cannot do: regenerate `Assets/app.ico` + `Logo*.png`
-with your art, then run `Scripts/create-shortcut.ps1` again.
+Manual spots the script cannot do: your app art — see §1b below, then run
+`Scripts/create-shortcut.ps1` again.
+
+## 1b. App icons (one command)
+
+All icon assets regenerate from a single square source PNG (1024px
+recommended, 512 minimum, transparent background, logo inside ~80% safe
+margins — tight edge-to-edge art clips in circular hosts):
+
+```powershell
+.\Scripts\set-app-icon.ps1 -Source C:\art\logo.png
+```
+
+This writes `Assets/app.ico` (multi-entry 16–256 for taskbar, title bar,
+installer, tray, shortcuts), `Assets/Logo.png` (256: splash, Home, About)
+and `Assets/Logo-64/48/32/16.png`, verifies every output by reading it
+back, and backs up the replaced files to `.icon-backup\<timestamp>\`
+(git-ignored). Preview with `-WhatIf`; point at a copied assets folder
+with `-AssetsDir` for dry runs. MSIX tiles need no step: `build-msix.ps1`
+renders them from `Logo.png` at pack time.
 
 ## 2. Add a page (6 steps, all required)
 

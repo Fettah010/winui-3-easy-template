@@ -49,6 +49,13 @@ default app. Template flag-off runtime proof stays manual screenshots.
 
 ## P5 — App icon pipeline (`set-app-icon.ps1`)
 
+Status: IMPLEMENTED — `Scripts/set-app-icon.ps1` (+ `Templates/Project/`
+mirror, no template.json change: feature-independent), §1b in both
+TEMPLATE-GUIDEs, `.icon-backup/` git-ignored. Verified on a temp Assets
+copy from a generated 1024px source: 7-entry ICO (OS LoadImage-accepted),
+5 PNGs at exact sizes with alpha intact, refusals (256px, non-square),
+zero-write `-WhatIf`, timestamped backups; real `Assets/` untouched.
+
 Problem: app art is 6+ hand-maintained files (`app.ico`, `Logo.png`,
 `Logo-16/32/48/64`). No GUI is possible here — the VS template dialog only
 renders text fields, checkboxes, and dropdowns (engine limit, not a gap) —
