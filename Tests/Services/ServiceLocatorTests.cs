@@ -1,0 +1,80 @@
+using System;
+using System.IO;
+using DevTemWinUi3.Services;
+using DevTemWinUi3.ViewModels;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace DevTemWinUi3.Tests.Services;
+
+[TestClass]
+public class ServiceLocatorTests
+{
+    private string _storePath = string.Empty;
+
+    [TestInitialize]
+    public void Init()
+    {
+        _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+        LocalSettingsStore.SetTestPath(_storePath);
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        LocalSettingsStore.SetTestPath(null);
+        try { File.Delete(_storePath); } catch { }
+    }
+    [TestMethod]
+    public void Initialize_DoesNotThrow()
+    {
+        ServiceLocator.Initialize();
+    }
+
+    [TestMethod]
+    public void GetService_ReturnsNonNull()
+    {
+        ServiceLocator.Initialize();
+        var db = ServiceLocator.GetService<DatabaseService>();
+        Assert.IsNotNull(db);
+    }
+
+    [TestMethod]
+    public void GetRequiredService_ReturnsNonNull()
+    {
+        ServiceLocator.Initialize();
+        var db = ServiceLocator.GetRequiredService<DatabaseService>();
+        Assert.IsNotNull(db);
+    }
+
+    [TestMethod]
+    public void Services_Property_IsAccessible()
+    {
+        ServiceLocator.Initialize();
+        var services = ServiceLocator.Services;
+        Assert.IsNotNull(services);
+    }
+
+    [TestMethod]
+    public void Singletons_ResolveToProcessInstances()
+    {
+        ServiceLocator.Initialize();
+        Assert.AreSame(UpdateService.Current, ServiceLocator.GetRequiredService<UpdateService>());
+        Assert.AreSame(NavigationService.Current, ServiceLocator.GetRequiredService<NavigationService>());
+        Assert.AreSame(ThemeService.Current, ServiceLocator.GetRequiredService<ThemeService>());
+        Assert.AreSame(AppInfo.Current, ServiceLocator.GetRequiredService<AppInfo>());
+    }
+
+    [TestMethod]
+    public void ViewModels_ResolveTransient()
+    {
+        ServiceLocator.Initialize();
+        var first = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
+        var second = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
+        Assert.IsNotNull(first);
+        Assert.IsNotNull(second);
+        Assert.AreNotSame(first, second);
+
+        var diag = ServiceLocator.GetRequiredService<DiagnosticsPageViewModel>();
+        Assert.IsNotNull(diag);
+    }
+}

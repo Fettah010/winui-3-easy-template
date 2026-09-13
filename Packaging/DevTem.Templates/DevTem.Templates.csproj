@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- NuGet template package: ships Templates/Page (devtem-page) and
+       Templates/Project (devtem-winui) for `dotnet new install`. Versioned
+       independently from the app: CI passes -p:Version from templates-v* tags.
+       Pack: dotnet pack Packaging/DevTem.Templates -p:Version=0.1.0 -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageType>Template</PackageType>
+    <PackageId>DevTem.Templates</PackageId>
+    <Title>DevTem WinUI 3 templates</Title>
+    <Authors>DevTem contributors</Authors>
+    <Description>WinUI 3 desktop app template with tray, Velopack auto-updates, SQLite, i18n, deep-link registration, settings backup and diagnostics (dotnet new devtem-winui) plus an MVVM content-page item template (dotnet new devtem-page).</Description>
+    <PackageTags>winui;winui3;windows;desktop;dotnet-new;templates;mvvm</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Fettah010/winui-3-easy-template</RepositoryUrl>
+    <Version>0.1.4</Version>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <!-- Template content needs dotfiles (.gitignore, .github/): disable the
+         default exclusion of files starting with '.'. -->
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <!-- NU5100/23/28: template packages carry no lib. NU5110/11: our .ps1
+         files are template content, not NuGet install scripts. -->
+    <NoWarn>$(NoWarn);NU5100;NU5123;NU5128;NU5110;NU5111</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\Templates\Project\**\*" Exclude="..\..\Templates\Project\bin\**\*;..\..\Templates\Project\obj\**\*" PackagePath="content\Project\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="..\..\Templates\Page\**\*" Exclude="..\..\Templates\Page\bin\**\*;..\..\Templates\Page\obj\**\*" PackagePath="content\Page\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Package face: icon + readme land at the package root (not content/). -->
+    <None Include="..\..\Assets\Logo.png" Pack="true" PackagePath="icon.png" />
+    <None Include="README.md" Pack="true" PackagePath="README.md" />
+  </ItemGroup>
+
+</Project>

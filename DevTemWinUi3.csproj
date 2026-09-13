@@ -1,0 +1,104 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DevTemWinUi3</RootNamespace>
+    <AssemblyName>DevTemWinUi3</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>0.0.1</Version>
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <!-- Product version shown by Windows; carries the channel suffix for beta
+         builds (e.g. 0.0.5-beta) so the app can default to its own channel.
+         Keep in sync: stable releases use the plain version. -->
+    <InformationalVersion>0.0.1-beta</InformationalVersion>
+    <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
+    <UseXamlCompilerExecutable>false</UseXamlCompilerExecutable>
+    <!-- ReadyToRun for Release: pre-compiled managed code shortens cold-start
+         JIT on installed builds (slightly larger package, faster launch). -->
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Release'">true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- app.ico MUST be explicit Content (not just ApplicationIcon): only Content
+         is guaranteed to flow into publish output and the Velopack installer.
+         Without it, installed builds lose the taskbar icon (SetIcon blanks it)
+         and the tray icon (LoadImage fails). -->
+    <Content Include="Assets\app.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\app-light.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\app-dark.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-64.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-48.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-32.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Logo-16.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Tests\**" />
+    <None Remove="Tests\**" />
+    <Content Remove="Tests\**" />
+  </ItemGroup>
+
+  <!-- FlaUI smoke tests drive the built exe; they are never app code. -->
+  <ItemGroup>
+    <Compile Remove="UI\**" />
+    <None Remove="UI\**" />
+    <Content Remove="UI\**" />
+    <Page Remove="UI\**" />
+  </ItemGroup>
+
+  <!-- Template packaging project: ships templates, never app code. Its obj/
+       AssemblyInfo must never join this compilation (CS0579 duplicates). -->
+  <ItemGroup>
+    <Compile Remove="Packaging\**" />
+    <None Remove="Packaging\**" />
+    <Content Remove="Packaging\**" />
+  </ItemGroup>
+
+  <!-- Archived reference code is documentation, not product code. -->
+  <ItemGroup>
+    <Compile Remove="docs\**" />
+    <Page Remove="docs\**" />
+    <None Remove="docs\**" />
+    <Content Remove="docs\**" />
+  </ItemGroup>
+
+  <!-- dotnet-new scaffolding sources: template files, not product code. -->
+  <ItemGroup>
+    <Compile Remove="Templates\**" />
+    <Page Remove="Templates\**" />
+    <None Remove="Templates\**" />
+    <Content Remove="Templates\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.2.251219" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.2.251219" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Sentry" Version="6.11.0" />
+    <PackageReference Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
+</Project>

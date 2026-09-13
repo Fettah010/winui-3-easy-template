@@ -1,0 +1,122 @@
+using System;
+using System.Threading.Tasks;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media.Animation;
+using DevTemWinUi3.Services;
+
+namespace DevTemWinUi3;
+
+public partial class App : Application
+{
+    private SplashScreen? _splash;
+    private MainWindow? _mainWindow;
+
+    public App()
+    {
+        this.InitializeComponent();
+
+        this.UnhandledException += (_, e) =>
+        {
+            LoggingService.Log.Fatal(e.Exception, "Unhandled UI-thread exception");
+            CrashReportingService.Current.CaptureException(e.Exception, "ui-thread");
+            e.Handled = false;
+        };
+    }
+
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
+    {
+        // Show splash screen immediately (it reports real init phases below)
+        _splash = new SplashScreen();
+        _splash.Activate();
+        LoggingService.Log.Information(
+            "Splash shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
+
+        // Initialize services while splash is visible
+        await InitializeServicesAsync();
+
+        // Create main window (hidden initially)
+        _mainWindow = new MainWindow();
+        MainWindowInstance = _mainWindow;
+        _splash?.ReportProgress(0.85, LocalizationService.Current.GetString("SplashPreparingWindow"));
+
+        // Animate transition: splash fades out, main window fades in
+        await TransitionToMainWindow();
+        LoggingService.Log.Information(
+            "Main window shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
+
+        // Deep link that started this process (if any) wins over the home page.
+        HandlePendingProtocolUri();
+
+        // Heavy work deferred past the first frame so the window appears ASAP:
+        // database init and the update check run while the user already sees UI.
+        // The periodic loop keeps trayed (long-running) apps current too.
+        // Owned by BackgroundUpdateService; App stays launch orchestration.
+        _ = DatabaseInitializer.InitializeAsync();
+        _ = BackgroundUpdateService.Current.CheckForUpdatesAsync(MainWindowInstance);
+        _ = BackgroundUpdateService.Current.RunPeriodicChecksAsync(MainWindowInstance);
+    }
+
+    private async Task InitializeServicesAsync()
+    {
+        await Task.Run(() =>
+        {
+            ServiceLocator.Initialize();
+            LocalizationService.Current.Initialize();
+            // Unpackaged installs have no manifest: claim our deep-link
+            // scheme per-user (HKCU, no admin); MSIX covers itself.
+            ProtocolService.EnsureRegistered();
+        });
+
+        // One-time channel migration (beta builds holding a stale channel).
+        SettingsService.Current.EnsureChannelForCurrentBuild();
+
+        var loc = LocalizationService.Current;
+        _splash?.ReportProgress(0.4, loc.GetString("SplashLoadingServices"));
+        LoggingService.Log.Information(
+            "Services ready after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
+    }
+
+    private async Task TransitionToMainWindow()
+    {
+        if (_splash is null || _mainWindow is null) return;
+
+        // Close splash with animation
+        var splashCloseTask = _splash.CloseWithAnimation();
+
+        // Small overlap — start activating main window before splash fully closes
+        await Task.Delay(100);
+
+        _mainWindow.Activate();
+        _splash = null;
+
+        // Wait for splash close animation to finish
+        await splashCloseTask;
+
+        // Fade in main window content
+        await WindowChromeService.Current.PlayEntranceAnimation(_mainWindow.ContentRoot);
+    }
+
+    /// <summary>
+    /// Navigates to the deep link that started this process, if any.
+    /// Runs after the main window is visible so the nav frame exists.
+    /// </summary>
+    private void HandlePendingProtocolUri()
+    {
+        try
+        {
+            var pending = Program.PendingProtocolUri;
+            if (string.IsNullOrWhiteSpace(pending))
+                return;
+            if (NavigationService.Current.TryNavigateByUri(pending, out var tag))
+                LoggingService.Log.Information("Deep link handled on launch: {Tag}", tag);
+            else
+                LoggingService.Log.Warning("Deep link had no route: {Uri}", pending);
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Log.Error(ex, "Deep link handling on launch failed");
+        }
+    }
+
+    internal Window? MainWindowInstance;
+}

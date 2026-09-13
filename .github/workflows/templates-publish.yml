@@ -1,0 +1,80 @@
+name: templates-publish
+
+# Tag templates-vX.Y.Z (cut from green main) packs DevTem.Templates with
+# that version and pushes it to NuGet via Trusted Publishing (OIDC — no API
+# key stored anywhere). One-time setup on nuget.org: Trusted Publishing >
+# Create > package DevTem.Templates, this repo, workflow templates-publish.yml.
+# Separate file on purpose: no paths filter, so the tag always publishes.
+
+on:
+  push:
+    tags: ["templates-v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version for manual runs (tags derive it from the tag name)"
+        required: false
+        default: ""
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    # OIDC token for NuGet Trusted Publishing (no secrets involved).
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Pack DevTem.Templates
+        shell: pwsh
+        run: |
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) { $version = "${{ github.ref_name }}".Replace("templates-v", "") }
+          if ([string]::IsNullOrWhiteSpace($version) -or $version -notmatch '^\d+\.\d+\.\d+') { $version = "0.1.0" }
+          $outDir = Join-Path $env:GITHUB_WORKSPACE "nupkgs"
+          dotnet pack (Join-Path $env:GITHUB_WORKSPACE "Packaging/DevTem.Templates") -c Release -p:Version=$version -o $outDir
+          if ($LASTEXITCODE -ne 0) { throw "dotnet pack failed." }
+          $pkg = Get-ChildItem (Join-Path $outDir "*.nupkg") | Select-Object -First 1
+          if (-not $pkg) { throw "Pack produced no nupkg in $outDir." }
+          Write-Host "Packed: $($pkg.FullName) ($($pkg.Length) bytes)"
+      - name: Smoke-test packed templates (install, scaffold, build, test)
+        shell: pwsh
+        run: |
+          $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
+          if (-not $pkg) { throw "No nupkg found — nothing to smoke-test." }
+          dotnet new install $pkg.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Template install from nupkg failed." }
+          $probe = Join-Path $env:RUNNER_TEMP "publish-smoke"
+          # Custom scheme exercises the scheme/schemeName engine paths end to end.
+          dotnet new devtem-winui -n SmokeCheck --scheme "acme://" --output (Join-Path $probe "SmokeCheck")
+          if ($LASTEXITCODE -ne 0) { throw "Scaffold from nupkg failed." }
+          $manifest = Get-Content -LiteralPath (Join-Path $probe "SmokeCheck/Packaging/Msix/Package.appxmanifest") -Raw
+          if ($manifest -notmatch 'Name="acme"') { throw "Scaffolded manifest protocol Name is not acme." }
+          dotnet build (Join-Path $probe "SmokeCheck/SmokeCheck.sln") -c Debug -p:Platform=x64 --no-incremental -v q
+          if ($LASTEXITCODE -ne 0) { throw "Smoke scaffold does not build clean." }
+          dotnet test (Join-Path $probe "SmokeCheck/Tests/SmokeCheck.Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q
+          if ($LASTEXITCODE -ne 0) { throw "Smoke scaffold tests failed." }
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        continue-on-error: true
+        with:
+          user: fettahDev
+      - name: Push to NuGet (OIDC first, stored key fallback)
+        shell: pwsh
+        env:
+          FALLBACK_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
+          if (-not $pkg) { throw "No nupkg found — refusing to push nothing." }
+          $key = "${{ steps.login.outputs.NUGET_API_KEY }}"
+          if ([string]::IsNullOrWhiteSpace($key)) {
+            Write-Host "WARNING: OIDC login yielded no key — falling back to stored NUGET_API_KEY."
+            $key = $env:FALLBACK_API_KEY
+          }
+          if ([string]::IsNullOrWhiteSpace($key)) { throw "No NuGet credentials: OIDC login failed and NUGET_API_KEY is not configured." }
+          dotnet nuget push $pkg.FullName --api-key $key --source https://api.nuget.org/v3/index.json --skip-duplicate

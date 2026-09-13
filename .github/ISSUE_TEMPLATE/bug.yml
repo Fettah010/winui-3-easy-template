@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible problem in the sample app or templates.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first. For security-sensitive reports,
+        follow SECURITY.md instead of opening a public issue.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Include the app, template package, or commit version.
+      placeholder: 0.0.5-beta / templates-v0.1.3 / commit SHA
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows version, .NET SDK, architecture, and install mode.
+      placeholder: Windows 11, .NET 10, x64, unpackaged
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Give the smallest reliable sequence that reproduces the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or additional context
+      description: Remove secrets and personal data before posting.

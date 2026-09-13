@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "DevTem WinUI 3"
+message: "If DevTem helped your project, please cite the repository and template package."
+type: software
+authors:
+  - name: "Fettah010"
+    alias: "Fettah010"
+repository-code: "https://github.com/Fettah010/winui-3-easy-template"
+url: "https://github.com/Fettah010/winui-3-easy-template"
+license: MIT
+version: "0.0.1-beta"
+date-released: "2026-09-13"
+keywords:
+  - WinUI 3
+  - Windows App SDK
+  - .NET
+  - MVVM
+  - Windows desktop
+  - starter template

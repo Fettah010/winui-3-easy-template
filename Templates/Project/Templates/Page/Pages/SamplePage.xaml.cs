@@ -1,0 +1,54 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using DevTemWinUi3.Services;
+using DevTemWinUi3.ViewModels;
+
+namespace DevTemWinUi3.Pages;
+
+public sealed partial class SamplePage : Page, INavigationAware
+{
+    public SamplePageViewModel ViewModel { get; }
+
+    public SamplePage()
+    {
+        this.InitializeComponent();
+        // ViewModel comes from the container (transient per page), never new.
+        // Wire-up step 1: register it in ServiceLocator.Initialize():
+        //     services.AddTransient<SamplePageViewModel>();
+        ViewModel = ServiceLocator.GetRequiredService<SamplePageViewModel>();
+        DataContext = ViewModel;
+    }
+
+    public void OnNavigatedTo(object? parameter)
+    {
+        // Labels bind live ({loc:Loc} in the XAML) — nothing to refresh.
+        // Wire-up step 2: paste SamplePage.strings.md into
+        // Services/Localization/{En,Es,Fr}Strings.cs, then delete the
+        // snippet. The generated test stub fails until you do (or run
+        // Scripts/add-page.ps1, which does every step for you).
+        UpdateResponsiveLayout();
+    }
+
+    public void OnNavigatedFrom()
+    {
+        // Nothing to tear down on leave.
+    }
+
+    private void SamplePage_Loaded(object sender, RoutedEventArgs e) => UpdateResponsiveLayout();
+
+    private void SamplePage_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateResponsiveLayout();
+
+    /// <summary>
+    /// Page-level responsive switch (padding here; two-column pages also
+    /// restack their grids). Driven by the page's own width so the compact
+    /// nav pane is accounted for. Never depends on language.
+    /// </summary>
+    private void UpdateResponsiveLayout()
+    {
+        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+
+        ContentPanel.Padding = narrow
+            ? new Thickness(16, 16, 16, 24)
+            : new Thickness(32, 24, 32, 32);
+    }
+}

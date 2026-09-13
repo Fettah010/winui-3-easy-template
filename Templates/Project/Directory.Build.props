@@ -1,0 +1,27 @@
+<Project>
+  <!-- Repository-wide quality bars. Applies to the app, tests, packaging,
+       and (for scaffolded apps) the template copy, which carries its own. -->
+
+  <PropertyGroup>
+    <!-- The "0 warnings" rule, enforced structurally instead of by
+         discipline. Add narrowly-scoped <NoWarn> entries per project when
+         a warning is genuinely unactionable (documented next to it). -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Roslyn analyzers at Recommended level. Escalating to All/Enforce
+         is a deliberate future step, not a TODO. -->
+    <AnalysisMode>Recommended</AnalysisMode>
+
+    <!-- CA1822 (mark members static): singleton services intentionally expose
+         instance members through Current for DI/testability (P2 design), so
+         the rule would fight the architecture. New stateless helpers should
+         still prefer static. -->
+    <!-- CA1707 (no underscores in identifiers): scaffolded namespaces and
+         assembly names come from user input that the engine sanitizes with
+         underscores ("My App" -> My_App), so the rule cannot hold for
+         generated identity. Higher analysis modes escalate it; suppress here
+         so EVERY valid name builds. -->
+    <NoWarn>$(NoWarn);CA1822;CA1707</NoWarn>
+  </PropertyGroup>
+
+</Project>

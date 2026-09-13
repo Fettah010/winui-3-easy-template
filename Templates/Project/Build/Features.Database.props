@@ -1,0 +1,9 @@
+<Project>
+  <!-- SQLite plus HTTP data layer. Emitted only for scaffolds with the database flag on.
+       Imported from the app csproj with an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+  </ItemGroup>
+</Project>

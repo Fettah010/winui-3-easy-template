@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a focused improvement to DevTem or its templates.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What user problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful change.
+    validations:
+      required: true
+  - type: checkboxes
+    id: template
+    attributes:
+      label: Template impact
+      options:
+        - label: I considered whether this also needs a Templates/Project update.
+          required: true

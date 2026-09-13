@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "WinUI 3 template contributors",
+  "classifications": [ "WinUI", "WinUI 3", "Desktop", "MVVM" ],
+  "identity": "WinUI3.App.TrayUpdatesDb",
+  "groupIdentity": "WinUI3.App",
+  "name": "DevTem",
+  "shortName": "devtem-winui",
+  "description": "Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates, SQLite + HTTP data layer, 3-language UI, persisted settings, Serilog, release pipeline. Identity (namespace, display name, company, repo, URI scheme) and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "type": "project",
+  "sourceName": "DevTemWinUi3",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "symbols": {
+    "safeName": {
+      "type": "generated",
+      "generator": "regex",
+      "datatype": "string",
+      "fileRename": "__SafeName__",
+      "parameters": {
+        "source": "name",
+        "steps": [
+          { "regex": "^[^A-Za-z]+", "replacement": "_" },
+          { "regex": "[^A-Za-z0-9_]", "replacement": "_" }
+        ]
+      },
+      "description": "Identifier-safe form of the project name. Renames the project files so they always match the (sanitized) references inside content — spaced names like 'My App' become My_App.csproj everywhere."
+    },
+    "displayName": {
+      "type": "parameter",
+      "datatype": "string",
+      "displayName": "Display name",
+      "defaultValue": "My App",
+      "replaces": "DevTem-WinUI 3",
+      "description": "Display name used in titles, toasts and the installer."
+    },
+    "company": {
+      "type": "parameter",
+      "datatype": "string",
+      "displayName": "Company",
+      "defaultValue": "Contoso",
+      "replaces": "Fettah",
+      "description": "Pack author."
+    },
+    "repo": {
+      "type": "parameter",
+      "datatype": "string",
+      "displayName": "GitHub repository",
+      "defaultValue": "myorg/my-app",
+      "replaces": "Fettah010/winui-3-easy-template",
+      "description": "GitHub repo path (org/name) used for feeds, links and CI."
+    },
+    "scheme": {
+      "type": "parameter",
+      "datatype": "string",
+      "displayName": "Deep-link URI scheme",
+      "defaultValue": "myapp://",
+      "replaces": "devtem://",
+      "description": "Deep-link URI scheme, including :// (e.g. --scheme acme://)."
+    },
+    "schemeName": {
+      "type": "generated",
+      "generator": "regex",
+      "datatype": "string",
+      "displayName": "Deep-link scheme name",
+      "parameters": {
+        "source": "scheme",
+        "steps": [
+          { "regex": "^(.*)://$", "replacement": "Name=\"$1\"" }
+        ]
+      },
+      "replaces": "Name=\"devtem\"",
+      "description": "Full manifest protocol attribute (Name=\"…\") derived from the scheme; replaces replaces the whole match, so the value must carry the wrapper."
+    },
+    "tray": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "System tray",
+      "defaultValue": "true",
+      "replaces": "__TRAY__",
+      "description": "Include minimize-to-tray, autostart and desktop toasts (--tray false to drop)."
+    },
+    "updates": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "Velopack auto-updates",
+      "defaultValue": "true",
+      "replaces": "__UPDATES__",
+      "description": "Include Velopack auto-updates, channels and the release pipeline (--updates false to drop)."
+    },
+    "database": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "SQLite + HTTP data layer",
+      "defaultValue": "true",
+      "replaces": "__DATABASE__",
+      "description": "Include the SQLite + HTTP data layer (--database false to drop)."
+    },
+    "attribution": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "DevTem attribution",
+      "defaultValue": "true",
+      "description": "Keep a one-line source comment in the generated README (--attribution false to omit)."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!tray)",
+          "exclude": [
+            "Services/SystemTrayService.cs",
+            "Services/DesktopToastService.cs",
+            "Tests/Services/DesktopToastServiceTests.cs"
+          ]
+        },
+        {
+          "condition": "(!updates)",
+          "exclude": [
+            "Services/UpdateService.cs",
+            "Services/BackgroundUpdateService.cs",
+            "Build/Features.Updates.props",
+            "Tests/Services/UpdateServiceTests.cs",
+            "Tests/Services/BackgroundUpdateServiceTests.cs",
+            ".github/workflows/release.yml",
+            "Scripts/build-and-release.ps1",
+            "Scripts/local-smoke-test.ps1",
+            "Scripts/upload-github.ps1"
+          ]
+        },
+        {
+          "condition": "(!database)",
+          "exclude": [
+            "Services/DatabaseService.cs",
+            "Services/DatabaseInitializer.cs",
+            "Services/ApiService.cs",
+            "Build/Features.Database.props",
+            "Tests/Services/DatabaseServiceTests.cs",
+            "Tests/Services/DatabaseInitializerTests.cs",
+            "Tests/Services/ApiServiceTests.cs"
+          ]
+        },
+        {
+          "condition": "(!attribution)",
+          "exclude": [
+            "DevTemAttribution.cs"
+          ]
+        }
+      ]
+    }
+  ]
+}

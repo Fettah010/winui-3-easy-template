@@ -1,0 +1,57 @@
+name: templates
+
+# Scaffold matrix: every push/PR touching templates runs test-templates.ps1
+# (all flag combos scaffolded, built with 0 warnings, tested).
+# Publishing lives in templates-publish.yml (tag-driven, no paths filter).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Templates/**"
+      - "Packaging/**"
+      - "Scripts/test-templates.ps1"
+      - "Scripts/test-mirror-parity.ps1"
+      - "Scripts/register-protocol.ps1"
+      - "Services/**"
+      - "Pages/**"
+      - "ViewModels/**"
+      - "Controls/**"
+      - "Assets/**"
+      - "**.csproj"
+      - "**.sln"
+      - ".github/workflows/templates.yml"
+      - "Tests/**"
+  pull_request:
+    paths:
+      - "Templates/**"
+      - "Packaging/**"
+      - "Scripts/test-templates.ps1"
+      - "Scripts/test-mirror-parity.ps1"
+      - "Scripts/register-protocol.ps1"
+      - "Services/**"
+      - "Pages/**"
+      - "ViewModels/**"
+      - "Controls/**"
+      - "Assets/**"
+      - "**.csproj"
+      - "**.sln"
+      - ".github/workflows/templates.yml"
+      - "Tests/**"
+  workflow_dispatch:
+
+jobs:
+  matrix:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Mirror parity (app vs Templates/Project)
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-mirror-parity.ps1
+      - name: register-protocol dry run (writes nothing)
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/register-protocol.ps1 -Scheme "devtem-ci-probe://" -ExePath "$env:SystemRoot\System32\notepad.exe" -WhatIf
+      - name: Scaffold matrix (build + test every combo)
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-templates.ps1
