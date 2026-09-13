@@ -113,10 +113,10 @@ public sealed partial class SplashScreen : Window
                 return;
 
             int round = DWMWCP_ROUND;
-            DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref round, sizeof(int));
+            _ = DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref round, sizeof(int));
 
             int noBorder = DWMWA_COLOR_NONE;
-            DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref noBorder, sizeof(int));
+            _ = DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref noBorder, sizeof(int));
         }
         catch { }
     }

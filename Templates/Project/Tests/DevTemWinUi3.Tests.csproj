@@ -5,7 +5,9 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <NoWarn>$(NoWarn);MSTEST0001</NoWarn>
+    <!-- Test methods use the Method_Condition_Expected naming convention
+         throughout (CA1707): the underscores are intentional, not violations. -->
+    <NoWarn>$(NoWarn);MSTEST0001;CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -56,7 +56,7 @@ public class ApiServiceTests
         Assert.IsFalse(result);
     }
 
-    private class TestResponse
+    private sealed class TestResponse
     {
         public string Url { get; set; } = string.Empty;
     }

@@ -9,8 +9,10 @@ namespace DevTemWinUi3.Services;
 /// <summary>
 /// Thin wrapper around the Velopack <see cref="UpdateManager"/> so pages
 /// stay simple and the update source can be swapped/reused from one place.
+/// Process-lifetime singleton (never disposed in practice); implements
+/// <see cref="IDisposable"/> to own its gate correctly (CA1001).
 /// </summary>
-public sealed class UpdateService
+public sealed class UpdateService : IDisposable
 {
     // GitHub Releases feed that hosts this app's updates. Releases are
     // created with Scripts/build-and-release.ps1 (vpk upload github).
@@ -149,5 +151,11 @@ public sealed class UpdateService
     {
         Manager.ApplyUpdatesAndRestart(update);
         Environment.Exit(0);
+    }
+
+    public void Dispose()
+    {
+        _managerLock.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

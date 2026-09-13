@@ -97,13 +97,15 @@ public sealed class SystemTrayService : IDisposable
     private static extern ushort RegisterClassExW(ref WNDCLASSEXW lpwcx);
 
     [DllImport("user32.dll")]
-    private static extern uint RegisterWindowMessageW(string lpString);
+    private static extern uint RegisterWindowMessageW([MarshalAs(UnmanagedType.LPWStr)] string lpString);
 
     [DllImport("user32.dll")]
     private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
     [DllImport("user32.dll")]
-    private static extern IntPtr FindWindowW(string? lpClassName, string? lpWindowName);
+    private static extern IntPtr FindWindowW(
+        [MarshalAs(UnmanagedType.LPWStr)] string? lpClassName,
+        [MarshalAs(UnmanagedType.LPWStr)] string? lpWindowName);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct NOTIFYICONDATAW

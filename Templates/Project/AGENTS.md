@@ -166,6 +166,8 @@ default to the beta channel; stable releases use the plain version).
    seconds to launch.
 9. **Retired code lives in `docs/archive/`** (excluded from build). Do not
    resurrect it into `Pages/`; treat it as a reading reference only.
+10. **Classic `.sln`, not `.slnx`.** slnx cannot express the x86/x64/ARM64
+    mapping WinUI needs (`dotnet build slnx -p:Platform=x64` → MSB4126).
 
 ## Conventions
 

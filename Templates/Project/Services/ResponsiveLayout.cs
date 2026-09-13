@@ -51,10 +51,8 @@ public static class ResponsiveLayout
     /// </summary>
     public static int ScaleLogicalToPhysical(int logicalPixels, uint dpi)
     {
-        if (logicalPixels < 0)
-            throw new ArgumentOutOfRangeException(nameof(logicalPixels));
-        if (dpi == 0)
-            throw new ArgumentOutOfRangeException(nameof(dpi));
+        ArgumentOutOfRangeException.ThrowIfNegative(logicalPixels);
+        ArgumentOutOfRangeException.ThrowIfZero(dpi);
         return (int)Math.Round(logicalPixels * dpi / 96.0);
     }
 }

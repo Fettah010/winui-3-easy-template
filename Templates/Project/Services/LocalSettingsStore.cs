@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.Json;
 
@@ -22,6 +23,10 @@ public sealed class LocalSettingsStore
     private static readonly object _gate = new();
     private static string? _overridePath;
     private static LocalSettingsStore? _shared;
+
+    // Shared serializer options (CA1869): one instance for the process.
+    // Invariant-friendly defaults keep the file stable across locales.
+    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
 
     /// <summary>Process-wide shared store at the default path.</summary>
     public static LocalSettingsStore Shared
@@ -133,7 +138,7 @@ public sealed class LocalSettingsStore
             // Corrupt file: back it up for diagnosis, start clean.
             try
             {
-                var backup = _path + ".corrupt-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
+                var backup = _path + ".corrupt-" + DateTime.Now.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
                 File.Move(_path, backup);
             }
             catch { }
@@ -152,7 +157,7 @@ public sealed class LocalSettingsStore
             var temp = _path + ".tmp";
             using (var stream = File.Create(temp))
             {
-                JsonSerializer.Serialize(stream, _data, new JsonSerializerOptions { WriteIndented = true });
+                JsonSerializer.Serialize(stream, _data, _jsonOptions);
             }
             File.Move(temp, _path, overwrite: true);
         }

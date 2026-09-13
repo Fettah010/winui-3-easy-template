@@ -25,8 +25,7 @@ public static class WrapLayout
         double verticalSpacing,
         out Size extent)
     {
-        if (childSizes is null)
-            throw new ArgumentNullException(nameof(childSizes));
+        ArgumentNullException.ThrowIfNull(childSizes);
         if (double.IsNaN(maxWidth) || maxWidth < 0)
             throw new ArgumentOutOfRangeException(nameof(maxWidth));
         if (double.IsNaN(horizontalSpacing) || horizontalSpacing < 0)

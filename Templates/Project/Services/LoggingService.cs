@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using Serilog;
 using Serilog.Events;
@@ -38,13 +39,16 @@ public static class LoggingService
             .MinimumLevel.Debug()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.Console(outputTemplate: OutputTemplate)
+            // Invariant format provider: log files stay parseable regardless
+            // of the machine's locale (CA1305).
+            .WriteTo.Console(outputTemplate: OutputTemplate, formatProvider: CultureInfo.InvariantCulture)
             .WriteTo.File(
                 path: Path.Combine(logPath, LogFileName),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: LogRetentionDays,
                 shared: true,
-                outputTemplate: OutputTemplate)
+                outputTemplate: OutputTemplate,
+                formatProvider: CultureInfo.InvariantCulture)
             .CreateLogger();
 
         Serilog.Log.Logger = Log;

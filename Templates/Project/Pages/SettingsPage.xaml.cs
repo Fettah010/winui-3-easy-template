@@ -9,6 +9,9 @@ using DevTemWinUi3.ViewModels;
 
 namespace DevTemWinUi3.Pages;
 
+// Pages are lifetime-managed by Frame (never disposed): the CancellationTokenSource
+// is cancelled in OnNavigatedFrom instead of disposed (CA1001).
+#pragma warning disable CA1001 // Type owns disposable fields but is not disposable
 public sealed partial class SettingsPage : Page, INavigationAware
 {
     public SettingsPageViewModel ViewModel { get; }
@@ -334,3 +337,4 @@ public sealed partial class SettingsPage : Page, INavigationAware
         }
     }
 }
+#pragma warning restore CA1001

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
@@ -90,7 +91,7 @@ public sealed class DatabaseService : IDisposable
         if (result is null || result == DBNull.Value)
             return default;
 
-        return (T)Convert.ChangeType(result, typeof(T));
+        return (T)Convert.ChangeType(result, typeof(T), CultureInfo.InvariantCulture);
     }
 
     /// <summary>
