@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using DevTemWinUi3.Services;
@@ -65,13 +66,16 @@ public sealed partial class SettingsPage : Page, INavigationAware
         ThemeSystemItem.Content = loc.GetString("SettingsThemeSystem");
         ThemeLightItem.Content = loc.GetString("SettingsThemeLight");
         ThemeDarkItem.Content = loc.GetString("SettingsThemeDark");
+        AutomationProperties.SetName(ThemeComboBox, loc.GetString("SettingsTheme"));
         RefreshThemeComboBoxDisplay();
 
         LanguageCard.Header = loc.GetString("SettingsLanguage");
         LanguageCard.Description = loc.GetString("SettingsLanguageDesc");
+        AutomationProperties.SetName(LanguageComboBox, loc.GetString("SettingsLanguage"));
 
         ChannelCard.Header = loc.GetString("SettingsChannelHeader");
         ChannelCard.Description = loc.GetString("SettingsChannelDesc");
+        AutomationProperties.SetName(ChannelSegment, loc.GetString("SettingsChannelHeader"));
 
         CheckUpdatesCard.Header = loc.GetString("SettingsCheckHeader");
         CheckUpdatesCard.Description = loc.GetString("SettingsCheckDesc");
@@ -80,6 +84,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
 
         AutoCheckCard.Header = loc.GetString("SettingsAutoCheckHeader");
         AutoCheckCard.Description = loc.GetString("SettingsAutoCheckDesc");
+        AutomationProperties.SetName(AutoCheckToggle, loc.GetString("SettingsAutoCheckHeader"));
 
         UpdateStatusCard.Header = loc.GetString("SettingsCheckHeader");
         if (UpdateStatusCard.Visibility == Visibility.Collapsed)
@@ -87,8 +92,10 @@ public sealed partial class SettingsPage : Page, INavigationAware
 
         MinimizeCard.Header = loc.GetString("SettingsMinimizeToTray");
         MinimizeCard.Description = loc.GetString("SettingsTrayMinimizeDesc");
+        AutomationProperties.SetName(MinimizeToTrayToggle, loc.GetString("SettingsMinimizeToTray"));
         AutoStartCard.Header = loc.GetString("SettingsAutoStart");
         AutoStartCard.Description = loc.GetString("SettingsTrayAutoStartDesc");
+        AutomationProperties.SetName(AutoStartToggle, loc.GetString("SettingsAutoStart"));
         if (!ViewModel.AutoStartAvailable)
             AutoStartCard.Description = loc.GetString("SettingsTrayPackagedNote");
 

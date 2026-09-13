@@ -55,7 +55,19 @@ MATRIX PASSED (4 combos + page probe, 0 warnings each).
   installers): docs + script hooks for cert signing. Cheap, unblocks real
   releases.
 
-## 3. Professional polish `[ ]`
+## 3. Professional polish `[x]`
+
+- [x] `.sln` (classic; slnx cannot express the x86/x64/ARM64 mapping) +
+  init-template rename handling; rename-proof scratch builds 0 warnings.
+- [x] Accessibility audit: the 6 unnamed controls (Settings toggles,
+  combos, segmented) now get localized `AutomationProperties.Name`;
+  buttons/nav items already announce via text Content; zero hardcoded
+  colors (all theme brushes, high-contrast safe).
+- [x] Bars enforced: `Directory.Build.props` (TWAE + Recommended
+  analyzers + justified CA1822/CA1707 suppressions), `.editorconfig`;
+  fixed real findings (ThrowIf helpers, InvariantCulture, cached
+  JsonSerializerOptions, P/Invoke marshaling, UpdateService IDisposable).
+  Verified: solution build 0 warnings, 93/93, matrix green, live runs.
 
 - [ ] Add a `.sln` (+ rename handling in `init-template.ps1`) — VS opens
   solutions, not csprojs.
