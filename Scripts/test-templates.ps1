@@ -40,6 +40,45 @@ function Invoke-Step([string]$label, [scriptblock]$body) {
     return $true
 }
 
+# Rename-engine proof: the scaffold must carry the requested scheme in every
+# surface the engines touch (dotnet-new `scheme`/`schemeName` symbols).
+function Assert-ScaffoldIdentity([string]$outDir, [string]$scheme) {
+    $bare = $scheme.TrimEnd('/').TrimEnd(':')
+    $manifest = Join-Path $outDir "Packaging\Msix\Package.appxmanifest"
+    $manifestText = [System.IO.File]::ReadAllText($manifest)
+    if ($manifestText -notmatch [regex]::Escape('Name="' + $bare + '"')) {
+        throw "manifest protocol Name is not '$bare'"
+    }
+    $metadata = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\AppMetadata.cs"))
+    if ($metadata -notmatch [regex]::Escape('"' + $scheme + '"')) {
+        throw "AppMetadata protocol prefix is not '$scheme'"
+    }
+    Write-Host "identity OK ($scheme / $bare)"
+}
+
+# init-template proof: re-brand a scratch copy of THIS repo and let the
+# script's own leftover verification pass or fail the run (throws).
+# Excludes build output, VCS, and generated dirs for copy speed.
+function Invoke-InitTemplateScratchTest {
+    $scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("devtem-init-" + [System.Guid]::NewGuid().ToString("N"))
+    try {
+        $exclude = @("bin", "obj", ".git", ".vs", "TestResults", "Logs", "nupkgs", "Releases", ".icon-backup")
+        $items = Get-ChildItem -LiteralPath $repoRoot -Force |
+            Where-Object { $exclude -notcontains $_.Name }
+        New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+        foreach ($item in $items) {
+            Copy-Item -LiteralPath $item.FullName -Destination (Join-Path $scratch $item.Name) -Recurse -Force
+        }
+        & (Join-Path $scratch "Scripts\init-template.ps1") `
+            -AppName "Renamed App" -Company "Renamed" `
+            -RepoUrl "https://github.com/re/named"
+        Write-Host "init-template scratch re-brand OK"
+    }
+    finally {
+        Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 try {
     # Clean slate, then install both templates from this repo.
     # (Uninstalls fail when nothing is installed — expected, ignored.)
@@ -57,6 +96,14 @@ try {
             "--company", $c.Company, "--repo", $c.Repo, "--scheme", $c.Scheme,
             "--output", $outDir) + $c.Flags
         if (-not (Invoke-Step "scaffold $combo" { & dotnet new @scaffoldArgs })) { continue }
+
+        # Rename-engine proof for this combo's scheme (cheap, fail fast).
+        try { Assert-ScaffoldIdentity $outDir $c.Scheme }
+        catch {
+            Write-Host "FAILED: identity $combo : $_" -ForegroundColor Red
+            $failed++
+            continue
+        }
 
         # Item-template proof: add-page.ps1 wires a page end-to-end inside the
         # all-on app (scaffold + strings + DI + route/nav + its own build +
@@ -98,6 +145,18 @@ try {
             continue
         }
         Write-Host "PASSED: $combo" -ForegroundColor Green
+    }
+
+    # init-template proof (all combos green or not, this is independent):
+    # re-brand a scratch repo copy; the script's own leftover check decides.
+    Write-Host "`n==> init-template scratch" -ForegroundColor Cyan
+    try {
+        Invoke-InitTemplateScratchTest | Out-Null
+        Write-Host "PASSED: init-template scratch" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "FAILED: init-template scratch: $_" -ForegroundColor Red
+        $failed++
     }
 }
 finally {

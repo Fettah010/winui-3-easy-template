@@ -41,7 +41,7 @@ jobs:
           $pkg = Get-ChildItem (Join-Path $outDir "*.nupkg") | Select-Object -First 1
           if (-not $pkg) { throw "Pack produced no nupkg in $outDir." }
           Write-Host "Packed: $($pkg.FullName) ($($pkg.Length) bytes)"
-      - name: Smoke-test packed templates (install, scaffold, build)
+      - name: Smoke-test packed templates (install, scaffold, build, test)
         shell: pwsh
         run: |
           $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
@@ -49,10 +49,15 @@ jobs:
           dotnet new install $pkg.FullName
           if ($LASTEXITCODE -ne 0) { throw "Template install from nupkg failed." }
           $probe = Join-Path $env:RUNNER_TEMP "publish-smoke"
-          dotnet new devtem-winui -n SmokeCheck --output (Join-Path $probe "SmokeCheck")
+          # Custom scheme exercises the scheme/schemeName engine paths end to end.
+          dotnet new devtem-winui -n SmokeCheck --scheme "acme://" --output (Join-Path $probe "SmokeCheck")
           if ($LASTEXITCODE -ne 0) { throw "Scaffold from nupkg failed." }
+          $manifest = Get-Content -LiteralPath (Join-Path $probe "SmokeCheck/Packaging/Msix/Package.appxmanifest") -Raw
+          if ($manifest -notmatch 'Name="acme"') { throw "Scaffolded manifest protocol Name is not acme." }
           dotnet build (Join-Path $probe "SmokeCheck/SmokeCheck.sln") -c Debug -p:Platform=x64 --no-incremental -v q
           if ($LASTEXITCODE -ne 0) { throw "Smoke scaffold does not build clean." }
+          dotnet test (Join-Path $probe "SmokeCheck/Tests/SmokeCheck.Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q
+          if ($LASTEXITCODE -ne 0) { throw "Smoke scaffold tests failed." }
       - name: NuGet login (OIDC → temp API key)
         uses: NuGet/login@v1
         id: login

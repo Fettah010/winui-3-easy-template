@@ -54,19 +54,22 @@ git push origin templates-v0.1.2
 `Templates/Project/` is a hand-conditioned copy (`#if` flags,
 `DevTemWinUi3Tray_` naming); nothing proves parity today.
 
-- [ ] Mirror-parity check in CI: diff app vs template modulo an allowlist
-  of conditioned regions. Note `templates.yml` does NOT trigger on app
-  `Services/`/`Pages/`/`ViewModels/` — a mirror-less app change stays
-  green. Widen paths or rely on the parity script.
-- [ ] Assert rename-engine paths in the matrix: scaffolded manifest
-  `Name="acme"`, scaffolded `ProtocolPrefix`, `init-template.ps1` on a
-  scratch copy with leftover verification.
-- [ ] `register-protocol.ps1`: `-WhatIf` support (`SupportsShouldProcess`,
-  like `set-app-icon.ps1`) + a CI-safe invocation test.
-- [ ] Include the nested `Templates/Project/Templates/Page/` copy in the
-  parity check.
-- [ ] `ui-tests.yml` paths miss `Services/`/`ViewModels/` — a runtime
-  regression from a service change skips smoke tests in CI.
+- [x] Mirror-parity check in CI (`Scripts/test-mirror-parity.ps1`: file
+  sets, verbatim hashes, csproj version agreement, nested page copy;
+  self-tested pass + reject; `templates.yml` runs it first and triggers
+  on app source paths too).
+- [x] Assert rename-engine paths in the matrix (`Assert-ScaffoldIdentity`
+  per combo: manifest `Name="<scheme>"`, `ProtocolPrefix`; fixed the
+  `schemeName` generator this caught — `replaces` swaps the whole match,
+  so the value now emits the full `Name="…"` attribute via `$1` group).
+- [x] `init-template.ps1` scratch re-brand in the matrix (copy, rename,
+  self-verification). Runs after combos in `test-templates.ps1`.
+- [x] `register-protocol.ps1`: `-WhatIf` support + real probe
+  register/unregister cycle locally (zero residue) + CI dry-run step in
+  `templates.yml`. Fixed a latent `"$Scheme://"` PS 5.1 parse error found
+  by the dry run.
+- [x] `ui-tests.yml` paths widened (`Services/`, `ViewModels/`,
+  `App.xaml*`, `Program.cs`, page code-behind).
 
 ## P2 — VS Studio + NuGet polish
 
@@ -74,16 +77,16 @@ VS surface is sound (bool→checkbox, text→field, `icon` choice→dropdown,
 all with `displayName`; no `postActions`; `schemeName` correctly shows
 no UI). Remaining:
 
-- [ ] Package `Description` still lists only tray/updates/SQLite/i18n —
-  add deep-links, diagnostics, backup for 0.1.2.
-- [ ] `templates-publish.yml` smoke scaffolds default flags only and
-  builds without tests — pass `--scheme acme://` and run `dotnet test`.
-- [ ] VS troubleshooting note: aggressive template caching (`dotnet new
-  update`/reinstall when the new version doesn't appear).
-- [ ] State the item-template VS limitation once where VS users look
-  (Add → New Item never shows `devtem-page`; CLI only).
-- [ ] Asset-mapping table in both TEMPLATE-GUIDEs (P5/P6 rule, never
-  written): source → `app.ico` entries, `Logo*.png`, MSIX tiles.
+- [x] Package `Description` lists deep-links, backup, diagnostics
+  (verified in a locally packed 0.1.2 nupkg: install → custom-scheme
+  scaffold → manifest assert → build 0/0 → 116/116).
+- [x] `templates-publish.yml` smoke scaffolds with `--scheme acme://`,
+  asserts the manifest, and runs `dotnet test` (same steps proven
+  locally against the packed nupkg).
+- [x] VS troubleshooting note (template cache: close, `dotnet new
+  update`, reopen) + item-template CLI-only limit stated in both guides.
+- [x] Asset-mapping table in both TEMPLATE-GUIDEs (source → outputs →
+  consumers, incl. pack-time MSIX tiles).
 
 ## P3 — Docs & small debt
 
@@ -96,7 +99,6 @@ no UI). Remaining:
   (no leaks from scaffolds). Keep.
 
 ## Verification bars (every item)
-
 - `dotnet build -c Debug -p:Platform=x64`: 0 warnings, 0 errors.
 - `dotnet test Tests/`: green (currently 116/116).
 - Template change: `Scripts/test-templates.ps1` MATRIX PASSED.
@@ -104,3 +106,14 @@ no UI). Remaining:
 - UI-affecting change: FlaUI 4/4 + live screenshot.
 - Workflow change: `pwsh` parse check + logic test with sample values
   (CI itself only runs on tag/push).
+
+## CI follow-up (v0.0.3-beta push)
+
+- [x] `ui-tests / smoke` failed after ~2m: the test DLL was never built.
+  Root cause: the sln mapped both test projects `Debug|x64 → Debug|Any
+  CPU`, so the sln build dropped DLLs in `bin\Debug\…` while `dotnet test
+  --no-build -p:Platform=x64` looks in `bin\x64\Debug\…`. Local runs
+  never saw it (`dotnet test` builds the csproj directly). Fixed the
+  x64 mappings (Debug + Release, app sln + template sln) and reproduced
+  the exact CI sequence green (sln build → `--no-build` 4/4).
+  Diagnostic improvements (exit code, app-log artifact) stay in place.

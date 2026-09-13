@@ -11,7 +11,7 @@
     <PackageId>DevTem.Templates</PackageId>
     <Title>DevTem WinUI 3 templates</Title>
     <Authors>DevTem contributors</Authors>
-    <Description>WinUI 3 desktop app template with tray, Velopack auto-updates, SQLite, i18n (dotnet new devtem-winui) plus an MVVM content-page item template (dotnet new devtem-page).</Description>
+    <Description>WinUI 3 desktop app template with tray, Velopack auto-updates, SQLite, i18n, deep-link registration, settings backup and diagnostics (dotnet new devtem-winui) plus an MVVM content-page item template (dotnet new devtem-page).</Description>
     <PackageTags>winui;winui3;windows;desktop;dotnet-new;templates;mvvm</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>icon.png</PackageIcon>

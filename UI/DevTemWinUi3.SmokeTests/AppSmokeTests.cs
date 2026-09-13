@@ -113,14 +113,26 @@ public sealed class AppSmokeTests
         if (_window is null)
         {
             // Say WHAT we saw: with a splash + single-instance dance, "not
-            // found" without the candidate list is undebuggable.
+            // found" without the candidate list is undebuggable. Also report
+            // whether the process died (with its exit code) vs is just slow —
+            // CI triage depends on that distinction.
             var app = _app;
             var automation = _automation;
             string seen = "(session not started)";
-            bool alive = false;
+            string process = "(session not started)";
             if (app is not null && automation is not null)
             {
-                try { alive = !app.HasExited; } catch { }
+                try
+                {
+                    if (app.HasExited)
+                        process = $"exited (code {app.ExitCode})";
+                    else
+                        process = $"alive (id {app.ProcessId})";
+                }
+                catch (Exception ex)
+                {
+                    process = "(state unknown: " + ex.Message + ")";
+                }
                 try
                 {
                     var titles = app.GetAllTopLevelWindows(automation)
@@ -134,7 +146,7 @@ public sealed class AppSmokeTests
                     seen = "(enumeration failed: " + ex.Message + ")";
                 }
             }
-            Assert.Fail($"Main window '{AppWindowTitle}' did not appear within {LaunchTimeout.TotalSeconds}s. Process alive: {alive}. Top-level windows: {seen}.");
+            Assert.Fail($"Main window '{AppWindowTitle}' did not appear within {LaunchTimeout.TotalSeconds}s. Process: {process}. Top-level windows: {seen}.");
         }
 
         // Stage the run before touching anything: foreground + topmost so

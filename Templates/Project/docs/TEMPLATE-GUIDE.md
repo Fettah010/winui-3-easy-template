@@ -45,15 +45,23 @@ margins — tight edge-to-edge art clips in circular hosts):
 ```powershell
 .\Scripts\set-app-icon.ps1 -Source C:\art\logo.png
 ```
-
 This writes `Assets/app.ico` (multi-entry 16–256 for taskbar, title bar,
 installer, tray, shortcuts) plus `app-light.ico`/`app-dark.ico` copies
-(theme-aware tray/title icons prefer them, `app.ico` fallback), `Assets/Logo.png` (256: splash, Home, About)
+(theme-aware tray/title icons prefer them, `app.ico` fallback),
+`Assets/Logo.png` (256: splash, Home, About)
 and `Assets/Logo-64/48/32/16.png`, verifies every output by reading it
 back, and backs up the replaced files to `.icon-backup\<timestamp>\`
 (git-ignored). Preview with `-WhatIf`; point at a copied assets folder
 with `-AssetsDir` for dry runs. MSIX tiles need no step: `build-msix.ps1`
 renders them from `Logo.png` at pack time.
+
+| Source (you draw) | Generated | Used by |
+| --- | --- | --- |
+| Square PNG (1024 rec., 512 min, transparent, ~80% safe margins) | `Assets/app.ico` {16,24,32,48,64,128,256} | Taskbar, title bar, installer, tray, shortcuts |
+| | `Assets/app-light.ico` / `app-dark.ico` (copies) | Theme-aware tray/title icons (`app.ico` fallback) |
+| | `Assets/Logo.png` (256) | Splash, Home hero, About |
+| | `Assets/Logo-16/32/48/64.png` (exact) | Title bar (32), cards |
+| `Assets/Logo.png` at pack time | MSIX tiles (StoreLogo, Square44/150, Wide310, SplashScreen) | Rendered by `build-msix.ps1` — never hand-edit |
 
 ## 2. Add a page (6 steps, all required)
 
@@ -85,7 +93,10 @@ Needs a `devtem-page` template: install once via
 `dotnet new install DevTem.Templates` (NuGet). If your app came from this
 repo you can point at its item template instead:
 `.\Scripts\add-page.ps1 -TemplateSource .\Templates\Page` — not needed for
-scaffolded apps (that folder is not shipped).
+scaffolded apps (that folder is not shipped). `devtem-page` is CLI-only
+(it never appears in VS Add → New Item — engine limit, not a gap). After
+updating the template package, if VS still shows the old parameters:
+close VS, run `dotnet new update`, reopen (VS caches templates).
 
 ### Flow B — manual (~5 minutes)
 

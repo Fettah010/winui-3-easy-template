@@ -3,6 +3,14 @@
 Guidance for AI agents and developers working on this repository. Read this
 first before making changes.
 
+## Session bootstrap (agents — do this before touching anything)
+
+1. Read `AGENTS.md` → `docs/TEMPLATE-GUIDE.md`.
+2. `git status`, `git log --oneline -5`.
+3. `dotnet build -c Debug -p:Platform=x64` — the tree must be green
+   *before* you; if not, say so before changing anything.
+4. State your understanding + plan, then work.
+
 ## What this is
 
 **DevTem-WinUI 3** — a ready-to-use template for **WinUI 3** desktop apps.

@@ -85,6 +85,23 @@ jobs:
           elseif ($version -match "-alpha$") { $channel = "alpha" }
           Write-Output "channel=$channel" >> $env:GITHUB_OUTPUT
 
+      - name: Guard tag matches csproj
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          [xml]$xml = Get-Content -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "DevTemWinUi3.csproj")
+          $info = $xml.Project.PropertyGroup |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_.InformationalVersion) } |
+            Select-Object -First 1 -ExpandProperty InformationalVersion
+          $plain = $xml.Project.PropertyGroup |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_.Version) } |
+            Select-Object -First 1 -ExpandProperty Version
+          Write-Host "Tag version: $env:VERSION; csproj Version: $plain; InformationalVersion: $info"
+          if ($env:VERSION -ne $info) {
+            throw "Tag v$env:VERSION disagrees with csproj InformationalVersion ($info). Bump the csproj first (AGENTS.md Versioning)."
+          }
+
       - name: Generate release notes
         shell: pwsh
         env:
@@ -93,13 +110,36 @@ jobs:
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
         run: |
-          $notes = @(
-            "## DevTem-WinUI 3 $env:VERSION",
-            "",
-            "Automated release built from commit ``$env:SHA``.",
-            "",
-            "For a full list of changes, see the [commits](https://github.com/$env:REPO/commits/$env:TAG)."
-          )
+          # Prefer the CHANGELOG.md section for this version; fall back to
+          # the stub when the version has no section (never fail the release
+          # over notes — the guard above already enforced version agreement).
+          $notes = ""
+          $changeLog = Join-Path $env:GITHUB_WORKSPACE "CHANGELOG.md"
+          if (Test-Path -LiteralPath $changeLog) {
+            $lines = Get-Content -LiteralPath $changeLog
+            $start = -1
+            for ($i = 0; $i -lt $lines.Count; $i++) {
+              if ($lines[$i] -match ('^## \[' + [regex]::Escape($env:VERSION) + '\]')) { $start = $i; break }
+            }
+            if ($start -ge 0) {
+              $end = $lines.Count
+              for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+                if ($lines[$i] -match '^## ') { $end = $i; break }
+              }
+              $body = @()
+              for ($i = $start + 1; $i -lt $end; $i++) { $body += $lines[$i] }
+              $notes = "## DevTem-WinUI 3 $env:VERSION`n`n" + ($body -join "`n").Trim("`n")
+            }
+          }
+          if ([string]::IsNullOrWhiteSpace($notes)) {
+            $notes = @(
+              "## DevTem-WinUI 3 $env:VERSION",
+              "",
+              "Automated release built from commit ``$env:SHA``.",
+              "",
+              "For a full list of changes, see the [commits](https://github.com/$env:REPO/commits/$env:TAG)."
+            ) -join "`n"
+          }
           Set-Content -Path ReleaseNotes.md -Value $notes
 
       - name: Build, pack & upload

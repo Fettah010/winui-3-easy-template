@@ -69,11 +69,11 @@
       "parameters": {
         "source": "scheme",
         "steps": [
-          { "regex": "://$", "replacement": "" }
+          { "regex": "^(.*)://$", "replacement": "Name=\"$1\"" }
         ]
       },
       "replaces": "Name=\"devtem\"",
-      "description": "Bare deep-link scheme (no ://) for the MSIX manifest protocol Name."
+      "description": "Full manifest protocol attribute (Name=\"…\") derived from the scheme; replaces replaces the whole match, so the value must carry the wrapper."
     },
     "tray": {
       "type": "parameter",

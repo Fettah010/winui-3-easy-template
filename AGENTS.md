@@ -3,6 +3,21 @@
 Guidance for AI agents and developers working on this repository. Read this
 first before making changes.
 
+## Session bootstrap (agents — do this before touching anything)
+
+1. Read `AGENTS.md` → `docs/STATE.md` → `docs/RELEASE-PLAN.md`, in order.
+2. `git status`, `git log --oneline -5`, newest tags.
+3. Confirm versions: csproj `<Version>`/`<InformationalVersion>` vs tags.
+4. `dotnet build -c Debug -p:Platform=x64` — the tree must be green
+   *before* you; if not, say so before changing anything.
+5. State your understanding + plan, then work. Refresh `docs/STATE.md`
+   when you finish.
+
+Doc map: `AGENTS.md` conventions (stable) · `docs/STATE.md` current facts
+(mutable) · `docs/RELEASE-PLAN.md` roadmap · `docs/WORKFLOW.md`
+definition-of-done per change type · `docs/DECISIONS.md` why things are
+the way they are.
+
 ## What this is
 
 **DevTem-WinUI 3** — a ready-to-use template for **WinUI 3** desktop apps.
@@ -178,3 +193,9 @@ default to the beta channel; stable releases use the plain version).
 - **MVVM pattern**: Use `[ObservableProperty]` and `[RelayCommand]` from CommunityToolkit.Mvvm.
 - Wrap all external service calls in try-catch.
 - Build must always have 0 warnings before committing.
+- Never commit, push, tag, or create PRs without a direct user request.
+  Implementing a release means preparing everything and handing over the
+  exact commands — the human runs them.
+- Verification tier per change type comes from `docs/WORKFLOW.md`; the
+  template mirror (`Templates/Project/`) must be updated alongside app
+  sources, then proven with `Scripts/test-mirror-parity.ps1` + the matrix.

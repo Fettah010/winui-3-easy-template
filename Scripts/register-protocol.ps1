@@ -3,6 +3,7 @@
 #   powershell -File Scripts\register-protocol.ps1
 #   powershell -File Scripts\register-protocol.ps1 -Unregister
 #   powershell -File Scripts\register-protocol.ps1 -Scheme "devtem://" -ExePath "C:\path\DevTemWinUi3.exe"
+#   powershell -File Scripts\register-protocol.ps1 -WhatIf   # dry run: prints actions, writes nothing
 #
 # Unpackaged apps have no manifest, so the scheme (devtem://settings, …)
 # only resolves after these HKCU keys exist. The app self-registers on every
@@ -14,6 +15,7 @@
 # NOTE: spell -Scheme WITH "://" (the default does): both rename engines key
 # on the "devtem://" literal, so renamed apps keep working with no edits.
 
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [string]$Scheme = "devtem://",
     [string]$ExePath = "",
@@ -36,13 +38,22 @@ if (-not $Unregister -and -not (Test-Path -LiteralPath $ExePath)) {
 
 $baseKey = "HKCU:\Software\Classes\$Scheme"
 if ($Unregister) {
+    if ($WhatIfPreference) {
+        Write-Host "What if: remove ${Scheme}:// (HKCU:\Software\Classes\$Scheme)"
+        return
+    }
     if (Test-Path -LiteralPath $baseKey) {
         Remove-Item -LiteralPath $baseKey -Recurse -Force
-        Write-Host "Unregistered $Scheme://"
+        Write-Host "Unregistered ${Scheme}://"
     }
     else {
-        Write-Host "$Scheme:// was not registered."
+        Write-Host "${Scheme}:// was not registered."
     }
+    return
+}
+
+if ($WhatIfPreference) {
+    Write-Host "What if: register ${Scheme}:// -> $ExePath (HKCU:\Software\Classes\$Scheme)"
     return
 }
 
@@ -60,5 +71,5 @@ if (-not (Test-Path -LiteralPath "$baseKey\shell\open\command")) {
 }
 Set-ItemProperty -LiteralPath "$baseKey\shell\open\command" -Name "(Default)" -Value "`"$ExePath`" `"%1`""
 
-Write-Host "Registered $Scheme:// -> $ExePath" -ForegroundColor Green
-Write-Host "Try: Start-Process `"$Scheme://settings`"" -ForegroundColor DarkGray
+Write-Host "Registered ${Scheme}:// -> $ExePath" -ForegroundColor Green
+Write-Host "Try: Start-Process `"${Scheme}://settings`"" -ForegroundColor DarkGray
