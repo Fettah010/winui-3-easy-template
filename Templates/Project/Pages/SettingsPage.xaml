@@ -203,6 +203,39 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    x:Name="SettingsBackupText"
+                    Text="BACKUP"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard
+                    x:Name="BackupCard"
+                    Header="Reset, export, import"
+                    Description="Reset everything to defaults, or back settings up to a JSON file.">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button
+                            x:Name="ResetSettingsButton"
+                            AutomationProperties.AutomationId="ResetSettingsButton"
+                            Content="Reset"
+                            Click="ResetSettingsButton_Click"/>
+                        <Button
+                            x:Name="ExportSettingsButton"
+                            AutomationProperties.AutomationId="ExportSettingsButton"
+                            Content="Export"
+                            Click="ExportSettingsButton_Click"/>
+                        <Button
+                            x:Name="ImportSettingsButton"
+                            AutomationProperties.AutomationId="ImportSettingsButton"
+                            Content="Import"
+                            Click="ImportSettingsButton_Click"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                    </StackPanel>
+                </ctk:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="8" Margin="0,8,0,0">
+                <TextBlock
                     x:Name="SettingsAboutText"
                     Text="ABOUT"
                     Style="{ThemeResource CaptionTextBlockStyle}"

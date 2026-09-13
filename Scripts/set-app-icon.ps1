@@ -9,6 +9,9 @@
 # Produces (in Assets/ by default, or -AssetsDir for dry runs):
 #   app.ico     multi-entry PNG-compressed ICO {16,24,32,48,64,128,256}
 #               (taskbar, title bar, installer, tray, shortcuts)
+#   app-light.ico / app-dark.ico  copies of app.ico (theme-aware tray/title
+#               icons pick these when present, app.ico fallback otherwise;
+#               re-render with theme-specific art when you have it)
 #   Logo.png    256  (splash, Home hero, About)
 #   Logo-64/48/32/16.png  exact-size copies (title bar, cards)
 #
@@ -164,6 +167,8 @@ function Backup-File([string]$path, [string]$backupDir) {
 try {
     $targets = @(
         (Join-Path $AssetsDir "app.ico")
+        (Join-Path $AssetsDir "app-light.ico")
+        (Join-Path $AssetsDir "app-dark.ico")
         (Join-Path $AssetsDir "Logo.png")
     )
     foreach ($size in $SmallLogos) {
@@ -179,6 +184,11 @@ try {
     }
 
     Save-Ico $sourceImage $IcoSizes (Join-Path $AssetsDir "app.ico")
+    foreach ($variant in @("app-light.ico", "app-dark.ico")) {
+        if ($PSCmdlet.ShouldProcess((Join-Path $AssetsDir $variant), "Write ICO copy")) {
+            Copy-Item -LiteralPath (Join-Path $AssetsDir "app.ico") -Destination (Join-Path $AssetsDir $variant) -Force
+        }
+    }
 
     $logo = $null
     try {

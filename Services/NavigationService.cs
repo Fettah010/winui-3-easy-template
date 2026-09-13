@@ -157,16 +157,17 @@ public sealed class NavigationService
         if (string.IsNullOrWhiteSpace(uri))
             return false;
 
-        // Support formats:
-        //   devtem://settings
-        //   devtem:///settings
-        //   devtem://home?theme=dark
-        var cleanUri = uri.Replace("devtem://", "").Replace("devtem:///", "").Trim('/');
-        var queryIndex = cleanUri.IndexOf('?');
-        if (queryIndex >= 0)
-            cleanUri = cleanUri[..queryIndex];
+        // Deep links (devtem://settings, devtem:///home?theme=dark) parse to
+        // a tag; anything else falls back to a plain tag (legacy callers).
+        if (ProtocolService.TryParseRoute(uri, out tag))
+            return NavigateTo(tag);
 
-        tag = cleanUri;
+        var fallback = uri.Trim();
+        var queryIndex = fallback.IndexOf('?');
+        if (queryIndex >= 0)
+            fallback = fallback[..queryIndex];
+        fallback = fallback.Trim('/');
+        tag = fallback;
         return NavigateTo(tag);
     }
 

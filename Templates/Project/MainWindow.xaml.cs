@@ -68,16 +68,17 @@ public sealed partial class MainWindow : Window
         if (Content is FrameworkElement themedRoot)
             ThemeService.Current.ApplyTo(themedRoot);
 
-        // Taskbar/titlebar icon matches the app/installer icon.
-        // Guard File.Exists: SetIcon with a missing file can blank the taskbar
-        // icon instead of throwing (seen on installed builds).
-        try
+        // Taskbar/titlebar icon matches the app/installer icon (theme variant
+        // when present, app.ico fallback). Guard File.Exists: SetIcon with a
+        // missing file can blank the taskbar icon instead of throwing.
+        SetWindowIcon();
+#if (tray)
+        if (Content is FrameworkElement themedRootForIcon)
         {
-            var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
-            if (System.IO.File.Exists(iconPath))
-                this.AppWindow.SetIcon(iconPath);
+            bool initialDark = themedRootForIcon.ActualTheme == ElementTheme.Dark;
+            try { SystemTrayService.Current.RefreshThemeIcon(initialDark); } catch { }
         }
-        catch { }
+#endif
 
         // Apply localized strings (and keep them live: the nav pane listens
         // for language changes; cached pages refresh in OnNavigatedTo).
@@ -101,6 +102,7 @@ public sealed partial class MainWindow : Window
         // Register routes
         _nav.RegisterRoute("home", typeof(HomePage));
         _nav.RegisterRoute("about", typeof(AboutPage));
+        _nav.RegisterRoute("diagnostics", typeof(DiagnosticsPage));
         _nav.RegisterRoute("settings", typeof(SettingsPage));
         _nav.SetFrame(ContentFrame);
         _nav.Navigated += OnNavigated;
@@ -114,9 +116,17 @@ public sealed partial class MainWindow : Window
         // Save window state on close
         this.Closed += MainWindow_Closed;
 
-        // Refresh title bar colors when theme changes
+        // Refresh title bar colors + theme icons when theme changes
         if (Content is FrameworkElement root)
-            root.ActualThemeChanged += (_, _) => SetTitleBarColors();
+            root.ActualThemeChanged += (_, _) =>
+            {
+                SetTitleBarColors();
+                bool isDark = (Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
+                SetWindowIcon(isDark);
+#if (tray)
+                try { SystemTrayService.Current.RefreshThemeIcon(isDark); } catch { }
+#endif
+            };
 
 #if (tray)
         // Initialize system tray
@@ -166,6 +176,18 @@ public sealed partial class MainWindow : Window
         story.Begin();
 
         await Task.Delay(350);
+    }
+
+    private void SetWindowIcon(bool? isDark = null)
+    {
+        try
+        {
+            bool dark = isDark ?? (Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
+            var iconPath = AppIconService.ResolveIconPath(AppContext.BaseDirectory, dark);
+            if (System.IO.File.Exists(iconPath))
+                this.AppWindow.SetIcon(iconPath);
+        }
+        catch { }
     }
 
     private void SetTitleBarColors()
@@ -340,6 +362,7 @@ public sealed partial class MainWindow : Window
             var loc = LocalizationService.Current;
             NavHomeItem.Content = loc.GetString("NavHome");
             NavAboutItem.Content = loc.GetString("NavAbout");
+            NavDiagnosticsItem.Content = loc.GetString("NavDiagnostics");
             if (RootNavigationView.SettingsItem is NavigationViewItem settingsItem)
             {
                 settingsItem.Content = loc.GetString("NavSettings");
@@ -432,6 +455,14 @@ public sealed partial class MainWindow : Window
 
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             SetForegroundWindow(hwnd);
+
+            // A second launch (e.g. a deep link) stashes its URI where we
+            // look on every activation — navigate to it when present.
+            if (ProtocolService.TryReadAndClearPendingUri(out var pending) &&
+                !string.IsNullOrWhiteSpace(pending))
+            {
+                _nav.TryNavigateByUri(pending, out _);
+            }
         }
         catch { }
     }

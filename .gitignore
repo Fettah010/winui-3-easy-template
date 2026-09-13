@@ -8,6 +8,9 @@ nupkgs/
 # App runtime output (Serilog)
 Logs/
 
+# Test output (MSTest trx + FlaUI failure screenshots; CI uploads them)
+TestResults/
+
 # set-app-icon.ps1 backups (pre-rewrite icon originals)
 .icon-backup/
 

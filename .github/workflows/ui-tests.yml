@@ -2,7 +2,7 @@ name: ui-tests
 
 # FlaUI smoke tests: launch the real exe, navigate, switch theme/language.
 # Runs once against the default app — never on the template matrix
-# (template flag-off runtime proof stays manual screenshots, per FLAUI-PLAN).
+# (template flag-off runtime proof stays manual screenshots).
 
 on:
   push:

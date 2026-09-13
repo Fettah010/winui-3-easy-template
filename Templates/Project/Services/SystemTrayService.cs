@@ -178,6 +178,7 @@ public sealed class SystemTrayService : IDisposable
     private IntPtr _mainWindowHwnd;
     private bool _isVisible;
     private bool _iconVisible;
+    private bool _isDarkIcon;
 
     public static SystemTrayService Current { get; } = new();
 
@@ -289,6 +290,29 @@ public sealed class SystemTrayService : IDisposable
     }
 
     /// <summary>
+    /// Swaps the tray icon to the light/dark variant. No-op when the icon is
+    /// currently hidden (the correct variant is picked on next <see cref="EnsureTrayIcon"/>).
+    /// Falls back to <c>app.ico</c> when variants are absent.
+    /// </summary>
+    public void RefreshThemeIcon(bool isDark)
+    {
+        try
+        {
+            _isDarkIcon = isDark;
+            if (!_iconVisible)
+                return;
+            var iconPath = AppIconService.ResolveIconPath(AppContext.BaseDirectory, isDark);
+            RemoveTrayIcon();
+            CreateTrayIcon(iconPath);
+            _iconVisible = true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to refresh tray theme icon");
+        }
+    }
+
+    /// <summary>
     /// Removes the tray icon and tears down the message window. Call on real
     /// app exit — otherwise Windows keeps a ghost icon after the process dies.
     /// Idempotent.
@@ -375,12 +399,12 @@ public sealed class SystemTrayService : IDisposable
         _windowHandle = IntPtr.Zero;
     }
 
-    private void CreateTrayIcon()
+    private void CreateTrayIcon(string? iconPath = null)
     {
         if (_windowHandle == IntPtr.Zero || _iconVisible)
             return;
 
-        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico");
+        iconPath ??= AppIconService.ResolveIconPath(AppContext.BaseDirectory, _isDarkIcon);
 
         if (!File.Exists(iconPath))
         {

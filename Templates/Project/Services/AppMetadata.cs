@@ -39,6 +39,14 @@ public static class AppMetadata
     /// <summary>Tray tooltip.</summary>
     public static string TrayTooltip => AppName;
 
+    // NOTE: spelled WITH "://" on purpose — both rename engines key on the
+    // "devtem://" literal (dotnet-new `scheme` symbol, init-template.ps1),
+    // so renamed apps get their own scheme with no extra rules.
+    private const string ProtocolPrefix = "devtem://";
+
+    /// <summary>Deep-link URI scheme without "://" (e.g. "devtem").</summary>
+    public static string ProtocolScheme => ProtocolPrefix.TrimEnd('/', ':');
+
     /// <summary>
     /// Sentry DSN for crash reporting. Empty (default) disables it entirely:
     /// <see cref="CrashReportingService"/> becomes a no-op and no Sentry

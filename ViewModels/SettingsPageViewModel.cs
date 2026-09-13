@@ -40,10 +40,21 @@ public partial class SettingsPageViewModel : ObservableObject
 
     public SettingsPageViewModel()
     {
-        AppVersion = AppInfo.Current.Version;
+        RefreshFromServices();
+        _loaded = true;
+    }
 
+    /// <summary>
+    /// Re-reads every bound value from the services (used after reset/import
+    /// changed preferences behind the ViewModel's back). Safe to call any
+    /// time; never throws.
+    /// </summary>
+    public void RefreshFromServices()
+    {
         try
         {
+            AppVersion = AppInfo.Current.Version;
+
             var theme = SettingsService.Current.Theme;
             SelectedThemeIndex = theme switch
             {
@@ -66,9 +77,31 @@ public partial class SettingsPageViewModel : ObservableObject
         try { MinimizeToTray = SettingsService.Current.MinimizeToTray; }
         catch { MinimizeToTray = true; }
 
-        AutoStart = SystemTrayService.IsAutoStartEnabled();
+        try { AutoStart = SystemTrayService.IsAutoStartEnabled(); }
+        catch { }
+    }
 
-        _loaded = true;
+    /// <summary>Resets all preferences to defaults and refreshes the UI.</summary>
+    [RelayCommand]
+    private void ResetSettings()
+    {
+        SettingsBackupService.ResetAll();
+        RefreshFromServices();
+    }
+
+    /// <summary>Exports preferences to a JSON file. Returns false on failure.</summary>
+    public bool ExportTo(string path) => SettingsBackupService.ExportToFile(path);
+
+    /// <summary>
+    /// Imports preferences from a JSON file, refreshing the UI when valid.
+    /// Returns false when the file is missing or unparseable.
+    /// </summary>
+    public bool ImportFrom(string path)
+    {
+        bool ok = SettingsBackupService.ImportFromFile(path);
+        if (ok)
+            RefreshFromServices();
+        return ok;
     }
 
     partial void OnSelectedThemeIndexChanged(int value)

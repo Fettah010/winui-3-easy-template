@@ -16,13 +16,13 @@
     <AssemblyName>DevTemWinUi3</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>0.0.2</Version>
-    <AssemblyVersion>0.0.2.0</AssemblyVersion>
-    <FileVersion>0.0.2.0</FileVersion>
+    <Version>0.0.3</Version>
+    <AssemblyVersion>0.0.3.0</AssemblyVersion>
+    <FileVersion>0.0.3.0</FileVersion>
     <!-- Product version shown by Windows; carries the channel suffix for beta
-         builds (e.g. 0.0.2-beta) so the app can default to its own channel.
+         builds (e.g. 0.0.3-beta) so the app can default to its own channel.
          Keep in sync: stable releases use the plain version. -->
-    <InformationalVersion>0.0.2-beta</InformationalVersion>
+    <InformationalVersion>0.0.3-beta</InformationalVersion>
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
     <UseXamlCompilerExecutable>false</UseXamlCompilerExecutable>
     <!-- ReadyToRun for Release: pre-compiled managed code shortens cold-start
@@ -36,6 +36,8 @@
          Without it, installed builds lose the taskbar icon (SetIcon blanks it)
          and the tray icon (LoadImage fails). -->
     <Content Include="Assets\app.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\app-light.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\app-dark.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Logo.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Logo-64.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Logo-48.png" CopyToOutputDirectory="PreserveNewest" />

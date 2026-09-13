@@ -73,6 +73,40 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void NewBackupKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("RESPALDO", loc.GetString("SettingsBackup"));
+        Assert.AreEqual("Restablecer, exportar, importar", loc.GetString("SettingsBackupHeader"));
+        Assert.AreEqual("Restablecer", loc.GetString("SettingsReset"));
+        Assert.AreEqual("Configuración importada.", loc.GetString("SettingsBackupImportDone"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("SAUVEGARDE", loc.GetString("SettingsBackup"));
+        Assert.AreEqual("Réinitialiser, exporter, importer", loc.GetString("SettingsBackupHeader"));
+        Assert.AreEqual("Réinitialiser", loc.GetString("SettingsReset"));
+        Assert.AreEqual("Paramètres importés.", loc.GetString("SettingsBackupImportDone"));
+    }
+
+    [TestMethod]
+    public void NewDiagnosticsKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Diagnóstico", loc.GetString("NavDiagnostics"));
+        Assert.AreEqual("Actualizar", loc.GetString("DiagnosticsRefresh"));
+        Assert.AreEqual("Aún no hay archivos de registro.", loc.GetString("DiagnosticsNoLogs"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Diagnostic", loc.GetString("NavDiagnostics"));
+        Assert.AreEqual("Actualiser", loc.GetString("DiagnosticsRefresh"));
+        Assert.AreEqual("Aucun journal pour l'instant.", loc.GetString("DiagnosticsNoLogs"));
+    }
+
+    [TestMethod]
     public void SetLanguage_RaisesLanguageChanged()
     {
         var loc = LocalizationService.Current;

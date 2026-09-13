@@ -7,6 +7,9 @@ ReleasesLocal/
 # App runtime output (Serilog)
 Logs/
 
+# Test output (MSTest trx + FlaUI failure screenshots; CI uploads them)
+TestResults/
+
 # VS / user files
 .vs/
 *.user

@@ -33,6 +33,7 @@ $replacements = @(
     @("DevTem-WinUI 3", $AppName),
     @("DevTemWinUi3", $SafeName),
     @("DevTemTray_", $SafeName + "Tray_"),
+    @('Name="devtem"', 'Name="' + $Scheme + '"'),
     @("devtem://", $Scheme + "://"),
     @("winui-3-easy-template", $RepoSlug),
     @('"Fettah"', "`"$Company`""),
@@ -103,7 +104,7 @@ $leftovers = Get-ChildItem -LiteralPath $PSScriptRoot/.. -Recurse -File -Include
         -not ($skipDirs | Where-Object { $full -like "*\$_\*" }) -and
         $_.Name -notin $frozenNames
     } |
-    Select-String -Pattern "DevTem|devtem://|Fettah010|winui-3-easy-template" -CaseSensitive |
+    Select-String -Pattern 'DevTem|devtem://|Name="devtem"|Fettah010|winui-3-easy-template' -CaseSensitive |
     Select-Object -ExpandProperty Path -Unique
 
 if ($leftovers) {

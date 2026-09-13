@@ -46,6 +46,9 @@ public partial class App : Application
         LoggingService.Log.Information(
             "Main window shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
 
+        // Deep link that started this process (if any) wins over the home page.
+        HandlePendingProtocolUri();
+
         // Heavy work deferred past the first frame so the window appears ASAP:
         // database init and the update check run while the user already sees UI.
         // The periodic loop keeps trayed (long-running) apps current too.
@@ -60,6 +63,9 @@ public partial class App : Application
         {
             ServiceLocator.Initialize();
             LocalizationService.Current.Initialize();
+            // Unpackaged installs have no manifest: claim our deep-link
+            // scheme per-user (HKCU, no admin); MSIX covers itself.
+            ProtocolService.EnsureRegistered();
         });
 
         // One-time channel migration (beta builds holding a stale channel).
@@ -104,6 +110,28 @@ public partial class App : Application
 
         // Fade in main window content
         await _mainWindow.PlayEntranceAnimation();
+    }
+
+    /// <summary>
+    /// Navigates to the deep link that started this process, if any.
+    /// Runs after the main window is visible so the nav frame exists.
+    /// </summary>
+    private void HandlePendingProtocolUri()
+    {
+        try
+        {
+            var pending = Program.PendingProtocolUri;
+            if (string.IsNullOrWhiteSpace(pending))
+                return;
+            if (NavigationService.Current.TryNavigateByUri(pending, out var tag))
+                LoggingService.Log.Information("Deep link handled on launch: {Tag}", tag);
+            else
+                LoggingService.Log.Warning("Deep link had no route: {Uri}", pending);
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Log.Error(ex, "Deep link handling on launch failed");
+        }
     }
 
     /// <summary>

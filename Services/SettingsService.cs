@@ -122,4 +122,25 @@ public sealed class SettingsService
         get => Store.Get(KeyAutoCheck, true);
         set => Store.Set(KeyAutoCheck, value);
     }
+
+    /// <summary>
+    /// Removes every user preference (theme, channel, tray, auto-check,
+    /// pending-update state) so the next read returns defaults. The
+    /// per-version channel-migration marker is kept: it is bookkeeping,
+    /// not a preference. Language lives in <see cref="LocalizationService"/>
+    /// and is reset separately (<see cref="SettingsBackupService.ResetAll"/>).
+    /// </summary>
+    public void ResetToDefaults()
+    {
+        try
+        {
+            Store.Remove(KeyTheme);
+            Store.Remove(KeyChannel);
+            Store.Remove(KeyMinimizeToTray);
+            Store.Remove(KeyAutoCheck);
+            Store.Remove(KeyLastCheckTime);
+            Store.Remove(KeyPendingVersion);
+        }
+        catch { }
+    }
 }

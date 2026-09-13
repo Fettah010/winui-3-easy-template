@@ -67,7 +67,8 @@ public class ChannelResolverTests
     [TestMethod]
     public void EnsureChannelForCurrentBuild_MigratesStaleStableOnBetaBuild()
     {
-        // Test assembly is a beta build (InformationalVersion 0.0.2-beta).
+        // The app assembly under test is a beta build (InformationalVersion
+        // carries -beta), so migration applies here.
         Assert.IsTrue(AppInfo.Current.IsBetaBuild);
 
         SettingsService.Current.Channel = ChannelResolver.Stable;

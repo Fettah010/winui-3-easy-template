@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
@@ -7,6 +8,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
+using Windows.Storage.Pickers;
 
 namespace DevTemWinUi3.Pages;
 
@@ -32,6 +34,11 @@ public sealed partial class SettingsPage : Page, INavigationAware
             LanguageComboBox.Items.Add(lang);
         }
 
+        SelectCurrentLanguage();
+    }
+
+    private void SelectCurrentLanguage()
+    {
         // Select current language
         var currentTag = LocalizationService.Current.CurrentLanguage;
         for (int i = 0; i < LocalizationService.AvailableLanguages.Count; i++)
@@ -101,6 +108,13 @@ public sealed partial class SettingsPage : Page, INavigationAware
 
         AppVersionCard.Header = loc.GetString("SettingsAppVersion");
         RepoCard.Header = loc.GetString("SettingsRepoHeader");
+
+        SettingsBackupText.Text = loc.GetString("SettingsBackup");
+        BackupCard.Header = loc.GetString("SettingsBackupHeader");
+        BackupCard.Description = loc.GetString("SettingsBackupDesc");
+        ResetSettingsButton.Content = loc.GetString("SettingsReset");
+        ExportSettingsButton.Content = loc.GetString("SettingsExport");
+        ImportSettingsButton.Content = loc.GetString("SettingsImport");
 
         if (InstallUpdateButton.Visibility == Visibility.Visible && InstallUpdateButton.IsEnabled)
             InstallUpdateButton.Content = loc.GetString("SettingsInstall");
@@ -327,6 +341,109 @@ public sealed partial class SettingsPage : Page, INavigationAware
     {
     }
 #endif
+
+    private void ResetSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ViewModel.ResetSettingsCommand.Execute(null);
+            RefreshAfterBackup();
+            var loc = LocalizationService.Current;
+            NotificationService.Current.Success(
+                loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupResetDone"));
+        }
+        catch { }
+    }
+
+    private async void ExportSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new FileSavePicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = "devtem-settings",
+            };
+            picker.FileTypeChoices.Add("JSON", new List<string> { ".json" });
+            InitializeWithWindow(picker);
+
+            var file = await picker.PickSaveFileAsync();
+            if (file is null)
+                return;
+
+            var loc = LocalizationService.Current;
+            if (ViewModel.ExportTo(file.Path))
+                NotificationService.Current.Success(
+                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupExportDone"));
+            else
+                NotificationService.Current.Error(
+                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupImportFailed"));
+        }
+        catch { }
+    }
+
+    private async void ImportSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var picker = new FileOpenPicker
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            };
+            picker.FileTypeFilter.Add(".json");
+            InitializeWithWindow(picker);
+
+            var file = await picker.PickSingleFileAsync();
+            if (file is null)
+                return;
+
+            var loc = LocalizationService.Current;
+            if (ViewModel.ImportFrom(file.Path))
+            {
+                RefreshAfterBackup();
+                NotificationService.Current.Success(
+                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupImportDone"));
+            }
+            else
+            {
+                NotificationService.Current.Error(
+                    loc.GetString("SettingsTitle"), loc.GetString("SettingsBackupImportFailed"));
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Associates a WinRT picker with the main window (required for
+    /// unpackaged apps). No-op when the window is unavailable.
+    /// </summary>
+    private static void InitializeWithWindow(object picker)
+    {
+        try
+        {
+            if (App.Current is App app && app.m_window is not null)
+            {
+                var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(app.m_window);
+                WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Re-applies everything a reset/import may have changed behind the
+    /// page's back: strings (language), combo selections, and app theme.
+    /// </summary>
+    private void RefreshAfterBackup()
+    {
+        try
+        {
+            ApplyLocalization();
+            SelectCurrentLanguage();
+            ThemeService.Current.ApplyToMainWindow();
+        }
+        catch { }
+    }
 
     private void ShowUpdateStatus(string message, bool showInstall)
     {

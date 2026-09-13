@@ -20,6 +20,12 @@ public static class Program
     private static Mutex? _mutex;
     private static EventWaitHandle? _activateEvent;
 
+    /// <summary>
+    /// Deep-link URI this launch was started with (null for normal launches).
+    /// Read by <c>App</c> after the main window is ready.
+    /// </summary>
+    internal static string? PendingProtocolUri { get; private set; }
+
     [STAThread]
     static void Main(string[] args)
     {
@@ -53,10 +59,16 @@ public static class Program
         LoggingService.Initialize();
         CrashReportingService.Current.Initialize();
 
+        PendingProtocolUri = ProtocolService.ExtractProtocolUri(args);
+
         // Single-instance enforcement
         if (!TryEnforceSingleInstance())
         {
             LoggingService.Log.Information("Another instance is already running — signaling it and exiting");
+            // A deep link aimed at a running app must not die with this
+            // process: stash it where the first instance looks on activation.
+            if (!string.IsNullOrWhiteSpace(PendingProtocolUri))
+                ProtocolService.WritePendingUri(PendingProtocolUri);
             SignalExistingInstance();
             return;
         }

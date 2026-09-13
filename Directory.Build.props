@@ -9,7 +9,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <!-- Roslyn analyzers at Recommended level. Escalating to All/Enforce
-         is a deliberate future step (see UPGRADE-ROADMAP §3). -->
+         is a deliberate future step (tracked in docs/RELEASE-PLAN.md). -->
     <AnalysisMode>Recommended</AnalysisMode>
 
     <!-- CA1822 (mark members static): singleton services intentionally expose

@@ -23,6 +23,7 @@ Identity lives in two layers. Code surfaces read `Services/AppMetadata.cs`
 | `DevTem-WinUI 3` | Display name (titles, toasts, installer) | `Acme Desk` |
 | `Fettah010/winui-3-easy-template` | GitHub repo (feeds, links, CI) | `acme/desk-app` |
 | `Fettah` | Pack author | `Acme` |
+| `devtem://` (+ `Name="devtem"` in the MSIX manifest) | Deep-link URI scheme (self-registered per-user on first run; `Scripts/register-protocol.ps1` for manual setup) | `acme://` |
 
 ```powershell
 .\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" -RepoUrl "https://github.com/acme/desk-app"
@@ -46,7 +47,8 @@ margins — tight edge-to-edge art clips in circular hosts):
 ```
 
 This writes `Assets/app.ico` (multi-entry 16–256 for taskbar, title bar,
-installer, tray, shortcuts), `Assets/Logo.png` (256: splash, Home, About)
+installer, tray, shortcuts) plus `app-light.ico`/`app-dark.ico` copies
+(theme-aware tray/title icons prefer them, `app.ico` fallback), `Assets/Logo.png` (256: splash, Home, About)
 and `Assets/Logo-64/48/32/16.png`, verifies every output by reading it
 back, and backs up the replaced files to `.icon-backup\<timestamp>\`
 (git-ignored). Preview with `-WhatIf`; point at a copied assets folder

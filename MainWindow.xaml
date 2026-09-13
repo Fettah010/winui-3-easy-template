@@ -91,6 +91,11 @@
                         <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="NavDiagnosticsItem" AutomationProperties.AutomationId="NavDiagnosticsItem" Content="Diagnostics" Tag="diagnostics">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Repair"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
             <Frame x:Name="ContentFrame"/>

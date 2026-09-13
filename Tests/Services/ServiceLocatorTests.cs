@@ -73,5 +73,8 @@ public class ServiceLocatorTests
         Assert.IsNotNull(first);
         Assert.IsNotNull(second);
         Assert.AreNotSame(first, second);
+
+        var diag = ServiceLocator.GetRequiredService<DiagnosticsPageViewModel>();
+        Assert.IsNotNull(diag);
     }
 }

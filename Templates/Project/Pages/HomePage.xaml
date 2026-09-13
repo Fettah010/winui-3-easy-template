@@ -299,7 +299,7 @@
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                     <TextBlock
                         x:Name="ShipBodyText"
-                        Text="1. Bump Version in DevTemWinUi3.csproj  →  2. git tag v0.0.2-beta + push  →  3. CI builds, packs and publishes to GitHub Releases."
+                        Text="1. Bump Version in DevTemWinUi3.csproj  →  2. git tag v0.0.3-beta + push  →  3. CI builds, packs and publishes to GitHub Releases."
                         Style="{ThemeResource BodyTextBlockStyle}"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap"/>

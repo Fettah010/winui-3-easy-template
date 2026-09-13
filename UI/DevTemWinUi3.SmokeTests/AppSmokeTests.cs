@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Conditions;
@@ -22,6 +23,13 @@ namespace DevTemWinUi3.SmokeTests;
 // once (any manual launch would do the same). Run on demand or in CI —
 // never side-by-side with a manually running app instance (single-instance
 // enforcement would attach us to the wrong window; ClassInit refuses).
+//
+// Occupied desktops: UIA reads work through occluding windows, but mouse
+// clicks land on whatever is on top. ClassInit therefore stages the run —
+// foreground + topmost window, physical cursor confined to its bounds
+// (ClipCursor; released in ClassCleanup) — and nav clicks retry with a
+// refocus. A full OS input block (BlockInput) is deliberately NOT used:
+// it would swallow FlaUI's own synthetic clicks too.
 [TestClass]
 public sealed class AppSmokeTests
 {
@@ -37,6 +45,35 @@ public sealed class AppSmokeTests
     private static Application? _app;
     private static UIA3Automation? _automation;
     private static Window? _window;
+
+    #region P/Invoke (cursor confinement)
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool ClipCursor(ref RECT lpRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool ClipCursor(IntPtr lpRect);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(
+        IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    private static readonly IntPtr HWND_TOPMOST = new(-1);
+    private static readonly IntPtr HWND_NOTOPMOST = new(-2);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_SHOWWINDOW = 0x0040;
+
+    #endregion
 
     public TestContext TestContext { get; set; } = null!;
 
@@ -73,16 +110,49 @@ public sealed class AppSmokeTests
             LaunchTimeout,
             TimeSpan.FromMilliseconds(500));
         _window = found.Result;
-        Assert.IsNotNull(_window, $"Main window '{AppWindowTitle}' did not appear within {LaunchTimeout.TotalSeconds}s.");
+        if (_window is null)
+        {
+            // Say WHAT we saw: with a splash + single-instance dance, "not
+            // found" without the candidate list is undebuggable.
+            var app = _app;
+            var automation = _automation;
+            string seen = "(session not started)";
+            bool alive = false;
+            if (app is not null && automation is not null)
+            {
+                try { alive = !app.HasExited; } catch { }
+                try
+                {
+                    var titles = app.GetAllTopLevelWindows(automation)
+                        .Select(w => "'" + w.Title + "' (enabled=" + w.IsEnabled + ")");
+                    seen = string.Join(" | ", titles);
+                    if (string.IsNullOrWhiteSpace(seen))
+                        seen = "(no top-level windows)";
+                }
+                catch (Exception ex)
+                {
+                    seen = "(enumeration failed: " + ex.Message + ")";
+                }
+            }
+            Assert.Fail($"Main window '{AppWindowTitle}' did not appear within {LaunchTimeout.TotalSeconds}s. Process alive: {alive}. Top-level windows: {seen}.");
+        }
 
-        DismissFirstRunDialogIfPresent(DialogTimeout);
+        // Stage the run before touching anything: foreground + topmost so
+        // clicks cannot land on an occluding window, cursor confined so a
+        // stray physical mouse cannot drag one over us mid-run.
+        ForegroundWindow();
+        ConfineCursorToWindow();
+
+        DismissFirstRunDialogIfPresent(DialogTimeout, includeWhatsNew: true);
     }
 
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        // Close() would only hide to tray (HandleWindowClose); the process
-        // is ours, so kill it outright.
+        // Release the stage first (order matters: unclip while we still
+        // know the window), then kill our process outright — Close() would
+        // only hide to tray (HandleWindowClose).
+        ReleaseStage();
         try { _app?.Kill(); } catch { }
         try { _app?.Dispose(); } catch { }
         try { _automation?.Dispose(); } catch { }
@@ -203,6 +273,10 @@ public sealed class AppSmokeTests
     private static Window RequireWindow()
     {
         Assert.IsNotNull(_window, "App window is not available (ClassInit did not complete).");
+        // Re-foreground before every test: an occupied desktop may have
+        // covered us since the last one (UIA reads work occluded, mouse
+        // clicks land on whatever is on top).
+        ForegroundWindow();
         return _window;
     }
 
@@ -243,10 +317,100 @@ public sealed class AppSmokeTests
 
     private static void ClickNavAndWaitForPage(string navAutomationId, string titleAutomationId)
     {
-        var navItem = RequireElement(navAutomationId, "Nav item");
-        navItem.Click();
-        var title = WaitForElement(titleAutomationId, NavigateTimeout);
-        Assert.IsNotNull(title, $"Page title '{titleAutomationId}' did not appear after clicking '{navAutomationId}'.");
+        // A click can still miss (stray overlay, focus race): refocus and
+        // retry a few times before calling it a navigation failure.
+        const int attempts = 3;
+        for (int i = 1; i <= attempts; i++)
+        {
+            ForegroundWindow();
+            var navItem = RequireElement(navAutomationId, "Nav item");
+            try { navItem.Focus(); } catch { }
+            try { navItem.Click(); } catch { }
+            var title = WaitForElement(titleAutomationId, NavigateTimeout);
+            if (title is not null)
+                return;
+        }
+        Assert.Fail($"Page title '{titleAutomationId}' did not appear after clicking '{navAutomationId}' ({attempts} attempts).");
+    }
+
+    /// <summary>
+    /// Brings our window above everything else (topmost pins it there for
+    /// the whole run; <see cref="ReleaseStage"/> unpins). Best-effort: a
+    /// failure here must never fail a test by itself (click retries
+    /// compensate).
+    /// </summary>
+    private static void ForegroundWindow()
+    {
+        var window = _window;
+        if (window is null)
+            return;
+        try { window.Focus(); } catch { }
+        try { SetTopmost(true); } catch { }
+    }
+
+    /// <summary>Current main-window handle of our app process, if known.</summary>
+    private static IntPtr MainWindowHandle()
+    {
+        try
+        {
+            var app = _app;
+            if (app is null)
+                return IntPtr.Zero;
+            using var process = Process.GetProcessById(app.ProcessId);
+            process.Refresh();
+            return process.MainWindowHandle;
+        }
+        catch
+        {
+            return IntPtr.Zero;
+        }
+    }
+
+    private static void SetTopmost(bool topmost)
+    {
+        try
+        {
+            var hwnd = MainWindowHandle();
+            if (hwnd == IntPtr.Zero)
+                return;
+            SetWindowPos(hwnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST,
+                0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Confines the PHYSICAL mouse to our window bounds so stray user input
+    /// cannot drag another window over the run. Synthetic (FlaUI) input is
+    /// unaffected. Best-effort; skipped when bounds are unavailable.
+    /// </summary>
+    private static void ConfineCursorToWindow()
+    {
+        try
+        {
+            var window = _window;
+            if (window is null)
+                return;
+            var bounds = window.BoundingRectangle;
+            if (bounds.IsEmpty || bounds.Width < 50 || bounds.Height < 50)
+                return;
+            var rect = new RECT
+            {
+                Left = bounds.Left,
+                Top = bounds.Top,
+                Right = bounds.Right,
+                Bottom = bounds.Bottom,
+            };
+            ClipCursor(ref rect);
+        }
+        catch { }
+    }
+
+    /// <summary>Undoes <see cref="ForegroundWindow"/> + <see cref="ConfineCursorToWindow"/>.</summary>
+    private static void ReleaseStage()
+    {
+        try { ClipCursor(IntPtr.Zero); } catch { }
+        try { SetTopmost(false); } catch { }
     }
 
     /// <summary>
@@ -270,8 +434,13 @@ public sealed class AppSmokeTests
     /// <summary>
     /// Clicks the first-run "Get Started" button in any supported language
     /// when it is present; a no-op otherwise (already shown on this machine).
+    /// With <paramref name="includeWhatsNew"/>, also clears the what's-new
+    /// dialog (a version bump triggers it, and it is modal — nav clicks land
+    /// on it instead of the page). The what's-new check runs only at launch:
+    /// once dismissed it never returns in the same run, so per-test calls
+    /// skip it to stay inside the time budget.
     /// </summary>
-    private static void DismissFirstRunDialogIfPresent(TimeSpan timeout)
+    private static void DismissFirstRunDialogIfPresent(TimeSpan timeout, bool includeWhatsNew = false)
     {
         var window = _window;
         if (window is null)
@@ -287,6 +456,40 @@ public sealed class AppSmokeTests
                         return button;
                 }
                 return null;
+            },
+            timeout,
+            TimeSpan.FromMilliseconds(500)).Result;
+        try { found?.Click(); } catch { }
+
+        if (includeWhatsNew)
+            DismissWhatsNewDialogIfPresent(timeout);
+    }
+
+    /// <summary>
+    /// Clicks the what's-new dialog's OK button when a version bump left it
+    /// open. Located by dialog title (version-agnostic prefix), never by a
+    /// bare "OK" (too generic to click blindly).
+    /// </summary>
+    private static void DismissWhatsNewDialogIfPresent(TimeSpan timeout)
+    {
+        var window = _window;
+        if (window is null)
+            return;
+        var found = Retry.WhileNull<AutomationElement?>(
+            () =>
+            {
+                // NOTE: .Name throws PropertyNotSupportedException on some
+                // text elements — guard per element, never the whole search.
+                var title = window
+                    .FindAllDescendants(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Text))
+                    .FirstOrDefault(t =>
+                    {
+                        try { return t.Name.StartsWith("What's New in v", StringComparison.Ordinal); }
+                        catch { return false; }
+                    });
+                if (title is null)
+                    return null;
+                return window.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button).And(cf.ByName("OK")));
             },
             timeout,
             TimeSpan.FromMilliseconds(500)).Result;

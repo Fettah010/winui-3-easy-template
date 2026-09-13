@@ -61,6 +61,20 @@
       "replaces": "devtem://",
       "description": "Deep-link URI scheme, including :// (e.g. --scheme acme://)."
     },
+    "schemeName": {
+      "type": "generated",
+      "generator": "regex",
+      "datatype": "string",
+      "displayName": "Deep-link scheme name",
+      "parameters": {
+        "source": "scheme",
+        "steps": [
+          { "regex": "://$", "replacement": "" }
+        ]
+      },
+      "replaces": "Name=\"devtem\"",
+      "description": "Bare deep-link scheme (no ://) for the MSIX manifest protocol Name."
+    },
     "tray": {
       "type": "parameter",
       "datatype": "bool",

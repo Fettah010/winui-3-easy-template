@@ -50,15 +50,17 @@ public sealed class FirstRunService
     }
 
     /// <summary>
-    /// Gets the changelog text for the current version.
+    /// Gets the changelog text for the current version. Keep in sync with
+    /// CHANGELOG.md highlights — this is what updating users actually read.
     /// </summary>
     public string GetChangelog()
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• Settings page with theme selector
-• Auto-update improvements
-• Desktop shortcut support
-• Bug fixes and performance improvements";
+• Settings backup: reset, export, import
+• Diagnostics page with log viewer
+• Deep-link support (custom URI scheme)
+• Theme-aware tray and title icons
+• One-command page scaffolding (--title/--icon, add-page.ps1)";
     }
 }

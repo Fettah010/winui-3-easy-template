@@ -19,7 +19,7 @@
   <Identity
     Name="DevTemWinUi3"
     Publisher="CN=DevTem"
-    Version="0.0.2.0"
+    Version="0.0.3.0"
     ProcessorArchitecture="x64" />
 
   <Properties>
@@ -71,6 +71,14 @@
             Enabled="false"
             DisplayName="DevTem-WinUI 3 startup" />
         </desktop:Extension>
+        <!-- Deep-link scheme (devtem://…): packaged installs register here;
+             unpackaged runs self-register HKCU on startup (ProtocolService).
+             Renamed apps change Name alongside init-template/template.json. -->
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="devtem">
+            <uap:DisplayName>DevTem-WinUI 3</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
