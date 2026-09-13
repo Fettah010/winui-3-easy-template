@@ -56,11 +56,20 @@ jobs:
       - name: NuGet login (OIDC → temp API key)
         uses: NuGet/login@v1
         id: login
+        continue-on-error: true
         with:
           user: fettahDev
-      - name: Push to NuGet (Trusted Publishing, keyless)
+      - name: Push to NuGet (OIDC first, stored key fallback)
         shell: pwsh
+        env:
+          FALLBACK_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           $pkg = Get-ChildItem (Join-Path $env:GITHUB_WORKSPACE "nupkgs/*.nupkg") | Select-Object -First 1
           if (-not $pkg) { throw "No nupkg found — refusing to push nothing." }
-          dotnet nuget push $pkg.FullName --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          $key = "${{ steps.login.outputs.NUGET_API_KEY }}"
+          if ([string]::IsNullOrWhiteSpace($key)) {
+            Write-Host "WARNING: OIDC login yielded no key — falling back to stored NUGET_API_KEY."
+            $key = $env:FALLBACK_API_KEY
+          }
+          if ([string]::IsNullOrWhiteSpace($key)) { throw "No NuGet credentials: OIDC login failed and NUGET_API_KEY is not configured." }
+          dotnet nuget push $pkg.FullName --api-key $key --source https://api.nuget.org/v3/index.json --skip-duplicate

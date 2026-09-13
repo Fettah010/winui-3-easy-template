@@ -14,6 +14,8 @@
     <Description>WinUI 3 desktop app template with tray, Velopack auto-updates, SQLite, i18n (dotnet new devtem-winui) plus an MVVM content-page item template (dotnet new devtem-page).</Description>
     <PackageTags>winui;winui3;windows;desktop;dotnet-new;templates;mvvm</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Fettah010/winui-3-easy-template</RepositoryUrl>
     <Version>0.1.0</Version>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -30,6 +32,9 @@
   <ItemGroup>
     <Content Include="..\..\Templates\Project\**\*" Exclude="..\..\Templates\Project\bin\**\*;..\..\Templates\Project\obj\**\*" PackagePath="content\Project\%(RecursiveDir)%(Filename)%(Extension)" />
     <Content Include="..\..\Templates\Page\**\*" Exclude="..\..\Templates\Page\bin\**\*;..\..\Templates\Page\obj\**\*" PackagePath="content\Page\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Package face: icon + readme land at the package root (not content/). -->
+    <None Include="..\..\Assets\Logo.png" Pack="true" PackagePath="icon.png" />
+    <None Include="README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>
