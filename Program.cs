@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml;
 using Windows.ApplicationModel.Core;
 using Velopack;
 using DevTemWinUi3.Services;
+using DevTemWinUi3.Services.Native;
 
 namespace DevTemWinUi3;
 
@@ -50,7 +51,56 @@ public static class Program
         {
             LoggingService.Log.Fatal(ex, "Application crashed during startup");
             CrashReportingService.Current.CaptureException(ex, "startup");
+            ShowStartupCrashDialog();
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Best-effort fatal-error box with the log-folder path, so a startup
+    /// crash is actionable instead of a silent exit. Never throws; the UI
+    /// stack may be unusable here, hence the native box (see
+    /// <c>CrashDialogNative</c>). Localization is best-effort: the service
+    /// may not be initialized yet, so missing keys fall back to English.
+    /// </summary>
+    internal static void ShowStartupCrashDialog()
+    {
+        try
+        {
+            string logDir;
+            try { logDir = LoggingService.CurrentLogDirectory; }
+            catch { logDir = AppContext.BaseDirectory; }
+            string title;
+            string body;
+            try
+            {
+                title = LocalizationService.Current.GetString("StartupCrashTitle");
+                body = LocalizationService.Current.GetString("StartupCrashBody", logDir);
+            }
+            catch
+            {
+                title = "Unexpected error";
+                body = BuildStartupCrashMessage(logDir);
+            }
+            CrashDialogNative.Show(title, body);
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// English fallback text for the startup-crash dialog (also the shape
+    /// the unit tests pin: app name + log directory, never throws).
+    /// </summary>
+    internal static string BuildStartupCrashMessage(string? logDirectory)
+    {
+        try
+        {
+            string dir = string.IsNullOrWhiteSpace(logDirectory) ? "?" : logDirectory;
+            return $"The app closed unexpectedly.\n\nLogs: {dir}";
+        }
+        catch
+        {
+            return "The app closed unexpectedly.";
         }
     }
 

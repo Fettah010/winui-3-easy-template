@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using DevTemWinUi3.Services.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -42,6 +44,26 @@ public sealed class BackgroundUpdateService
     }
 
     public async Task CheckForUpdatesAsync(Window? mainWindow)
+    {
+        var watch = Stopwatch.StartNew();
+        try { CrashReportingService.AddBreadcrumb("Update check started", "updates"); } catch { }
+        try
+        {
+            await CheckForUpdatesCoreAsync(mainWindow);
+        }
+        finally
+        {
+            try
+            {
+                watch.Stop();
+                AppMetrics.RecordUpdateCheck(watch.Elapsed.TotalMilliseconds);
+                CrashReportingService.AddBreadcrumb("Update check finished", "updates");
+            }
+            catch { }
+        }
+    }
+
+    private async Task CheckForUpdatesCoreAsync(Window? mainWindow)
     {
         var svc = UpdateService.Current;
 

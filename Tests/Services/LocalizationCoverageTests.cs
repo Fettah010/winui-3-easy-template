@@ -120,6 +120,89 @@ public class LocalizationCoverageTests
         loc.SetLanguage("en-US");
         Assert.AreEqual("Search logs…", loc.GetString("DiagnosticsSearchPlaceholder"));
         Assert.AreEqual("1 of 4 lines", loc.GetString("DiagnosticsLines", 1, 4));
+        Assert.AreEqual("Startup time", loc.GetString("DiagnosticsStartup"));
+        Assert.AreEqual("Log level", loc.GetString("DiagnosticsLogLevel"));
+        Assert.AreEqual("Unexpected error", loc.GetString("StartupCrashTitle"));
+    }
+
+    [TestMethod]
+    public void NewStartupCrashKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Error inesperado", loc.GetString("StartupCrashTitle"));
+        Assert.AreEqual(
+            "La aplicación se cerró inesperadamente.\n\nRegistros: C:\\logs",
+            loc.GetString("StartupCrashBody", "C:\\logs"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Erreur inattendue", loc.GetString("StartupCrashTitle"));
+        Assert.AreEqual(
+            "L'application s'est fermée de manière inattendue.\n\nJournaux : C:\\logs",
+            loc.GetString("StartupCrashBody", "C:\\logs"));
+    }
+
+    [TestMethod]
+    public void NewPhase3Keys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Crash reports", loc.GetString("DiagnosticsCrashReports"));
+        Assert.AreEqual("METRICS", loc.GetString("DiagnosticsMetrics"));
+        Assert.AreEqual("Navigations", loc.GetString("DiagnosticsNavigations"));
+        Assert.AreEqual("Update checks", loc.GetString("DiagnosticsUpdateChecks"));
+        Assert.AreEqual("Exceptions", loc.GetString("DiagnosticsExceptions"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Informes de errores", loc.GetString("DiagnosticsCrashReports"));
+        Assert.AreEqual("MÉTRICAS", loc.GetString("DiagnosticsMetrics"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Rapports d'erreurs", loc.GetString("DiagnosticsCrashReports"));
+        Assert.AreEqual("MÉTRIQUES", loc.GetString("DiagnosticsMetrics"));
+    }
+
+    [TestMethod]
+    public void NewPhase2Keys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("File", loc.GetString("DiagnosticsViewFile"));
+        Assert.AreEqual("Live", loc.GetString("DiagnosticsViewLive"));
+        Assert.AreEqual("Export bundle", loc.GetString("DiagnosticsExportBundle"));
+        Assert.AreEqual("Close", loc.GetString("DiagnosticsClose"));
+        Assert.AreEqual("None", loc.GetString("DiagnosticsNone"));
+        Assert.AreEqual("Yes", loc.GetString("DiagnosticsYes"));
+        Assert.AreEqual("2 of 9 events", loc.GetString("DiagnosticsEventsCount", 2, 9));
+        Assert.AreEqual("3 new", loc.GetString("DiagnosticsNewEvents", 3));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Archivo", loc.GetString("DiagnosticsViewFile"));
+        Assert.AreEqual("En vivo", loc.GetString("DiagnosticsViewLive"));
+        Assert.AreEqual("Cerrar", loc.GetString("DiagnosticsClose"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Fichier", loc.GetString("DiagnosticsViewFile"));
+        Assert.AreEqual("En direct", loc.GetString("DiagnosticsViewLive"));
+        Assert.AreEqual("Fermer", loc.GetString("DiagnosticsClose"));
+    }
+
+    [TestMethod]
+    public void NewVerboseKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Verbose logging", loc.GetString("DiagnosticsVerbose"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Registro detallado", loc.GetString("DiagnosticsVerbose"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Journalisation détaillée", loc.GetString("DiagnosticsVerbose"));
     }
 
     [TestMethod]

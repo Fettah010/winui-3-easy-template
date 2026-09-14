@@ -224,7 +224,7 @@ parameters and feature flags (all flags default on):
 dotnet new install .\Templates\Project     # from this repo, or:
 dotnet new install DevTem.Templates::<version>   # versioned NuGet package
 dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
-    --repo "acme/desk-app" --scheme "acme://" --tray false --updates false --database false --http false --attribution false
+    --repo "acme/desk-app" --scheme "acme://" --tray false --updates false --database false --http false --health false --attribution false
 ```
 
 Releases of the package are cut with `templates-v*` tags (CI packs +
@@ -251,7 +251,7 @@ not by choice.
 | `--company` | Pack author | `Acme` |
 | `--repo` | GitHub `org/name` (feeds, links, CI) | `acme/desk-app` |
 | `--scheme` | Deep-link scheme (registered end-to-end: HKCU self-register on first run, manifest for MSIX; `Scripts/register-protocol.ps1` for manual setup) | `acme://` |
-| `--tray/--updates/--database/--http` | Feature on/off (`false` drops it) | `--tray false` |
+| `--tray/--updates/--database/--http/--health` | Feature on/off (`false` drops it) | `--tray false` |
 | `--attribution` | Keep the one-line DevTem source comment in generated `DevTemAttribution.cs` | `true` |
 
 Names with spaces work: `-n "My App"` produces `My_App` identifiers and
@@ -266,7 +266,7 @@ internal service:
 
 | Profile | Flags | Result |
 | --- | --- | --- |
-| Minimal | `--tray false --updates false --database false --http false --attribution false` | Shell, settings, localization, logging |
+| Minimal | `--tray false --updates false --database false --http false --health false --attribution false` | Shell, settings, localization, logging |
 | Desktop | `--updates false --database false --http false` | Minimal plus tray and desktop notifications |
 | Production | no overrides | All optional services and release tooling |
 
@@ -278,7 +278,7 @@ How flags work (verified over all-on, all-off, and mixed scaffolds):
 
 - **Files**: services, tests, release scripts and feature packages are
   excluded per flag (`sources.modifiers` in `template.json`).
-- **Code**: `.cs` `#if (tray|updates|database)` blocks (the engine only
+- **Code**: `.cs` `#if (tray|updates|database|diagnostics)` blocks (the engine only
   evaluates markers in code files).
 - **Packages**: `Build/Features.*.props` imported with `Exists` guards, so
   one static csproj serves every combo.

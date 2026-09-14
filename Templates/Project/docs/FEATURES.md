@@ -10,6 +10,7 @@ corresponding feature is enabled.
 | Velopack updates | __UPDATES__ |
 | SQLite database | __DATABASE__ |
 | Typed HTTP client | __HTTP__ |
+| Diagnostics page | __HEALTH__ |
 | DevTem attribution | __ATTRIBUTION__ |
 
 ## Next steps

@@ -62,7 +62,8 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Assets/app.ico` | App + installer + tray + shortcut icon (single source, `vpk --icon`). |
 | `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
 | `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release (updates feature). |
-| `Scripts/create-shortcut.ps1` | Creates desktop shortcut for the app. |
+| `Scripts/create-shortcut.ps1` | Creates desktop shortcuts for the app (launch + `(Dev)` build-and-run). |
+| `Scripts/run-app.ps1` | Build-if-needed + launch dev loop (target of the `(Dev)` shortcut). |
 | `run-dev.vbs` / `run-dev.bat` | Dev-only `dotnet run` launchers (repo-relative paths). The desktop shortcut targets the built exe directly (fast cold start). |
 | `.github/workflows/release.yml` | CI release pipeline (updates feature). |
 | `Tests/` | MSTest unit test project. |
@@ -153,18 +154,23 @@ dotnet run                                   # runs unpackaged (updates disabled
 ## Running the app
 
 - **Desktop shortcut**: Double-click `DevTem-WinUI 3` on desktop (targets the built exe)
+- **Dev loop**: Double-click `DevTem-WinUI 3 (Dev)` on desktop (builds if needed, then launches)
 - **Command line**: `dotnet run -c Debug -p:Platform=x64` (or `run-dev.bat`)
 
 ## Desktop shortcut setup
 
-Run `Scripts\create-shortcut.ps1` to create the desktop shortcut. The shortcut
-targets the built exe directly (fast cold start). `run-dev.vbs` / `.bat`
-run `dotnet run` (handy for dev, but adds seconds to every launch) — the app
-is WinExe so it never shows a terminal window on its own.
+Run `Scripts\create-shortcut.ps1` to create the desktop shortcuts (re-run it
+after moving the repo, or whenever a shortcut below is missing — check the
+desktop first instead of asking):
+
+- `DevTem-WinUI 3` → the built exe directly (fast cold start).
+- `DevTem-WinUI 3 (Dev)` → `Scripts\run-app.ps1`: builds Debug/x64 if needed,
+  then launches. This is the one-click dev loop — prefer it over typing
+  `dotnet build` / `dotnet run` in a terminal.
 
 ## Versioning
 
-Current version: **0.0.2-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.3-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

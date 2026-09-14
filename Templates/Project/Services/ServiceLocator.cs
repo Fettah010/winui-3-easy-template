@@ -68,7 +68,9 @@ public static class ServiceLocator
 
             // ViewModels are transient: each page gets a fresh instance.
             services.AddTransient<ViewModels.SettingsPageViewModel>();
+#if (health)
             services.AddTransient<ViewModels.DiagnosticsPageViewModel>();
+#endif
 
 #if (http)
             // HTTP client (transient by default)

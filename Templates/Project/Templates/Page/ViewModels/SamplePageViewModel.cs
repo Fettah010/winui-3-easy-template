@@ -26,4 +26,18 @@ public partial class SamplePageViewModel : ObservableObject
 
     [RelayCommand]
     private void Reset() => Headline = string.Empty;
+
+    // Observability example (uncomment to use; needs `using Serilog;`):
+    //     private readonly ILogger _log = Log.ForContext<SamplePageViewModel>();
+    //
+    //     [RelayCommand]
+    //     private void Save()
+    //     {
+    //         // Structured template (never interpolation): filterable in the
+    //         // diagnostics live view, exportable in bundles.
+    //         _log.Information("Sample saved: {Headline}", Headline);
+    //         // Breadcrumb for crash reports (page navigation is breadcrumbed
+    //         // automatically by NavigationService).
+    //         DevTemWinUi3.Services.CrashReportingService.AddBreadcrumb("Sample saved", "sample");
+    //     }
 }

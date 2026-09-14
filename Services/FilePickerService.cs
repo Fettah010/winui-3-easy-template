@@ -14,16 +14,26 @@ namespace DevTemWinUi3.Services;
 /// </summary>
 public sealed class FilePickerService : IFilePickerService
 {
-    public async Task<string?> PickSaveFileAsync(string suggestedFileName)
+    public async Task<string?> PickSaveFileAsync(string suggestedFileName, string fileExtension = ".json")
     {
         try
         {
+            string ext = string.IsNullOrWhiteSpace(fileExtension) ? ".json" : fileExtension;
+            if (!ext.StartsWith('.'))
+                ext = "." + ext;
+            string label = "Files";
+            if (ext.Equals(".json", StringComparison.OrdinalIgnoreCase))
+                label = "JSON";
+            else if (ext.Equals(".log", StringComparison.OrdinalIgnoreCase))
+                label = "Log files";
+            else if (ext.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+                label = "ZIP archive";
             var picker = new FileSavePicker
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
                 SuggestedFileName = suggestedFileName,
             };
-            picker.FileTypeChoices.Add("JSON", new List<string> { ".json" });
+            picker.FileTypeChoices.Add(label, new List<string> { ext });
             InitializeWithWindow(picker);
 
             var file = await picker.PickSaveFileAsync();

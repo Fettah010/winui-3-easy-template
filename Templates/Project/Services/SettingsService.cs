@@ -15,6 +15,8 @@ public sealed class SettingsService
     private const string KeyPendingVersion = "PendingUpdateVersion";
     private const string KeyMinimizeToTray = "MinimizeToTray";
     private const string KeyAutoCheck = "AutoCheckOnStartup";
+    private const string KeyVerboseLogging = "VerboseLogging";
+    private const string KeyCrashReports = "CrashReportsEnabled";
     private const string KeyChannelMigratedFor = "ChannelMigratedFor";
 
     public static SettingsService Current { get; } = new();
@@ -124,11 +126,39 @@ public sealed class SettingsService
     }
 
     /// <summary>
+    /// Whether extra debug detail is logged (Serilog Verbose level).
+    /// Off by default in release builds; on in Debug builds so the dev
+    /// loop captures everything without a toggle round-trip.
+    /// </summary>
+    public bool VerboseLogging
+    {
+        get => Store.Get(KeyVerboseLogging,
+#if DEBUG
+            true
+#else
+            false
+#endif
+        );
+        set => Store.Set(KeyVerboseLogging, value);
+    }
+
+    /// <summary>
+    /// Whether the app may send crash reports (Sentry). Explicit opt-in,
+    /// off by default; a configured DSN alone never enables sending.
+    /// </summary>
+    public bool CrashReportsEnabled
+    {
+        get => Store.Get(KeyCrashReports, false);
+        set => Store.Set(KeyCrashReports, value);
+    }
+
+    /// <summary>
     /// Removes every user preference (theme, channel, tray, auto-check,
-    /// pending-update state) so the next read returns defaults. The
-    /// per-version channel-migration marker is kept: it is bookkeeping,
-    /// not a preference. Language lives in <see cref="LocalizationService"/>
-    /// and is reset separately (<see cref="SettingsBackupService.ResetAll"/>).
+    /// verbose logging, crash-report consent, pending-update state) so the
+    /// next read returns defaults. The per-version channel-migration marker
+    /// is kept: it is bookkeeping, not a preference. Language lives in
+    /// <see cref="LocalizationService"/> and is reset separately
+    /// (<see cref="SettingsBackupService.ResetAll"/>).
     /// </summary>
     public void ResetToDefaults()
     {
@@ -138,6 +168,8 @@ public sealed class SettingsService
             Store.Remove(KeyChannel);
             Store.Remove(KeyMinimizeToTray);
             Store.Remove(KeyAutoCheck);
+            Store.Remove(KeyVerboseLogging);
+            Store.Remove(KeyCrashReports);
             Store.Remove(KeyLastCheckTime);
             Store.Remove(KeyPendingVersion);
         }

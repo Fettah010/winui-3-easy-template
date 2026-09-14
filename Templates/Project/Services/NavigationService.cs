@@ -82,6 +82,12 @@ public sealed class NavigationService
                 _currentTag = tag;
                 Navigated?.Invoke(this, tag);
                 (_frame.Content as INavigationAware)?.OnNavigatedTo(parameter);
+                try
+                {
+                    Diagnostics.AppMetrics.RecordNavigation(tag);
+                    CrashReportingService.AddBreadcrumb("Navigate: " + tag, "navigation");
+                }
+                catch { }
             }
             return success;
         }

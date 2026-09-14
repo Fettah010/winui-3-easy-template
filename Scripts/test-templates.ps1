@@ -1,7 +1,8 @@
 # Scaffold matrix for the dotnet-new templates: installs both templates from
-# this repo, scaffolds all-on / all-off / no-tray / no-updates, wires a page
-# end-to-end inside all-on via add-page.ps1, then builds (0 warnings,
-# 0 errors) and tests each scaffold. Fails the run on the first broken combo.
+# this repo, scaffolds all-on / all-off / no-tray / no-updates / no-diagnostics,
+# wires a page end-to-end inside all-on via add-page.ps1, then builds
+# (0 warnings, 0 errors) and tests each scaffold. Fails the run on the first
+# broken combo.
 #
 #   powershell -File Scripts/test-templates.ps1                 # full matrix
 #   powershell -File Scripts/test-templates.ps1 -Combos allon,alloff
@@ -10,7 +11,7 @@
 # Same matrix runs in CI (.github/workflows/templates.yml).
 
 param(
-    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "nohttp"),
+    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "nohttp", "nodiag"),
     [switch]$KeepTemp
 )
 
@@ -21,14 +22,15 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("devtem-matrix-" + [Sys
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
 $comboDefs = @{
-    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Attribution = $true }
-    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = $false; Attribution = $true }
-    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = $true; Attribution = $true }
-    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";     Display = "NoUpd App";  Company = "Nu";   Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false"); Http = $true; Database = $true; Tray = $true; Updates = $false; Attribution = $true }
-    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh";   Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = $true; Attribution = $true }
-    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false", "--http", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = $false; Attribution = $false }
-    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "false", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = $false; Attribution = $true }
-    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Attribution = $true }
+    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Health = $true; Attribution = $true }
+    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = $false; Health = $true; Attribution = $true }
+    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = $true; Health = $true; Attribution = $true }
+    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";     Display = "NoUpd App";  Company = "Nu"; Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false"); Http = $true; Database = $true; Tray = $true; Updates = $false; Health = $true; Attribution = $true }
+    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh"; Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = $true; Health = $true; Attribution = $true }
+    "nodiag"  = @{ Name = "NoDiagApp";   Safe = "NoDiagApp";    Display = "NoDiag App"; Company = "Nd"; Repo = "nd/app";        Scheme = "nd://";   Flags = @("--health", "false"); Http = $true; Database = $true; Tray = $true; Updates = $true; Health = $false; Attribution = $true }
+    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false", "--http", "false", "--health", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = $false; Health = $false; Attribution = $false }
+    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "false", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = $false; Health = $true; Attribution = $true }
+    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Health = $true; Attribution = $true }
 }
 
 $failed = 0
@@ -52,7 +54,7 @@ function Assert-FeatureManifest([string]$outDir) {
         throw "feature manifest is missing"
     }
     $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
-    foreach ($name in @("tray", "updates", "database", "http")) {
+    foreach ($name in @("tray", "updates", "database", "http", "health")) {
         if ($null -eq $manifest.features.$name) {
             throw "feature manifest is missing '$name'"
         }
@@ -66,7 +68,7 @@ function Assert-FeatureManifest([string]$outDir) {
 function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
     $readmePath = Join-Path $outDir "README.md"
     $readme = Get-Content -Raw $readmePath
-    foreach ($marker in @("Starter profiles", "--tray false", "--updates false", "--database false", "--http false")) {
+    foreach ($marker in @("Starter profiles", "--tray false", "--updates false", "--database false", "--http false", "--health false")) {
         if ($readme -notmatch [regex]::Escape($marker)) {
             throw "generated README is missing profile marker '$marker'"
         }
@@ -77,6 +79,7 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
         @("Velopack updates", $definition.Updates),
         @("SQLite database", $definition.Database),
         @("Typed HTTP client", $definition.Http),
+        @("Diagnostics page", $definition.Health),
         @("DevTem attribution", $definition.Attribution)
     )) {
         $expected = [string]$pair[1]
@@ -89,6 +92,7 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
         updates = $definition.Updates
         database = $definition.Database
         http = $definition.Http
+        diagnostics = $definition.Health
     }
     foreach ($guide in $guides.GetEnumerator()) {
         $guidePath = Join-Path $outDir ("docs\feature-guides\" + $guide.Key + ".md")
@@ -157,6 +161,17 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     elseif ((Test-Path -LiteralPath $dbPath) -or (Test-Path -LiteralPath $dbPropsPath)) {
         throw "database feature files or package import remain disabled"
     }
+    $diagPagePath = Join-Path $outDir "Pages\DiagnosticsPage.xaml"
+    $diagCrashPath = Join-Path $outDir "Services\Native\CrashDialogNative.cs"
+    $diagGuidePath = Join-Path $outDir "docs\feature-guides\diagnostics.md"
+    if ($definition.Health) {
+        if (-not (Test-Path -LiteralPath $diagPagePath) -or -not (Test-Path -LiteralPath $diagCrashPath)) {
+            throw "diagnostics feature files are missing"
+        }
+    }
+    elseif ((Test-Path -LiteralPath $diagPagePath) -or (Test-Path -LiteralPath $diagCrashPath) -or (Test-Path -LiteralPath $diagGuidePath)) {
+        throw "diagnostics feature files remain when disabled"
+    }
     Write-Host "identity OK ($safe / $display / $scheme / $repo)"
 }
 
@@ -186,13 +201,17 @@ function Invoke-InitTemplateScratchTest {
 try {
     # Clean slate, then install both templates from this repo.
     # (Uninstalls fail when nothing is installed — expected, ignored.)
+    # The NuGet package name is uninstalled too: a stale DevTem.Templates
+    # would otherwise shadow the path install at scaffold time (same
+    # template identity) and silently test old content.
+    try { & dotnet new uninstall DevTem.Templates 2>&1 | Out-Null } catch { }
     try { & dotnet new uninstall (Join-Path $repoRoot "Templates\Project") 2>&1 | Out-Null } catch { }
     try { & dotnet new uninstall (Join-Path $repoRoot "Templates\Page") 2>&1 | Out-Null } catch { }
     if (-not (Invoke-Step "install devtem-winui" { & dotnet new install (Join-Path $repoRoot "Templates\Project") })) { throw "install failed" }
     if (-not (Invoke-Step "install devtem-page" { & dotnet new install (Join-Path $repoRoot "Templates\Page") })) { throw "install failed" }
 
     foreach ($combo in $Combos) {
-        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/nohttp)" }
+        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/nohttp/nodiag)" }
         $c = $comboDefs[$combo]
         $outDir = Join-Path $tempRoot "$combo\$($c.Name)"
 

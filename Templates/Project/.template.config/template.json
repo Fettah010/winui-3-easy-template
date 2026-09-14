@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional Velopack auto-updates, optional SQLite and HTTP services, 3-language UI, persisted settings, Serilog, release tooling, and profile-aware documentation. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional Velopack auto-updates, optional SQLite, HTTP and diagnostics, 3-language UI, persisted settings, Serilog, release tooling, and profile-aware documentation. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,
@@ -109,6 +109,14 @@
       "replaces": "__HTTP__",
       "description": "Include the typed HTTP client and HttpClientFactory registration (--http false to drop)."
     },
+    "health": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "Diagnostics page",
+      "defaultValue": "true",
+      "replaces": "__HEALTH__",
+      "description": "Include the in-app diagnostics page (status, log viewer, metrics) (--health false to drop)."
+    },
     "attribution": {
       "type": "parameter",
       "datatype": "bool",
@@ -162,6 +170,16 @@
           ]
         },
         {
+          "condition": "(!health)",
+          "exclude": [
+            "Pages/DiagnosticsPage.xaml",
+            "Pages/DiagnosticsPage.xaml.cs",
+            "ViewModels/DiagnosticsPageViewModel.cs",
+            "Services/Native/CrashDialogNative.cs",
+            "Tests/ViewModels/DiagnosticsPageViewModelTests.cs"
+          ]
+        },
+        {
           "condition": "(!attribution)",
           "exclude": [
             "DevTemAttribution.cs"
@@ -189,6 +207,12 @@
           "condition": "(!http)",
           "exclude": [
             "docs/feature-guides/http.md"
+          ]
+        },
+        {
+          "condition": "(!health)",
+          "exclude": [
+            "docs/feature-guides/diagnostics.md"
           ]
         }
       ]

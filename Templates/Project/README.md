@@ -41,7 +41,7 @@ feature flags when needed:
 
 ```powershell
 # Minimal: shell, settings, localization and logging only
-dotnet new devtem-winui -n MyApp --tray false --updates false --database false --http false --attribution false
+dotnet new devtem-winui -n MyApp --tray false --updates false --database false --http false --health false --attribution false
 
 # Desktop: tray and notifications, without distribution services
 dotnet new devtem-winui -n MyApp --updates false --database false --http false

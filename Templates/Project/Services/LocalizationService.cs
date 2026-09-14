@@ -149,6 +149,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
             try { LocalSettingsStore.Shared.Set(PersistKey, languageTag); }
             catch { }
             Log.Information("Language changed to: {Language}", languageTag);
+            try { CrashReportingService.AddBreadcrumb("Language: " + languageTag, "settings"); } catch { }
             RaiseLanguageChanged();
         }
     }

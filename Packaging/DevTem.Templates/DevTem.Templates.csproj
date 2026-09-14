@@ -17,7 +17,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Fettah010/winui-3-easy-template</RepositoryUrl>
-    <Version>0.1.5</Version>
+    <Version>0.1.6</Version>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IncludeContentInPack>true</IncludeContentInPack>
     <ContentTargetFolders>content</ContentTargetFolders>

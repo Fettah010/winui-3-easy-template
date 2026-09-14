@@ -23,6 +23,7 @@ public static class SettingsBackupService
     {
         try { SettingsService.Current.ResetToDefaults(); } catch { }
         try { LocalizationService.Current.ResetLanguage(); } catch { }
+        try { CrashReportingService.AddBreadcrumb("Settings reset", "settings"); } catch { }
         try { LoggingService.Log.Information("Settings reset to defaults"); } catch { }
     }
 
@@ -58,6 +59,7 @@ public static class SettingsBackupService
                 Directory.CreateDirectory(dir);
             var json = JsonSerializer.Serialize(Capture(), s_jsonOptions);
             File.WriteAllText(path, json);
+            try { CrashReportingService.AddBreadcrumb("Settings exported", "settings"); } catch { }
             LoggingService.Log.Information("Settings exported to {Path}", path);
             return true;
         }
@@ -106,6 +108,7 @@ public static class SettingsBackupService
             }
 
             LoggingService.Log.Information("Settings imported from {Path}", path);
+            try { CrashReportingService.AddBreadcrumb("Settings imported", "settings"); } catch { }
             return true;
         }
         catch (Exception ex)

@@ -55,7 +55,11 @@ public sealed partial class MainWindow : Window
         // </devtem:routes>
         _nav.RegisterRoute("home", typeof(HomePage));
         _nav.RegisterRoute("about", typeof(AboutPage));
+#if (health)
         _nav.RegisterRoute("diagnostics", typeof(DiagnosticsPage));
+#else
+        CollapseFooterNavItem("diagnostics");
+#endif
         _nav.RegisterRoute("settings", typeof(SettingsPage));
         _nav.SetFrame(ContentFrame);
         _nav.Navigated += OnNavigated;
@@ -208,6 +212,28 @@ public sealed partial class MainWindow : Window
             {
                 settingsItem.Content = LocalizationService.Current.GetString("NavSettings");
                 AutomationProperties.SetAutomationId(settingsItem, "NavSettingsItem");
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Hides a footer nav item whose page was dropped at scaffold time
+    /// (XAML carries no engine markers, so this runs in code). Never throws.
+    /// </summary>
+    private void CollapseFooterNavItem(string tag)
+    {
+        try
+        {
+            foreach (var item in RootNavigationView.FooterMenuItems)
+            {
+                if (item is NavigationViewItem navItem &&
+                    navItem.Tag is string t &&
+                    string.Equals(t, tag, StringComparison.Ordinal))
+                {
+                    navItem.Visibility = Visibility.Collapsed;
+                    return;
+                }
             }
         }
         catch { }

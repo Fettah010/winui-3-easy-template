@@ -37,6 +37,39 @@ public class DiagnosticsServiceTests
         Assert.IsFalse(string.IsNullOrWhiteSpace(status.AppVersion));
         Assert.IsFalse(string.IsNullOrWhiteSpace(status.LogDirectory));
         Assert.IsFalse(string.IsNullOrWhiteSpace(status.Language));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(status.LogLevel));
+        Assert.IsGreaterThanOrEqualTo(0L, status.StartupElapsedMs);
+        Assert.IsGreaterThanOrEqualTo(0L, status.LogDirectorySizeBytes);
+        Assert.IsGreaterThanOrEqualTo(0, status.BufferedEventCount);
+        Assert.IsNotNull(status.PendingUpdate);
+        Assert.IsGreaterThanOrEqualTo(-1L, status.DatabaseSizeBytes);
+    }
+
+    [TestMethod]
+    public void CreateDiagnosticBundle_WritesExpectedEntries()
+    {
+        string path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".zip");
+        try
+        {
+            bool ok = DiagnosticsService.CreateDiagnosticBundle(path, "filtered", null, null);
+            Assert.IsTrue(ok);
+            using var zip = System.IO.Compression.ZipFile.OpenRead(path);
+            var names = zip.Entries.Select(e => e.FullName).ToArray();
+            Assert.IsTrue(names.Contains("status.json"));
+            Assert.IsTrue(names.Contains("settings.json"));
+            Assert.IsTrue(names.Contains("log-filtered.log"));
+            Assert.IsTrue(names.Contains("log-current.log"));
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void CreateDiagnosticBundle_BlankPath_ReturnsFalse()
+    {
+        Assert.IsFalse(DiagnosticsService.CreateDiagnosticBundle("  ", "x", null, null));
     }
 
     [TestMethod]
@@ -105,6 +138,29 @@ public class DiagnosticsServiceTests
         {
             try { File.Delete(file); } catch { }
         }
+    }
+
+    [TestMethod]
+    public void GetBufferedEvents_MapsNewestFirst()
+    {
+        LoggingService.EventBuffer.Emit(TestEvents.Make("buffered-old", "Seed.Space"));
+        LoggingService.EventBuffer.Emit(TestEvents.Make(
+            "buffered-new", "Seed.Space", Serilog.Events.LogEventLevel.Error,
+            new InvalidOperationException("boom")));
+
+        var events = DiagnosticsService.GetBufferedEvents(50);
+        Assert.IsNotNull(events);
+        var fresh = events.First(e =>
+            e.SourceContext == "Seed.Space" && e.Message == "buffered-new");
+        Assert.AreEqual("Error", fresh.Level);
+        Assert.IsTrue(fresh.HasException);
+    }
+
+    [TestMethod]
+    public void GetBufferedEvents_NonPositiveMax_ReturnsEmpty()
+    {
+        Assert.IsEmpty(DiagnosticsService.GetBufferedEvents(0));
+        Assert.IsEmpty(DiagnosticsService.GetBufferedEvents(-1));
     }
 
     [TestMethod]

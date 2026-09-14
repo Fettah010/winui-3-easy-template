@@ -1,7 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
+using DevTemWinUi3.Services.Diagnostics;
+using Serilog.Events;
 
 namespace DevTemWinUi3.Services;
 
@@ -14,7 +20,13 @@ public sealed record DiagnosticsStatus(
     bool IsPackaged,
     bool SentryEnabled,
     int LogFileCount,
-    string LogDirectory);
+    string LogDirectory,
+    long StartupElapsedMs,
+    string LogLevel,
+    long LogDirectorySizeBytes,
+    int BufferedEventCount,
+    string PendingUpdate,
+    long DatabaseSizeBytes);
 
 /// <summary>
 /// Reads app health + rolling log files for the in-app diagnostics page.
@@ -53,9 +65,21 @@ public static class DiagnosticsService
             string theme = "System";
             string channel = ChannelResolver.Stable;
             string language = "en-US";
+            long startupMs = 0;
+            string logLevel = "Debug";
+            long logDirBytes = 0;
+            int buffered = 0;
+            string pending = string.Empty;
+            long dbBytes = -1;
             try { theme = SettingsService.Current.Theme; } catch { }
             try { channel = SettingsService.Current.Channel; } catch { }
             try { language = LocalizationService.Current.CurrentLanguage; } catch { }
+            try { startupMs = Program.StartupStopwatch.ElapsedMilliseconds; } catch { }
+            try { logLevel = LoggingService.MinimumLevel.ToString(); } catch { }
+            try { logDirBytes = SumLogFileSizes(); } catch { }
+            try { buffered = LoggingService.EventBuffer.Count; } catch { }
+            try { pending = SettingsService.Current.PendingVersion ?? string.Empty; } catch { }
+            try { dbBytes = GetDatabaseFileSize(); } catch { }
             return new DiagnosticsStatus(
                 AppVersion: AppInfo.Current.Version,
                 Channel: channel,
@@ -64,11 +88,45 @@ public static class DiagnosticsService
                 IsPackaged: AppInfo.IsPackaged,
                 SentryEnabled: CrashReportingService.Current.IsEnabled,
                 LogFileCount: logCount,
-                LogDirectory: LogDirectoryPath);
+                LogDirectory: LogDirectoryPath,
+                StartupElapsedMs: startupMs,
+                LogLevel: logLevel,
+                LogDirectorySizeBytes: logDirBytes,
+                BufferedEventCount: buffered,
+                PendingUpdate: pending,
+                DatabaseSizeBytes: dbBytes);
         }
         catch
         {
-            return new DiagnosticsStatus("?", ChannelResolver.Stable, "System", "en-US", false, false, 0, "?");
+            return new DiagnosticsStatus("?", ChannelResolver.Stable, "System", "en-US", false, false, 0, "?", 0, "Debug", 0, 0, string.Empty, -1);
+        }
+    }
+
+    private static long SumLogFileSizes()
+    {
+        long total = 0;
+        foreach (var file in GetLogFiles())
+        {
+            try { total += new FileInfo(file).Length; } catch { }
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// SQLite file size in bytes, -1 when there is no database. Resolved by
+    /// convention (not via <c>DatabaseService</c>, which template scaffolds
+    /// may exclude) and guarded per file. Never throws.
+    /// </summary>
+    private static long GetDatabaseFileSize()
+    {
+        try
+        {
+            var path = Path.Combine(AppContext.BaseDirectory, "Data", "app.db");
+            return File.Exists(path) ? new FileInfo(path).Length : -1;
+        }
+        catch
+        {
+            return -1;
         }
     }
 
@@ -88,6 +146,91 @@ public static class DiagnosticsService
         {
             return Array.Empty<string>();
         }
+    }
+
+    /// <summary>A single in-memory log event for the live tail. Never null members.</summary>
+    public sealed record BufferedLogEvent(
+        DateTimeOffset Timestamp,
+        string Level,
+        string Message,
+        string? SourceContext,
+        bool HasException,
+        string? ExceptionText,
+        IReadOnlyDictionary<string, string> Properties)
+    {
+        /// <summary>Short clock time for list rows (invariant, parseable).</summary>
+        public string DisplayTime =>
+            Timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Newest buffered events (live tail source), capped at
+    /// <paramref name="maxEvents"/>. Empty when nothing is buffered or on
+    /// any error. Never throws.
+    /// </summary>
+    public static IReadOnlyList<BufferedLogEvent> GetBufferedEvents(int maxEvents = 200)
+    {
+        try
+        {
+            if (maxEvents <= 0)
+                return Array.Empty<BufferedLogEvent>();
+            var result = new List<BufferedLogEvent>(Math.Min(maxEvents, 256));
+            foreach (var e in LoggingService.EventBuffer.SnapshotNewestFirst())
+            {
+                if (result.Count >= maxEvents)
+                    break;
+                result.Add(MapBufferedEvent(e));
+            }
+            return result;
+        }
+        catch
+        {
+            return Array.Empty<BufferedLogEvent>();
+        }
+    }
+
+    private static BufferedLogEvent MapBufferedEvent(LogEvent e)
+    {
+        try
+        {
+            string message;
+            try { message = e.RenderMessage(CultureInfo.InvariantCulture); }
+            catch { message = e.MessageTemplate.Text; }
+            string? source = null;
+            string? exceptionText = null;
+            var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                foreach (var kv in e.Properties)
+                {
+                    try { properties[kv.Key] = Truncate(kv.Value.ToString(), 500); } catch { }
+                }
+                if (e.Properties.TryGetValue("SourceContext", out var v))
+                    source = v.ToString().Trim('"');
+            }
+            catch { }
+            try
+            {
+                if (e.Exception is not null)
+                    exceptionText = Truncate(e.Exception.ToString(), 2000);
+            }
+            catch { }
+            return new BufferedLogEvent(
+                e.Timestamp, e.Level.ToString(), message ?? string.Empty,
+                source, e.Exception is not null, exceptionText, properties);
+        }
+        catch
+        {
+            return new BufferedLogEvent(DateTimeOffset.MinValue, "?", string.Empty, null, false, null,
+                new Dictionary<string, string>());
+        }
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+            return value ?? string.Empty;
+        return string.Concat(value.AsSpan(0, maxLength), "…");
     }
 
     /// <summary>
@@ -120,6 +263,88 @@ public static class DiagnosticsService
                 tail.Enqueue(line);
             }
             return string.Join(Environment.NewLine, tail);
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = true };
+
+    /// <summary>
+    /// Writes a diagnostic bundle zip: status snapshot, redacted settings
+    /// (see <see cref="SettingsBackupService.Capture"/>), the current
+    /// filtered view, and the full current log file. Returns false (never
+    /// throws) when anything cannot be written.
+    /// </summary>
+    public static bool CreateDiagnosticBundle(
+        string destinationPath,
+        string filteredText,
+        string? selectedLogFileName,
+        DiagnosticsStatus? status)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(destinationPath))
+                return false;
+            var dir = Path.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            var snapshot = status ?? GetStatus();
+            using var zip = new ZipArchive(
+                File.Open(destinationPath, FileMode.Create), ZipArchiveMode.Create);
+            WriteZipEntry(zip, "status.json",
+                JsonSerializer.Serialize(snapshot, s_jsonOptions));
+            WriteZipEntry(zip, "settings.json",
+                JsonSerializer.Serialize(SettingsBackupService.Capture(), s_jsonOptions));
+            WriteZipEntry(zip, "log-filtered.log", filteredText ?? string.Empty);
+            WriteZipEntry(zip, "log-current.log",
+                ReadSelectedLogFullText(selectedLogFileName));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            try { LoggingService.Log.Error(ex, "Diagnostic bundle export failed"); } catch { }
+            return false;
+        }
+    }
+
+    private static void WriteZipEntry(ZipArchive zip, string name, string content)
+    {
+        var entry = zip.CreateEntry(name);
+        using var writer = new StreamWriter(entry.Open());
+        writer.Write(content ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Full text of the selected log file (shared read, 8 MB cap).
+    /// Empty string when unresolvable or on any error. Never throws.
+    /// </summary>
+    internal static string ReadSelectedLogFullText(string? selectedLogFileName)
+    {
+        const int MaxChars = 8 * 1024 * 1024;
+        try
+        {
+            if (string.IsNullOrEmpty(selectedLogFileName))
+                return string.Empty;
+            var full = GetLogFiles()
+                .FirstOrDefault(p => Path.GetFileName(p) == selectedLogFileName);
+            if (full is null || !File.Exists(full))
+                return string.Empty;
+            using var stream = new FileStream(full, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+            char[] buffer = new char[64 * 1024];
+            var text = new StringBuilder();
+            int read;
+            while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                int room = MaxChars - text.Length;
+                if (room <= 0)
+                    break;
+                text.Append(buffer, 0, Math.Min(read, room));
+            }
+            return text.ToString();
         }
         catch
         {

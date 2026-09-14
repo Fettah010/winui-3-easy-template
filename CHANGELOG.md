@@ -4,6 +4,34 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+## [0.0.3-beta] — 2026-09-14
+
+Diagnostics overhaul (plan `docs/DIAGNOSTICS-PLAN.md`, Phases 0–4), a
+one-click dev loop, and a new `health` template flag.
+
+### Fixed
+
+- Diagnostics page logs not showing: view models now resolve before
+  `InitializeComponent` so compiled bindings evaluate against the real
+  instance (same latent fix in Settings/About).
+
+### Added
+
+- Diagnostics status: startup time, effective log level, log files
+  (count + size), buffered events, packaged state, pending update,
+  database size; Serilog `SelfLog`; startup-crash dialog with log path.
+- Structured pipeline: in-memory ring buffer, enrichment (context,
+  version, thread), runtime verbose toggle, optional JSON sidecar.
+- Diagnostics page UX: live tail with pause-on-scroll, source/exception/
+  regex filters, event detail flyout, save-view + bundle-zip export,
+  virtualized list.
+- Metrics, startup traces, Sentry breadcrumbs + status context, explicit
+  crash-report opt-in, opt-in Windows Event Log sink.
+- `health` template flag (`--health false` drops the diagnostics surface;
+  pipeline stays), `nodiag` matrix combo, `docs/diagnostics.md` guide.
+- `DevTem-WinUI 3 (Dev)` desktop shortcut: build-if-needed + launch,
+  no terminal typing.
+
 ## [0.0.2-beta] — 2026-09-14
 
 Profile-aware template documentation, feature composition, reusable page

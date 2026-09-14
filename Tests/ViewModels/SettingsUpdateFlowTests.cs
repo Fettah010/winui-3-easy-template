@@ -49,7 +49,7 @@ public class SettingsUpdateFlowTests
         public string? SavePath;
         public string? OpenPath;
 
-        public Task<string?> PickSaveFileAsync(string suggestedFileName) =>
+        public Task<string?> PickSaveFileAsync(string suggestedFileName, string fileExtension = ".json") =>
             Task.FromResult(SavePath);
 
         public Task<string?> PickOpenFileAsync() =>

@@ -64,7 +64,49 @@
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         TextWrapping="Wrap"
                         HorizontalAlignment="Right"
-                        TextAlignment="Right"/>
+                        TextAlignment="Right"
+                        IsTextSelectionEnabled="True"/>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=DiagnosticsVerbose}"
+                    Description="{loc:Loc Key=DiagnosticsVerboseDesc}">
+                    <ToggleSwitch
+                        x:Name="VerboseToggle"
+                        AutomationProperties.AutomationId="DiagnosticsVerboseToggle"
+                        IsOn="{x:Bind ViewModel.VerboseLogging, Mode=TwoWay}"
+                        HorizontalAlignment="Right"/>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=DiagnosticsCrashReports}"
+                    Description="{loc:Loc Key=DiagnosticsCrashReportsDesc}">
+                    <ToggleSwitch
+                        x:Name="CrashReportsToggle"
+                        AutomationProperties.AutomationId="DiagnosticsCrashReportsToggle"
+                        IsOn="{x:Bind ViewModel.CrashReportingEnabled, Mode=TwoWay}"
+                        HorizontalAlignment="Right"/>
+                </ctk:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="8" Margin="0,8,0,0">
+                <TextBlock
+                    Text="{loc:Loc Key=DiagnosticsMetrics}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=DiagnosticsMetrics}">
+                    <TextBlock
+                        x:Name="MetricsText"
+                        AutomationProperties.AutomationId="DiagnosticsMetricsText"
+                        Style="{ThemeResource BodyTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap"
+                        HorizontalAlignment="Right"
+                        TextAlignment="Right"
+                        IsTextSelectionEnabled="True"/>
                 </ctk:SettingsCard>
             </StackPanel>
 
@@ -75,8 +117,20 @@
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
+                <ctk:SettingsCard>
+                    <ctk:Segmented
+                        x:Name="ViewSegment"
+                        AutomationProperties.AutomationId="DiagnosticsViewSegment"
+                        SelectedIndex="{x:Bind ViewModel.SelectedViewIndex, Mode=TwoWay}"
+                        HorizontalAlignment="Right">
+                        <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewFile}"/>
+                        <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewLive}"/>
+                    </ctk:Segmented>
+                </ctk:SettingsCard>
+
                 <ctk:SettingsCard
-                    Header="{loc:Loc Key=DiagnosticsLogs}">
+                    Header="{loc:Loc Key=DiagnosticsLogs}"
+                    Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
                     <!-- WrapPanel (not StackPanel): longer translations wrap
                          instead of clipping on narrow windows. -->
                     <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
@@ -98,6 +152,31 @@
                     </ctrl:WrapPanel>
                 </ctk:SettingsCard>
 
+                <!-- Live toolbar: source filter + exception/regex toggles. -->
+                <ctk:SettingsCard
+                    Visibility="{x:Bind ViewModel.LiveViewVisibility, Mode=OneWay}">
+                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Stretch">
+                        <TextBox
+                            x:Name="SourceBox"
+                            AutomationProperties.AutomationId="DiagnosticsSourceBox"
+                            PlaceholderText="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
+                            Text="{x:Bind ViewModel.LiveSourceFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            MinWidth="180"/>
+                        <CheckBox
+                            x:Name="ExceptionsCheck"
+                            AutomationProperties.AutomationId="DiagnosticsExceptionsCheck"
+                            Content="{loc:Loc Key=DiagnosticsExceptionsOnly}"
+                            IsChecked="{x:Bind ViewModel.ExceptionsOnly, Mode=TwoWay}"
+                            VerticalAlignment="Center"/>
+                        <CheckBox
+                            x:Name="RegexCheck"
+                            AutomationProperties.AutomationId="DiagnosticsRegexCheck"
+                            Content="{loc:Loc Key=DiagnosticsUseRegex}"
+                            IsChecked="{x:Bind ViewModel.UseRegex, Mode=TwoWay}"
+                            VerticalAlignment="Center"/>
+                    </ctrl:WrapPanel>
+                </ctk:SettingsCard>
+
                 <!-- Filter row: search + level + copy/clear. Plain card so the
                      viewer below stays the visual focus. -->
                 <ctk:SettingsCard>
@@ -112,6 +191,7 @@
                             x:Name="LevelComboBox"
                             AutomationProperties.AutomationId="DiagnosticsLevelCombo"
                             SelectedIndex="{x:Bind ViewModel.SelectedLevelIndex, Mode=TwoWay}"
+                            Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}"
                             MinWidth="140">
                             <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelAll}"/>
                             <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelDebug}"/>
@@ -142,7 +222,8 @@
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Padding="12">
+                    Padding="12"
+                    Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
                     <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                         <Grid>
                             <TextBlock
@@ -166,6 +247,73 @@
                         </Grid>
                     </ScrollViewer>
                 </Border>
+
+                <!-- Live view: virtualized event list fed by the ring buffer. -->
+                <StackPanel
+                    Spacing="8"
+                    Visibility="{x:Bind ViewModel.LiveViewVisibility, Mode=OneWay}">
+                    <Button
+                        x:Name="NewEventsButton"
+                        AutomationProperties.AutomationId="DiagnosticsNewEventsButton"
+                        HorizontalAlignment="Right"
+                        Click="NewEventsButton_Click"
+                        Visibility="Collapsed"/>
+                    <TextBlock
+                        x:Name="LiveEmptyText"
+                        AutomationProperties.AutomationId="DiagnosticsLiveEmptyText"
+                        Style="{ThemeResource BodyTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        TextWrapping="Wrap"
+                        Visibility="Collapsed"/>
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12">
+                        <ListView
+                            x:Name="LiveList"
+                            AutomationProperties.AutomationId="DiagnosticsLiveList"
+                            ItemsSource="{x:Bind ViewModel.LiveEvents, Mode=OneWay}"
+                            SelectionMode="None"
+                            IsItemClickEnabled="True"
+                            ItemClick="LiveList_ItemClick"
+                            MaxHeight="320"
+                            FontFamily="Consolas"
+                            FontSize="12">
+                            <ListView.ItemTemplate>
+                                <!-- Classic Binding (not x:Bind): the item type
+                                     is nested in DiagnosticsService, which
+                                     compiled bindings cannot name. -->
+                                <DataTemplate>
+                                    <StackPanel Spacing="2" Padding="0,4">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding DisplayTime}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                            <TextBlock Text="{Binding Level}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding SourceContext}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Message}" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Border>
+                </StackPanel>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=DiagnosticsExport}">
+                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
+                        <Button
+                            AutomationProperties.AutomationId="DiagnosticsSaveViewButton"
+                            Content="{loc:Loc Key=DiagnosticsSaveView}"
+                            Click="SaveViewButton_Click"/>
+                        <Button
+                            AutomationProperties.AutomationId="DiagnosticsExportBundleButton"
+                            Content="{loc:Loc Key=DiagnosticsExportBundle}"
+                            Click="ExportBundleButton_Click"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                    </ctrl:WrapPanel>
+                </ctk:SettingsCard>
             </StackPanel>
 
         </StackPanel>

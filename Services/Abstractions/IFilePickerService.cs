@@ -9,7 +9,7 @@ namespace DevTemWinUi3.Services;
 /// </summary>
 public interface IFilePickerService
 {
-    Task<string?> PickSaveFileAsync(string suggestedFileName);
+    Task<string?> PickSaveFileAsync(string suggestedFileName, string fileExtension = ".json");
 
     Task<string?> PickOpenFileAsync();
 }

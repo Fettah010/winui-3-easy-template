@@ -25,14 +25,25 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Startup trace (spans are no-ops without a listener) + phase
+        // timings for the diagnostics page (work with no listener at all).
+        using var launchSpan = DevTemWinUi3.Services.Diagnostics.AppTrace.StartStartup();
+
         // Show splash screen immediately (it reports real init phases below)
         _splash = new SplashScreen();
         _splash.Activate();
         LoggingService.Log.Information(
             "Splash shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
+        DevTemWinUi3.Services.Diagnostics.AppMetrics.RecordStartupPhase(
+            "splash", Program.StartupStopwatch.ElapsedMilliseconds);
 
         // Initialize services while splash is visible
-        await InitializeServicesAsync();
+        using (DevTemWinUi3.Services.Diagnostics.AppTrace.StartPhase("services"))
+        {
+            await InitializeServicesAsync();
+        }
+        DevTemWinUi3.Services.Diagnostics.AppMetrics.RecordStartupPhase(
+            "services", Program.StartupStopwatch.ElapsedMilliseconds);
 
         // Create main window (hidden initially)
         _mainWindow = new MainWindow();
@@ -40,9 +51,14 @@ public partial class App : Application
         _splash?.ReportProgress(0.85, LocalizationService.Current.GetString("SplashPreparingWindow"));
 
         // Animate transition: splash fades out, main window fades in
-        await TransitionToMainWindow();
+        using (DevTemWinUi3.Services.Diagnostics.AppTrace.StartPhase("window"))
+        {
+            await TransitionToMainWindow();
+        }
         LoggingService.Log.Information(
             "Main window shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
+        DevTemWinUi3.Services.Diagnostics.AppMetrics.RecordStartupPhase(
+            "window", Program.StartupStopwatch.ElapsedMilliseconds);
 
         // Deep link that started this process (if any) wins over the home page.
         HandlePendingProtocolUri();
