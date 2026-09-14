@@ -4,7 +4,7 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
-## [Unreleased]
+## [0.0.4-beta] — 2026-09-14
 
 Template flexibility overhaul (plan `docs/FLEXIBILITY-PLAN.md`,
 Phases 0–4): vendor lock-ins become scaffold-time choices with smooth
