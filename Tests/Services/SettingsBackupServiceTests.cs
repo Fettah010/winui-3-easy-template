@@ -27,12 +27,16 @@ public class SettingsBackupServiceTests
     [TestMethod]
     public void ExportImport_RoundTripsPreferences()
     {
+        // English-only scaffolds have a single language: round-trip it
+        // instead of Spanish/French (the persistence wiring is identical).
+        string first = LocalizationService.AvailableLanguages.Count > 1 ? "es-ES" : "en-US";
+        string second = LocalizationService.AvailableLanguages.Count > 1 ? "fr-FR" : "en-US";
         var settings = SettingsService.Current;
         settings.Theme = "Dark";
         settings.Channel = ChannelResolver.Beta;
         settings.MinimizeToTray = false;
         settings.AutoCheck = false;
-        LocalizationService.Current.SetLanguage("es-ES");
+        LocalizationService.Current.SetLanguage(first);
 
         var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
         try
@@ -44,14 +48,14 @@ public class SettingsBackupServiceTests
             settings.Channel = ChannelResolver.Stable;
             settings.MinimizeToTray = true;
             settings.AutoCheck = true;
-            LocalizationService.Current.SetLanguage("fr-FR");
+            LocalizationService.Current.SetLanguage(second);
 
             Assert.IsTrue(SettingsBackupService.ImportFromFile(path));
             Assert.AreEqual("Dark", settings.Theme);
             Assert.AreEqual(ChannelResolver.Beta, settings.Channel);
             Assert.IsFalse(settings.MinimizeToTray);
             Assert.IsFalse(settings.AutoCheck);
-            Assert.AreEqual("es-ES", LocalizationService.Current.CurrentLanguage);
+            Assert.AreEqual(first, LocalizationService.Current.CurrentLanguage);
         }
         finally
         {

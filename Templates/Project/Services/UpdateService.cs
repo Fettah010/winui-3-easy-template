@@ -96,7 +96,7 @@ public sealed class UpdateService : IUpdateService, IDisposable
                     options.ExplicitChannel = _channel;
 
                 var token = ResolveToken();
-                LoggingService.Log.Information(
+                AppLog.Information(
                     "Update source: {RepoUrl} (channel {Channel}, token {HasToken})",
                     GitHubRepoUrl, _channel, !string.IsNullOrWhiteSpace(token));
 
@@ -130,7 +130,7 @@ public sealed class UpdateService : IUpdateService, IDisposable
         _managerLock.Wait();
         try
         {
-            LoggingService.Log.Information("Update channel set to {Channel}", channel);
+            AppLog.Information("Update channel set to {Channel}", channel);
             _channel = channel;
             _manager = null; // rebuilt lazily with the new channel
         }

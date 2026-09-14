@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using Windows.Globalization;
 using DevTemWinUi3.Services.Localization;
-using Serilog;
 
 [assembly: InternalsVisibleTo("DevTemWinUi3.Tests")]
 
@@ -98,7 +97,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
                 if (!string.IsNullOrEmpty(lang) && _resources.ContainsKey(lang))
                     _currentLanguage = lang;
             }
-            Log.Information("Localization initialized. Language: {Language}", _currentLanguage);
+            AppLog.Information("Localization initialized. Language: {Language}", _currentLanguage);
         }
         catch
         {
@@ -148,7 +147,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
             catch { }
             try { LocalSettingsStore.Shared.Set(PersistKey, languageTag); }
             catch { }
-            Log.Information("Language changed to: {Language}", languageTag);
+            AppLog.Information("Language changed to: {Language}", languageTag);
             try { CrashReportingService.AddBreadcrumb("Language: " + languageTag, "settings"); } catch { }
             RaiseLanguageChanged();
         }
@@ -164,7 +163,7 @@ public sealed class LocalizationService : INotifyPropertyChanged
         catch { }
         try { LocalSettingsStore.Shared.Remove(PersistKey); }
         catch { }
-        Log.Information("Language reset to system default");
+        AppLog.Information("Language reset to system default");
         RaiseLanguageChanged();
     }
 

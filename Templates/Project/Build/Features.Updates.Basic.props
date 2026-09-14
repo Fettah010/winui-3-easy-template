@@ -1,0 +1,5 @@
+<Project>
+  <!-- Basic GitHub-releases checker. No packages: one HttpClient call per
+       check. This marker exists so the scaffold carries the same
+       Exists-guarded import shape as every other update backend. -->
+</Project>

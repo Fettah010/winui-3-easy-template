@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.Tests.Services;
 using DevTemWinUi3.ViewModels;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -124,12 +125,12 @@ public class DiagnosticsPageViewModelTests
         vm.VerboseLogging = true;
 
         Assert.IsTrue(SettingsService.Current.VerboseLogging);
-        Assert.AreEqual(Serilog.Events.LogEventLevel.Verbose, LoggingService.LevelSwitch.MinimumLevel);
+        Assert.AreEqual(LogLevel.Trace, LoggingService.MinimumLevel);
 
         vm.VerboseLogging = false;
 
         Assert.IsFalse(SettingsService.Current.VerboseLogging);
-        Assert.AreEqual(Serilog.Events.LogEventLevel.Debug, LoggingService.LevelSwitch.MinimumLevel);
+        Assert.AreEqual(LogLevel.Debug, LoggingService.MinimumLevel);
     }
 
     private sealed class FakePickers : IFilePickerService
@@ -172,7 +173,10 @@ public class DiagnosticsPageViewModelTests
 
         vm.SelectedViewIndex = DiagnosticsPageViewModel.ViewFile;
 
-        Assert.AreEqual(Visibility.Visible, vm.FileViewVisibility);
+        // Backends without a file sink (mel, none) keep the file view
+        // hidden: there is nothing file-backed to show.
+        var expectedFile = LoggingService.HasFileSink ? Visibility.Visible : Visibility.Collapsed;
+        Assert.AreEqual(expectedFile, vm.FileViewVisibility);
         Assert.AreEqual(Visibility.Collapsed, vm.LiveViewVisibility);
     }
 
@@ -198,7 +202,7 @@ public class DiagnosticsPageViewModelTests
         string tag = UniqueSource("Exc");
         LoggingService.EventBuffer.Emit(TestEvents.Make("fine", tag));
         LoggingService.EventBuffer.Emit(TestEvents.Make("broken", tag,
-            Serilog.Events.LogEventLevel.Error, new InvalidOperationException("x")));
+            LogLevel.Error, new InvalidOperationException("x")));
         var vm = new DiagnosticsPageViewModel();
         vm.SelectedViewIndex = DiagnosticsPageViewModel.ViewLive;
         vm.LiveSourceFilter = tag;

@@ -3,14 +3,27 @@
   "template": "devtem-winui",
   "features": {
     "tray": { "default": true, "dependsOn": [], "files": ["Services/SystemTrayService.cs", "Services/DesktopToastService.cs", "Tests/Services/DesktopToastServiceTests.cs"] },
-    "updates": { "default": true, "dependsOn": [], "files": ["Services/UpdateService.cs", "Services/BackgroundUpdateService.cs", "Build/Features.Updates.props", ".github/workflows/release.yml"] },
+    "updates": { "default": "velopack", "dependsOn": [], "files": ["Services/BackgroundUpdateService.cs"], "values": {
+      "velopack": { "files": ["Services/UpdateService.cs", "Build/Features.Updates.Velopack.props", "Tests/Services/UpdateServiceTests.cs", "Tests/Services/BackgroundUpdateServiceTests.cs", ".github/workflows/release.yml", "Scripts/build-and-release.ps1", "Scripts/local-smoke-test.ps1", "Scripts/upload-github.ps1", "docs/feature-guides/updates-velopack.md"] },
+      "basic": { "files": ["Services/BasicGithubUpdateService.cs", "Build/Features.Updates.Basic.props", "Tests/Services/BasicGithubUpdateServiceTests.cs", "docs/feature-guides/updates-basic.md"] },
+      "none": { "files": [] }
+    } },
     "database": { "default": true, "dependsOn": [], "files": ["Services/DatabaseService.cs", "Services/DatabaseInitializer.cs", "Build/Features.Database.props"] },
     "http": { "default": true, "dependsOn": [], "files": ["Services/ApiService.cs", "Build/Features.Http.props", "Tests/Services/ApiServiceTests.cs"] },
-    "health": { "default": true, "dependsOn": [], "files": ["Pages/DiagnosticsPage.xaml", "Pages/DiagnosticsPage.xaml.cs", "ViewModels/DiagnosticsPageViewModel.cs", "Services/Native/CrashDialogNative.cs", "Tests/ViewModels/DiagnosticsPageViewModelTests.cs"] }
+    "health": { "default": true, "dependsOn": [], "files": ["Pages/DiagnosticsPage.xaml", "Pages/DiagnosticsPage.xaml.cs", "ViewModels/DiagnosticsPageViewModel.cs", "Services/Native/CrashDialogNative.cs", "Tests/ViewModels/DiagnosticsPageViewModelTests.cs"] },
+    "crash": { "default": true, "dependsOn": [], "files": ["Services/SentryCrashReporter.cs", "Build/Features.Crash.props"] },
+    "localization": { "default": true, "dependsOn": [], "files": ["Services/Localization/EsStrings.cs", "Services/Localization/FrStrings.cs", "Tests/Services/LocalizationCoverageTests.cs", "Tests/Services/LocalizationServiceTests.cs"] },
+    "tests": { "default": true, "dependsOn": [], "files": [] },
+    "logging": { "default": "serilog", "dependsOn": [], "files": ["Services/AppLog.cs", "Services/LoggingService.cs", "Services/Diagnostics/InMemoryLogSink.cs", "Services/Diagnostics/InMemoryLogSinkLoggerProvider.cs", "Services/Diagnostics/LogEntry.cs"], "values": {
+      "serilog": { "files": ["Services/Diagnostics/SerilogLogEntrySink.cs", "Services/Diagnostics/EventLogSink.cs", "Services/Diagnostics/ThreadIdEnricher.cs", "Build/Features.Logging.props", "Build/Features.Logging.Serilog.props", "docs/feature-guides/logging-serilog.md"] },
+      "mel": { "files": ["Services/Diagnostics/EventLogLoggerProvider.cs", "Build/Features.Logging.props", "Build/Features.Logging.Mel.props", "docs/feature-guides/logging-mel.md"] },
+      "none": { "files": [] }
+    } }
   },
   "rules": [
     "database and http are independent",
     "disabled feature files and package references must be absent",
-    "feature flags are rendered into Services/AppFeatures.cs"
+    "feature flags are rendered into Services/AppFeatures.cs",
+    "updates carries a value (velopack, basic, none); per-value file lists live under features.updates.values"
   ]
 }

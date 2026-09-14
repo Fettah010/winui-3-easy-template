@@ -21,7 +21,7 @@ public static class DatabaseInitializer
         {
             // DatabaseService.InitializeAsync is idempotent; a page that needs
             // the DB earlier triggers init itself, so this is best-effort.
-            LoggingService.Log.Error(ex, "Deferred database init failed");
+            AppLog.Error(ex, "Deferred database init failed");
         }
     }
 }

@@ -1,7 +1,9 @@
 ## DevTem-WinUI 3
 
 A modern **Windows 11** app built with **WinUI 3** (.NET 10) and shipped with
-**Velopack** auto-updates over **GitHub Releases**. It also ships with a
+auto-updates over **GitHub Releases** (**Velopack** by default; `--updates
+basic` for a zero-dependency checker, `--updates none` to drop updating).
+It also ships with a
 ready-made **logging system** (Serilog), **dependency injection**,
 optional **SQLite database**, and optional **typed HTTP client**, so it works
 as a complete starting template for WinUI 3 apps.
@@ -13,7 +15,7 @@ guides are not generated.
 ### Tech stack
 
 - .NET 10 · WinUI 3 / Microsoft.WindowsAppSDK 1.8
-- Velopack 1.2 — installer + delta auto-updates (updates feature)
+- Velopack 1.2 — installer + delta auto-updates (`--updates velopack`, the default)
 - Serilog 4 — console + rolling file logging
 - Sentry 6 — crash reporting (opt-in via DSN, off by default)
 - Microsoft.Extensions.DependencyInjection — IoC container
@@ -41,10 +43,10 @@ feature flags when needed:
 
 ```powershell
 # Minimal: shell, settings, localization and logging only
-dotnet new devtem-winui -n MyApp --tray false --updates false --database false --http false --health false --attribution false
+dotnet new devtem-winui -n MyApp --tray false --updates none --database false --http false --health false --logging none --crash false --localization false --tests false --attribution false
 
 # Desktop: tray and notifications, without distribution services
-dotnet new devtem-winui -n MyApp --updates false --database false --http false
+dotnet new devtem-winui -n MyApp --updates none --database false --http false
 
 # Production: all optional services enabled (the default)
 dotnet new devtem-winui -n MyApp
@@ -53,11 +55,16 @@ dotnet new devtem-winui -n MyApp
 These are documented presets rather than a separate `--profile` parameter;
 explicit feature flags remain the authoritative customization surface.
 
-#### Auto-updates (Velopack) — updates feature
+#### Auto-updates — updates choice (`velopack`/`basic`/`none`)
 
 The app checks GitHub Releases on startup. When a new version is found, it
 downloads with a live progress bar and prompts the user to restart once the
 download finishes, then applies the update and restarts smoothly.
+
+- `velopack` (default): full installer + delta downloads + release pipeline.
+- `basic`: zero-dependency checker — downloads the release's Setup `.exe`
+  and launches it. No SDK, no pipeline; attach the `.exe` yourself.
+- `none`: no update code at all.
 
 ```powershell
 # Tag-based release
@@ -76,30 +83,32 @@ Two complementary channels:
   notifications via the Windows App SDK. Used when the app minimizes to
   the system tray; clicking the toast reopens the app.
 
-#### Logging (Serilog)
+#### Logging — logging choice (`serilog`/`mel`/`none`)
 
 ```csharp
 using DevTemWinUi3.Services;
 
-LoggingService.Log.Debug("Debug message");
-LoggingService.Log.Information("User {UserId} logged in", userId);
-LoggingService.Log.Error(ex, "Something failed");
+AppLog.Debug("Debug message");
+AppLog.Information("User {UserId} logged in", userId);
+AppLog.Error(ex, "Something failed");
 ```
 
-Crash reporting is opt-in. Set `SentryDsn` in
-`Services/Helpers/AppMetadata.cs` to enable it; `SentryEnvironment` and
-`SentryRelease` optionally override the derived environment and assembly
-version. Empty values keep the default beta/production and version behavior.
+App code logs through the `AppLog` facade, so call sites are identical on
+every backend:
 
-Logs go to the debugger console and to `Logs/applog-YYYYMMDD.log` next to the
-executable (daily rolling, 14 days kept).
+- `serilog` (default): debugger console + daily-rolling files
+  (`Logs/applog-YYYYMMDD.log`, 14 days kept).
+- `mel`: debugger + in-app buffer only — no log files.
+- `none`: no logging packages; the in-app buffer stays only when the
+  diagnostics page is on.
 
-#### Crash reporting (Sentry)
+#### Crash reporting (Sentry) — crash feature (on by default)
 
 Unhandled exceptions (app-domain, task pool, UI thread) are logged locally
 and, when a DSN is configured, reported to Sentry with release + channel
 tags. Disabled by default — paste a DSN into `AppMetadata.SentryDsn` to
-enable. Queued reports flush on clean exit.
+enable. `SentryEnvironment` and `SentryRelease` optionally override the
+derived environment and assembly version. Queued reports flush on clean exit.
 
 #### Dependency Injection
 
@@ -142,7 +151,7 @@ var result = await api.PostAsync<CreateUserRequest, CreateUserResponse>("/users"
 
 Uses `IHttpClientFactory` for proper lifecycle management. No socket exhaustion.
 
-#### Localization
+#### Localization — full 3-language set (English-only with `--localization false`)
 
 ```csharp
 // Get localized string
@@ -159,9 +168,14 @@ in Settings — no restart needed. The choice is persisted across launches.
 All UI strings are managed through `LocalizationService` using a
 dictionary-based approach for reliable unpackaged app support.
 
-### Releases — updates feature
+Scaffolded English-only (`--localization false`), only `en-US` exists and
+the picker is hidden; `Scripts/add-page.ps1` targets 3-language scaffolds
+(it inserts the new page's strings into all three dictionaries).
 
-The app is unpackaged (`WindowsPackageType=None`) and updated via Velopack.
+### Releases — `--updates velopack` scaffolds only
+
+The app is unpackaged (`WindowsPackageType=None`) and, with the default
+updater, updated via Velopack.
 Publishing is automated with **GitHub Actions**: the simplest flow is to push a
 version tag — the pipeline builds, packs deltas and releases it to GitHub
 Releases, and your users get the update in-app.
@@ -197,7 +211,8 @@ Pages/
 Services/
   AppInfo.cs               # Version helpers
   LoggingService.cs        # Serilog setup
-  UpdateService.cs         # Velopack UpdateManager wrapper (updates feature)
+  UpdateService.cs         # Velopack UpdateManager wrapper (--updates velopack)
+  BasicGithubUpdateService.cs # GitHub-releases checker (--updates basic)
   SettingsService.cs       # Persisted user preferences
   ResponsiveLayout.cs      # Breakpoints + DPI math (min size, compact pane)
   DesktopToastService.cs   # OS Action Center toasts (tray feature)
@@ -209,7 +224,7 @@ Services/
   LocalizationService.cs   # Dictionary-based i18n (en-US, es-ES, fr-FR)
   ServiceLocator.cs        # Dependency injection container
 Tests/
-  Services/                # Unit tests (requires app runtime for DI tests)
+  Services/                # Unit tests (tests feature; requires app runtime for DI tests)
   Controls/                # Layout math tests
 Scripts/
   build-and-release.ps1    # publish + pack + upload (used by CI too) (updates feature)

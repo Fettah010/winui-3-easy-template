@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using DevTemWinUi3.Controls;
-using Serilog;
 
 namespace DevTemWinUi3.Services;
 
@@ -47,7 +46,7 @@ public sealed class NotificationService
     public void Initialize(Panel host)
     {
         _host = host;
-        Log.Information("Notification service initialized");
+        AppLog.Information("Notification service initialized");
     }
 
     public void Info(string title, string message, int durationMs = 4000)

@@ -3,7 +3,6 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
-using Serilog;
 
 namespace DevTemWinUi3.Services;
 
@@ -50,11 +49,11 @@ public sealed class DatabaseService : IDisposable
                     UpdatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )");
 
-            Log.Information("Database initialized: {Path}", DatabasePath);
+            AppLog.Information("Database initialized: {Path}", DatabasePath);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to initialize database");
+            AppLog.Error(ex, "Failed to initialize database");
         }
     }
 

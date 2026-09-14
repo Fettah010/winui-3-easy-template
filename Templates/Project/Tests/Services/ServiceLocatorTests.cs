@@ -76,8 +76,13 @@ public class ServiceLocatorTests
     public void Singletons_ResolveToProcessInstances()
     {
         ServiceLocator.Initialize();
-#if (updates)
+#if (updates == 'velopack')
         Assert.AreSame(UpdateService.Current, ServiceLocator.GetRequiredService<UpdateService>());
+        Assert.AreSame(UpdateService.Current, ServiceLocator.GetRequiredService<IUpdateService>());
+#endif
+#if (updates == 'basic')
+        Assert.AreSame(BasicGithubUpdateService.Current, ServiceLocator.GetRequiredService<BasicGithubUpdateService>());
+        Assert.AreSame(BasicGithubUpdateService.Current, ServiceLocator.GetRequiredService<IUpdateService>());
 #endif
         Assert.AreSame(NavigationService.Current, ServiceLocator.GetRequiredService<NavigationService>());
         Assert.AreSame(ThemeService.Current, ServiceLocator.GetRequiredService<ThemeService>());

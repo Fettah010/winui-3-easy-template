@@ -61,6 +61,8 @@ public class DesktopToastServiceTests
         }
     }
 
+    // Translation assertions need the full 3-language scaffold.
+#if (localization)
     [TestMethod]
     public void ToastStrings_AreTranslated()
     {
@@ -78,4 +80,5 @@ public class DesktopToastServiceTests
             loc.SetLanguage("en-US");
         }
     }
+#endif
 }

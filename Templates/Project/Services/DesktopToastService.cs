@@ -1,7 +1,6 @@
 using System;
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
-using Serilog;
 
 namespace DevTemWinUi3.Services;
 
@@ -39,12 +38,12 @@ public sealed class DesktopToastService
             manager.NotificationInvoked += OnNotificationInvoked;
             manager.Register();
             IsAvailable = true;
-            Log.Information("Desktop toasts registered");
+            AppLog.Information("Desktop toasts registered");
         }
         catch (Exception ex)
         {
             IsAvailable = false;
-            Log.Warning(ex, "Desktop toasts unavailable, using in-app fallback");
+            AppLog.Warning(ex, "Desktop toasts unavailable, using in-app fallback");
         }
     }
 
@@ -80,7 +79,7 @@ public sealed class DesktopToastService
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Desktop toast '{Tag}' failed, using in-app fallback", tag);
+            AppLog.Warning(ex, "Desktop toast '{Tag}' failed, using in-app fallback", tag);
             return false;
         }
     }
@@ -106,7 +105,7 @@ public sealed class DesktopToastService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Toast activation handling failed");
+            AppLog.Error(ex, "Toast activation handling failed");
         }
     }
 }

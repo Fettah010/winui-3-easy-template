@@ -1,25 +1,39 @@
 using System;
 using System.Collections.Generic;
-using DevTemWinUi3.Services.Diagnostics;
-using Sentry;
 using DevTemWinUi3.Services.Configuration;
+using DevTemWinUi3.Services.Diagnostics;
 
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Sentry crash reporting, gated by <see cref="AppMetadata.SentryDsn"/>.
-/// Empty DSN (the default) disables it entirely: <see cref="Initialize"/>
-/// returns without touching the network and every other entry point is a
-/// safe no-op, so unconfigured apps and unit tests never notice it.
+/// Crash-backend contract. Implemented by <see cref="SentryCrashReporter"/>
+/// (scaffolded only with the crash feature); the veneer below programs
+/// against this so call sites never touch SDK types.
+/// </summary>
+internal interface ICrashReporter : IDisposable
+{
+    void Capture(Exception ex, string? context);
+
+    void Breadcrumb(string message, string category);
+}
+
+/// <summary>
+/// Crash-reporting seam: SDK-free veneer, so every call site compiles for
+/// every scaffold and degrades to a no-op when the crash feature is off.
+/// The Sentry SDK lives in <see cref="SentryCrashReporter"/> (scaffolded
+/// only with the crash feature). Gated by the opt-in setting plus
+/// <see cref="AppMetadata.SentryDsn"/>: empty DSN (the default) disables
+/// it entirely, so unconfigured apps and unit tests never notice it.
 /// </summary>
 public sealed class CrashReportingService
 {
     public static CrashReportingService Current { get; } = new();
-
     private CrashReportingService() { }
 
     private readonly object _lock = new();
-    private IDisposable? _sentry;
+#pragma warning disable CA1859 // Seam by design: the interface decouples call sites from the (scaffold-optional) Sentry backend.
+    private ICrashReporter? _reporter;
+#pragma warning restore CA1859
 
     /// <summary>
     /// Whether reports are actually flowing (user opted in, DSN set, and
@@ -31,7 +45,7 @@ public sealed class CrashReportingService
         {
             lock (_lock)
             {
-                if (_sentry is null)
+                if (_reporter is null)
                     return false;
                 try { return SettingsService.Current.CrashReportsEnabled; }
                 catch { return false; }
@@ -40,7 +54,7 @@ public sealed class CrashReportingService
     }
 
     /// <summary>
-    /// Starts Sentry when the user opted in and a DSN is configured.
+    /// Starts reporting when the user opted in and a DSN is configured.
     /// Idempotent and never throws. Call once at startup (Program.Run);
     /// call again after the opt-in toggle flips on.
     /// </summary>
@@ -50,7 +64,7 @@ public sealed class CrashReportingService
         {
             if (!SettingsService.Current.CrashReportsEnabled)
             {
-                LoggingService.Log.Information("Crash reporting disabled: user opted out");
+                AppLog.Information("Crash reporting disabled: user opted out");
                 return;
             }
         }
@@ -61,36 +75,31 @@ public sealed class CrashReportingService
         var dsn = DeploymentConfiguration.SentryDsn;
         if (string.IsNullOrWhiteSpace(dsn))
         {
-            LoggingService.Log.Information("Crash reporting disabled: no Sentry DSN configured");
+            AppLog.Information("Crash reporting disabled: no Sentry DSN configured");
             return;
         }
 
         lock (_lock)
         {
-            if (_sentry is not null)
+            if (_reporter is not null)
                 return;
             try
             {
-                _sentry = SentrySdk.Init(o =>
-                {
-                    o.Dsn = dsn;
-                    o.Release = string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryRelease)
-                        ? AppInfo.Current.Version
-                        : DeploymentConfiguration.SentryRelease;
-                    o.Environment = string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryEnvironment)
-                        ? (AppInfo.Current.IsBetaBuild ? "beta" : "production")
-                        : DeploymentConfiguration.SentryEnvironment;
-                    o.SendDefaultPii = false;
-                });
-                LoggingService.Log.Information("Crash reporting enabled (Sentry, {Environment})",
-                    string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryEnvironment)
-                        ? (AppInfo.Current.IsBetaBuild ? "beta" : "production")
-                        : DeploymentConfiguration.SentryEnvironment);
+                string release = string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryRelease)
+                    ? AppInfo.Current.Version
+                    : DeploymentConfiguration.SentryRelease;
+                string environment = string.IsNullOrWhiteSpace(DeploymentConfiguration.SentryEnvironment)
+                    ? (AppInfo.Current.IsBetaBuild ? "beta" : "production")
+                    : DeploymentConfiguration.SentryEnvironment;
+                _reporter = SentryCrashReporter.TryCreate(dsn, release, environment);
+                if (_reporter is null)
+                    return;
+                AppLog.Information("Crash reporting enabled (Sentry, {Environment})", environment);
             }
             catch (Exception ex)
             {
-                _sentry = null;
-                LoggingService.Log.Error(ex, "Crash reporting failed to initialize");
+                _reporter = null;
+                AppLog.Error(ex, "Crash reporting failed to initialize");
             }
         }
     }
@@ -110,16 +119,11 @@ public sealed class CrashReportingService
         {
             if (!IsEnabled)
                 return;
-            SentrySdk.CaptureException(ex, scope =>
-            {
-                if (!string.IsNullOrEmpty(context))
-                    scope.SetTag("context", context);
-                try { scope.Contexts["app-status"] = BuildStatusContext(); } catch { }
-            });
+            _reporter?.Capture(ex, context);
         }
         catch (Exception captureEx)
         {
-            LoggingService.Log.Error(captureEx, "Crash report capture failed");
+            AppLog.Error(captureEx, "Crash report capture failed");
         }
     }
 
@@ -134,7 +138,7 @@ public sealed class CrashReportingService
         {
             if (string.IsNullOrWhiteSpace(message) || !Current.IsEnabled)
                 return;
-            SentrySdk.AddBreadcrumb(message, category ?? "app");
+            Current._reporter?.Breadcrumb(message, category ?? "app");
         }
         catch { }
     }
@@ -160,8 +164,8 @@ public sealed class CrashReportingService
     }
 
     /// <summary>
-    /// Flushes and shuts Sentry down. Never throws. Called on clean exit so
-    /// queued reports go out; crash paths rely on best-effort delivery.
+    /// Flushes and shuts reporting down. Never throws. Called on clean exit
+    /// so queued reports go out; crash paths rely on best-effort delivery.
     /// </summary>
     public void Shutdown()
     {
@@ -169,10 +173,10 @@ public sealed class CrashReportingService
         {
             try
             {
-                _sentry?.Dispose();
+                _reporter?.Dispose();
             }
             catch { }
-            _sentry = null;
+            _reporter = null;
         }
     }
 }

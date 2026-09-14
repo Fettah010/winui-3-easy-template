@@ -40,7 +40,7 @@ dotnet new devtem-page -n Orders
 | --- | --- | --- | --- |
 | Official `dotnet new` WinUI blank | Learning WinUI basics | App shell, updates, tray, settings, diagnostics, release automation | Not a production starter |
 | Template Studio | Visual scaffolding | Opinionated desktop app starter, release workflow, ready-made working patterns | More wizard-driven, less code-first |
-| DevTem | Real-world desktop app starter | Some flexibility in favor of a working baseline | Opinionated by design |
+| DevTem | Real-world desktop app starter | Some flexibility in favor of a working baseline | Curated defaults; composable at scaffold time |
 
 DevTem is not trying to compete with the official blank app as a minimal "hello world." It is the production-ready WinUI 3 starter for the workloads that blank templates leave out on purpose.
 
@@ -49,13 +49,17 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 - WinUI 3 / Windows App SDK on .NET 10
 - Mica-based desktop shell with native title bar behavior
 - System tray support with single-instance activation
-- Velopack auto-update checks and installation flow
-- 3-language runtime localization (en-US, es-ES, fr-FR)
-- Serilog console + file logging
-- Optional Sentry crash reporting
-- SQLite data layer and typed HTTP client
+- Auto-updates (Velopack installer + deltas by default; zero-dependency checker or none at scaffold time)
+- 3-language runtime localization (en-US, es-ES, fr-FR; English-only at scaffold time)
+- Logging through one facade (Serilog console + file by default; MEL or none at scaffold time)
+- Optional Sentry crash reporting (DSN-gated; SDK droppable at scaffold time)
+- SQLite data layer and typed HTTP client (each droppable at scaffold time)
 - MVVM pattern with CommunityToolkit.Mvvm
 - GitHub Actions release pipeline and version tag flow
+
+Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
+app shows the all-on reference, `dotnet new devtem-winui --help` lists
+the flags, and `docs/FEATURES.md` records what each scaffold picked.
 
 ## Run this repo locally
 

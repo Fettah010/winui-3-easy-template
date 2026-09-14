@@ -80,7 +80,8 @@
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=DiagnosticsCrashReports}"
-                    Description="{loc:Loc Key=DiagnosticsCrashReportsDesc}">
+                    Description="{loc:Loc Key=DiagnosticsCrashReportsDesc}"
+                    Visibility="{x:Bind ViewModel.CrashReportingVisibility, Mode=OneWay}">
                     <ToggleSwitch
                         x:Name="CrashReportsToggle"
                         AutomationProperties.AutomationId="DiagnosticsCrashReportsToggle"

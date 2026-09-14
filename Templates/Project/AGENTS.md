@@ -18,11 +18,13 @@ It is a small starter app (a Home page + a Settings page) that demonstrates:
 
 - WinUI 3 / Windows App SDK on **.NET 10** (`net10.0-windows10.0.19041.0`)
 - Unpackaged app (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`)
-- **Velopack 1.2.0** auto-updates over **GitHub Releases** (updates feature)
-- **Serilog** logging (debugger console + rolling file, 14 days)
+- Auto-updates over **GitHub Releases** — **Velopack 1.2.0** by default
+  (`--updates basic` = zero-dependency checker, `--updates none` = dropped)
+- Logging through the `AppLog` facade — **Serilog** backend by default
+  (debugger console + rolling file, 14 days; `--logging mel|none`)
 - **CommunityToolkit.Mvvm** for MVVM pattern (ObservableProperty, RelayCommand)
 - **SettingsService** for persisted user preferences (theme, channel, etc.)
-- One-command release pipeline (local script + GitHub Actions, no PAT) (updates feature)
+- One-command release pipeline (local script + GitHub Actions, no PAT) (Velopack scaffolds)
 
 Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows.
 
@@ -48,11 +50,11 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
-| `Services/UpdateService.cs` | Velopack `UpdateManager` behind `IUpdateService` (holds the pending update; VMs/tests never touch Velopack types) (updates feature). |
+| `Services/UpdateService.cs` | Velopack `UpdateManager` behind `IUpdateService` (holds the pending update; VMs/tests never touch Velopack types). Sibling: `BasicGithubUpdateService` (zero-dependency checker). |
 | `Services/Abstractions/` | `IUpdateService`/`UpdateCheckResult`/`IFilePickerService` seams (VM testability). |
 | `Services/FilePickerService.cs` | WinRT save/open pickers with window association for unpackaged apps. |
-| `Services/LoggingService.cs` | Serilog setup; log file `Logs/applog-YYYYMMDD.log` next to the exe. |
-| `Services/CrashReportingService.cs` | Sentry (DSN-gated, off by default); hooks in `Program.cs` + `App.xaml.cs`. |
+| `Services/LoggingService.cs` | Logging backends (Serilog default; MEL or none per scaffold). App code logs via the `AppLog` facade; the file log exists on the Serilog backend only. |
+| `Services/CrashReportingService.cs` | Crash-reporting veneer over `ICrashReporter` (Sentry SDK in `SentryCrashReporter`, DSN-gated, off by default, droppable with `--crash false`); hooks in `Program.cs` + `App.xaml.cs`. |
 | `Services/Configuration/ProductConfiguration.cs` | Secret-free product/deployment defaults plus `DEVTEM_*` environment overrides. |
 | `Services/SettingsService.cs` | Persisted user preferences (theme, channel, etc.) via `LocalSettingsStore`. |
 | `Services/Helpers/AppInfo.cs` | Assembly-version accessors. |

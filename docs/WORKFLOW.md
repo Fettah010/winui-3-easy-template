@@ -7,8 +7,8 @@ that applies. Time costs are local-machine figures.
 
 | Tier | Commands | Cost | When |
 | --- | --- | --- | --- |
-| Fast | `dotnet build DevTemWinUi3.csproj -c Debug -p:Platform=x64` (0 warn/0 err) + `dotnet test Tests/` (currently 116/116) | ~1 min | Every change, no exceptions |
-| Matrix | `powershell -File Scripts/test-templates.ps1` (4 combos build 0/0 + tests) | ~10 min | Any `Templates/**` change (incl. mirror edits) |
+| Fast | `dotnet build DevTemWinUi3.csproj -c Debug -p:Platform=x64` (0 warn/0 err) + `dotnet test Tests/` (currently 196/196) | ~1 min | Every change, no exceptions |
+| Matrix | `powershell -File Scripts/test-templates.ps1` (15 combos build 0/0 + tests) | ~30 min | Any `Templates/**` change (incl. mirror edits) |
 | Pack | `powershell -File Scripts/build-msix.ps1 -DryRun` (staging valid) | ~3 min | Manifest, csproj, Assets changes |
 | Live UI | `dotnet test UI/…` 4/4 + screenshot in the summary | ~1 min | Any XAML / navigation / theme / Settings change |
 | Workflow | `pwsh` parse + logic test with sample values (pass + reject) | ~1 min | Any `.github/workflows` change (CI only runs on tag/push) |

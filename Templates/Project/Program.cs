@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Windows.ApplicationModel.Core;
-#if (updates)
+#if (updates == 'velopack')
 using Velopack;
 #endif
 using DevTemWinUi3.Services;
@@ -35,12 +35,12 @@ public static class Program
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
         {
             var ex = e.ExceptionObject as Exception;
-            LoggingService.Log.Fatal(ex, "Unhandled app-domain exception");
+            AppLog.Fatal(ex, "Unhandled app-domain exception");
             CrashReportingService.Current.CaptureException(ex, "app-domain");
         };
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
-            LoggingService.Log.Fatal(e.Exception, "Unobserved task exception");
+            AppLog.Fatal(e.Exception, "Unobserved task exception");
             CrashReportingService.Current.CaptureException(e.Exception, "unobserved-task");
             e.SetObserved();
         };
@@ -51,7 +51,7 @@ public static class Program
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Fatal(ex, "Application crashed during startup");
+            AppLog.Fatal(ex, "Application crashed during startup");
             CrashReportingService.Current.CaptureException(ex, "startup");
 #if (health)
             ShowStartupCrashDialog();
@@ -121,7 +121,7 @@ public static class Program
         // Single-instance enforcement
         if (!TryEnforceSingleInstance())
         {
-            LoggingService.Log.Information("Another instance is already running — signaling it and exiting");
+            AppLog.Information("Another instance is already running — signaling it and exiting");
             // A deep link aimed at a running app must not die with this
             // process: stash it where the first instance looks on activation.
             if (!string.IsNullOrWhiteSpace(PendingProtocolUri))
@@ -130,14 +130,14 @@ public static class Program
             return;
         }
 
-#if (updates)
+#if (updates == 'velopack')
         VelopackApp.Build()
-            .OnFirstRun(_ => LoggingService.Log.Information("First run after install"))
-            .OnRestarted(_ => LoggingService.Log.Information("Restarted after update"))
+            .OnFirstRun(_ => AppLog.Information("First run after install"))
+            .OnRestarted(_ => AppLog.Information("Restarted after update"))
             .Run();
 
 #endif
-        LoggingService.Log.Information("{AppName} starting", AppMetadata.AppName);
+        AppLog.Information("{AppName} starting", AppMetadata.AppName);
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Application.Start(p =>

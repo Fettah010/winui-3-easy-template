@@ -32,11 +32,14 @@ public sealed partial class SettingsPage : Page, INavigationAware
         LocalizationService.Current.LanguageChanged += OnLanguageChanged;
         RefreshDynamicLabels();
 
-        // Populate language combo box
+        // Populate language combo box. English-only scaffolds hide the
+        // picker: a single-item dropdown is noise, not a choice.
         foreach (var lang in LocalizationService.AvailableLanguages)
         {
             LanguageComboBox.Items.Add(lang);
         }
+        if (LocalizationService.AvailableLanguages.Count <= 1)
+            LanguageCard.Visibility = Visibility.Collapsed;
 
         SelectCurrentLanguage();
     }

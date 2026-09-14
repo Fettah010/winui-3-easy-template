@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using DevTemWinUi3.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DevTemWinUi3.Tests.Services;
@@ -145,7 +146,7 @@ public class DiagnosticsServiceTests
     {
         LoggingService.EventBuffer.Emit(TestEvents.Make("buffered-old", "Seed.Space"));
         LoggingService.EventBuffer.Emit(TestEvents.Make(
-            "buffered-new", "Seed.Space", Serilog.Events.LogEventLevel.Error,
+            "buffered-new", "Seed.Space", LogLevel.Error,
             new InvalidOperationException("boom")));
 
         var events = DiagnosticsService.GetBufferedEvents(50);

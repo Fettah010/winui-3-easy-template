@@ -1,7 +1,0 @@
-<Project>
-  <!-- Velopack auto-updates. Emitted only for scaffolds with the updates flag on.
-       Imported from the app csproj with an Exists guard. -->
-  <ItemGroup>
-    <PackageReference Include="Velopack" Version="1.2.0" />
-  </ItemGroup>
-</Project>

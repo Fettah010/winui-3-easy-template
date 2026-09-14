@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
-using Serilog;
 using static DevTemWinUi3.Services.Native.TrayNative;
 
 namespace DevTemWinUi3.Services;
@@ -71,11 +70,11 @@ public sealed class SystemTrayService : IDisposable
             }
 
             _isVisible = true;
-            Log.Information("System tray initialized");
+            AppLog.Information("System tray initialized");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to initialize system tray");
+            AppLog.Error(ex, "Failed to initialize system tray");
         }
     }
 
@@ -100,14 +99,14 @@ public sealed class SystemTrayService : IDisposable
             // it would strand the window with no way back. Ensure it first.
             EnsureTrayIcon();
             _mainWindow.AppWindow.Hide();
-            Log.Information("Window hidden to system tray");
+            AppLog.Information("Window hidden to system tray");
             // Tell the user where the app went; clicking the toast reopens it.
             // Falls back silently when OS toasts are unavailable.
             DesktopToastService.Current.TryShowMinimized();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to hide window to tray");
+            AppLog.Error(ex, "Failed to hide window to tray");
         }
     }
 
@@ -119,11 +118,11 @@ public sealed class SystemTrayService : IDisposable
         try
         {
             WindowActivator.ShowAndActivate(_mainWindow);
-            Log.Information("Window restored from tray");
+            AppLog.Information("Window restored from tray");
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to show window from tray");
+            AppLog.Error(ex, "Failed to show window from tray");
         }
     }
 
@@ -159,7 +158,7 @@ public sealed class SystemTrayService : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to refresh tray theme icon");
+            AppLog.Error(ex, "Failed to refresh tray theme icon");
         }
     }
 
@@ -219,14 +218,14 @@ public sealed class SystemTrayService : IDisposable
 
         if (!File.Exists(iconPath))
         {
-            Log.Warning("Tray icon not found at {Path}", iconPath);
+            AppLog.Warning("Tray icon not found at {Path}", iconPath);
             return;
         }
 
         _iconHandle = LoadImageW(IntPtr.Zero, iconPath, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
         if (_iconHandle == IntPtr.Zero)
         {
-            Log.Warning("Failed to load tray icon");
+            AppLog.Warning("Failed to load tray icon");
             return;
         }
 
@@ -280,7 +279,7 @@ public sealed class SystemTrayService : IDisposable
             {
                 RemoveTrayIcon();
                 CreateTrayIcon();
-                Log.Information("Taskbar recreated, tray icon restored");
+                AppLog.Information("Taskbar recreated, tray icon restored");
             }
             return IntPtr.Zero;
         }
@@ -373,7 +372,7 @@ public sealed class SystemTrayService : IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error exiting app from tray");
+            AppLog.Error(ex, "Error exiting app from tray");
         }
     }
 

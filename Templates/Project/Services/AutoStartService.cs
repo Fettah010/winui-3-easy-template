@@ -1,5 +1,4 @@
 using System;
-using Serilog;
 
 namespace DevTemWinUi3.Services;
 
@@ -42,17 +41,17 @@ public sealed class AutoStartService
             {
                 var exePath = Environment.ProcessPath ?? string.Empty;
                 key.SetValue(AppMetadata.AutoStartRegistryName, $"\"{exePath}\"");
-                Log.Information("Auto-start enabled");
+                AppLog.Information("Auto-start enabled");
             }
             else
             {
                 key.DeleteValue(AppMetadata.AutoStartRegistryName, false);
-                Log.Information("Auto-start disabled");
+                AppLog.Information("Auto-start disabled");
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Failed to set auto-start");
+            AppLog.Error(ex, "Failed to set auto-start");
         }
     }
 }

@@ -1,0 +1,8 @@
+<Project>
+  <!-- MEL backend: debugger output provider. The core MEL package stays a
+       direct reference (AppLog needs it in every scaffold). Emitted only
+       for scaffolds with the mel backend. Imported with an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+  </ItemGroup>
+</Project>

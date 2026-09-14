@@ -386,7 +386,7 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Show event detail failed");
+            AppLog.Error(ex, "Show event detail failed");
         }
     }
 
@@ -416,7 +416,7 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Copy logs failed");
+            AppLog.Error(ex, "Copy logs failed");
         }
     }
 
@@ -460,7 +460,7 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Open log folder failed");
+            AppLog.Error(ex, "Open log folder failed");
         }
     }
 }

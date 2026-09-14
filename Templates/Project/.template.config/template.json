@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional Velopack auto-updates, optional SQLite, HTTP and diagnostics, 3-language UI, persisted settings, Serilog, release tooling, and profile-aware documentation. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none), optional SQLite, HTTP, diagnostics, crash reporting, and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, release tooling, and profile-aware documentation. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,
@@ -87,11 +87,25 @@
     },
     "updates": {
       "type": "parameter",
-      "datatype": "bool",
-      "displayName": "Velopack auto-updates",
-      "defaultValue": "true",
+      "datatype": "choice",
+      "displayName": "Auto-updates",
+      "defaultValue": "velopack",
+      "choices": [
+        {
+          "choice": "velopack",
+          "description": "Velopack auto-updates: installer, delta downloads, release pipeline (default)."
+        },
+        {
+          "choice": "basic",
+          "description": "Zero-dependency GitHub-releases checker: notify + download a Setup .exe, no SDK."
+        },
+        {
+          "choice": "none",
+          "description": "No update code, scripts, or CI release job."
+        }
+      ],
       "replaces": "__UPDATES__",
-      "description": "Include Velopack auto-updates, channels and the release pipeline (--updates false to drop)."
+      "description": "Update mechanism: velopack (full), basic (checker only), or none (--updates basic)."
     },
     "database": {
       "type": "parameter",
@@ -117,6 +131,28 @@
       "replaces": "__HEALTH__",
       "description": "Include the in-app diagnostics page (status, log viewer, metrics) (--health false to drop)."
     },
+    "logging": {
+      "type": "parameter",
+      "datatype": "choice",
+      "displayName": "Logging backend",
+      "defaultValue": "serilog",
+      "choices": [
+        {
+          "choice": "serilog",
+          "description": "Serilog: debugger console + 14-day rolling files + JSON sidecar (default)."
+        },
+        {
+          "choice": "mel",
+          "description": "Microsoft.Extensions.Logging only: debugger + Event Log + in-app buffer. No log files."
+        },
+        {
+          "choice": "none",
+          "description": "No logging packages. The in-app buffer stays only when health is on."
+        }
+      ],
+      "replaces": "__LOGGING__",
+      "description": "Logging backend: serilog (files), mel (no files), or none (--logging mel)."
+    },
     "attribution": {
       "type": "parameter",
       "datatype": "bool",
@@ -124,6 +160,30 @@
       "defaultValue": "true",
       "replaces": "__ATTRIBUTION__",
       "description": "Keep DevTemAttribution.cs with a one-line source comment (--attribution false to omit)."
+    },
+    "crash": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "Crash reporting (Sentry)",
+      "defaultValue": "true",
+      "replaces": "__CRASH__",
+      "description": "Include Sentry crash reporting behind the veneer (DSN-gated, off until configured) (--crash false to drop the SDK)."
+    },
+    "localization": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "Three-language UI",
+      "defaultValue": "true",
+      "replaces": "__LOCALIZATION__",
+      "description": "Include Spanish and French dictionaries + the language picker (--localization false for English-only)."
+    },
+    "tests": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "MSTest suite",
+      "defaultValue": "true",
+      "replaces": "__TESTS__",
+      "description": "Include the MSTest suite sources (--tests false keeps an empty test project shell)."
     }
   },
   "sources": [
@@ -138,17 +198,56 @@
           ]
         },
         {
-          "condition": "(!updates)",
+          "condition": "(updates != 'velopack')",
           "exclude": [
             "Services/UpdateService.cs",
-            "Services/BackgroundUpdateService.cs",
-            "Build/Features.Updates.props",
+            "Build/Features.Updates.Velopack.props",
             "Tests/Services/UpdateServiceTests.cs",
             "Tests/Services/BackgroundUpdateServiceTests.cs",
             ".github/workflows/release.yml",
             "Scripts/build-and-release.ps1",
             "Scripts/local-smoke-test.ps1",
-            "Scripts/upload-github.ps1"
+            "Scripts/upload-github.ps1",
+            "docs/feature-guides/updates-velopack.md"
+          ]
+        },
+        {
+          "condition": "(updates != 'basic')",
+          "exclude": [
+            "Services/BasicGithubUpdateService.cs",
+            "Build/Features.Updates.Basic.props",
+            "Tests/Services/BasicGithubUpdateServiceTests.cs",
+            "docs/feature-guides/updates-basic.md"
+          ]
+        },
+        {
+          "condition": "(updates == 'none')",
+          "exclude": [
+            "Services/BackgroundUpdateService.cs"
+          ]
+        },
+        {
+          "condition": "(logging != 'serilog')",
+          "exclude": [
+            "Services/Diagnostics/SerilogLogEntrySink.cs",
+            "Services/Diagnostics/EventLogSink.cs",
+            "Services/Diagnostics/ThreadIdEnricher.cs",
+            "Build/Features.Logging.Serilog.props",
+            "docs/feature-guides/logging-serilog.md"
+          ]
+        },
+        {
+          "condition": "(logging != 'mel')",
+          "exclude": [
+            "Services/Diagnostics/EventLogLoggerProvider.cs",
+            "Build/Features.Logging.Mel.props",
+            "docs/feature-guides/logging-mel.md"
+          ]
+        },
+        {
+          "condition": "(logging == 'none')",
+          "exclude": [
+            "Build/Features.Logging.props"
           ]
         },
         {
@@ -186,15 +285,31 @@
           ]
         },
         {
-          "condition": "(!tray)",
+          "condition": "(!crash)",
           "exclude": [
-            "docs/feature-guides/tray.md"
+            "Services/SentryCrashReporter.cs",
+            "Build/Features.Crash.props"
           ]
         },
         {
-          "condition": "(!updates)",
+          "condition": "(!localization)",
           "exclude": [
-            "docs/feature-guides/updates.md"
+            "Services/Localization/EsStrings.cs",
+            "Services/Localization/FrStrings.cs",
+            "Tests/Services/LocalizationCoverageTests.cs",
+            "Tests/Services/LocalizationServiceTests.cs"
+          ]
+        },
+        {
+          "condition": "(!tests)",
+          "exclude": [
+            "Tests/**/*.cs"
+          ]
+        },
+        {
+          "condition": "(!tray)",
+          "exclude": [
+            "docs/feature-guides/tray.md"
           ]
         },
         {

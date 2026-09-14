@@ -81,20 +81,21 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Segmented" Version="8.2.251219" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
-    <PackageReference Include="Serilog" Version="4.4.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Sentry" Version="6.11.0" />
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.0" />
   </ItemGroup>
 
   <!-- Feature packages: each props file exists only when its feature was
        scaffolded (see Build/). Exists-guarded imports keep one static csproj
        for every flag combo — the template engine skips markers in csproj. -->
-  <Import Project="Build\Features.Updates.props" Condition="Exists('Build\Features.Updates.props')" />
+  <Import Project="Build\Features.Updates.Velopack.props" Condition="Exists('Build\Features.Updates.Velopack.props')" />
+  <Import Project="Build\Features.Updates.Basic.props" Condition="Exists('Build\Features.Updates.Basic.props')" />
+  <Import Project="Build\Features.Logging.Serilog.props" Condition="Exists('Build\Features.Logging.Serilog.props')" />
+  <Import Project="Build\Features.Logging.Mel.props" Condition="Exists('Build\Features.Logging.Mel.props')" />
   <Import Project="Build\Features.Database.props" Condition="Exists('Build\Features.Database.props')" />
   <Import Project="Build\Features.Http.props" Condition="Exists('Build\Features.Http.props')" />
+  <Import Project="Build\Features.Crash.props" Condition="Exists('Build\Features.Crash.props')" />
+  <Import Project="Build\Features.Logging.props" Condition="Exists('Build\Features.Logging.props')" />
 
 </Project>

@@ -53,9 +53,13 @@ public static class ServiceLocator
             services.AddSingleton<LocalizationService>(LocalizationService.Current);
             services.AddSingleton<AppInfo>(AppInfo.Current);
             services.AddSingleton<ThemeService>(ThemeService.Current);
-#if (updates)
+#if (updates == 'velopack')
             services.AddSingleton<UpdateService>(UpdateService.Current);
             services.AddSingleton<IUpdateService>(UpdateService.Current);
+#endif
+#if (updates == 'basic')
+            services.AddSingleton<BasicGithubUpdateService>(BasicGithubUpdateService.Current);
+            services.AddSingleton<IUpdateService>(BasicGithubUpdateService.Current);
 #endif
             services.AddSingleton<IFilePickerService, FilePickerService>();
 #if (tray)

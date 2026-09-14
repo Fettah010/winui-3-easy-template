@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Linq;
 using DevTemWinUi3.Services.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,8 +24,8 @@ public class InMemoryLogSinkTests
 
         var snapshot = sink.SnapshotNewestFirst();
         Assert.HasCount(2, snapshot);
-        Assert.AreEqual("second", snapshot[0].RenderMessage(CultureInfo.InvariantCulture));
-        Assert.AreEqual("first", snapshot[1].RenderMessage(CultureInfo.InvariantCulture));
+        Assert.AreEqual("second", snapshot[0].Message);
+        Assert.AreEqual("first", snapshot[1].Message);
     }
 
     [TestMethod]
@@ -39,8 +38,7 @@ public class InMemoryLogSinkTests
 
         var snapshot = sink.SnapshotNewestFirst();
         Assert.HasCount(2, snapshot);
-        Assert.IsFalse(snapshot.Any(e =>
-            e.RenderMessage(CultureInfo.InvariantCulture) == "one"));
+        Assert.IsFalse(snapshot.Any(e => e.Message == "one"));
     }
 
     [TestMethod]

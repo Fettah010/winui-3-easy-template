@@ -1,0 +1,11 @@
+<Project>
+  <!-- Serilog backend: pipeline, file/console sinks, and the MEL bridge
+       for AppLog. Emitted only for scaffolds with the serilog backend.
+       Imported from the app csproj with an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+</Project>

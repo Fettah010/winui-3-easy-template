@@ -3,7 +3,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Serilog;
 
 namespace DevTemWinUi3.Services;
 
@@ -39,12 +38,12 @@ public sealed class ApiService
     {
         try
         {
-            Log.Debug("GET {Url}", url);
+            AppLog.Debug("GET {Url}", url);
             return await _httpClient.GetFromJsonAsync<T>(url);
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "GET {Url} failed", url);
+            AppLog.Warning(ex, "GET {Url} failed", url);
             return default;
         }
     }
@@ -56,14 +55,14 @@ public sealed class ApiService
     {
         try
         {
-            Log.Debug("POST {Url}", url);
+            AppLog.Debug("POST {Url}", url);
             var response = await _httpClient.PostAsJsonAsync(url, data);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<TResponse>();
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "POST {Url} failed", url);
+            AppLog.Warning(ex, "POST {Url} failed", url);
             return default;
         }
     }
@@ -75,13 +74,13 @@ public sealed class ApiService
     {
         try
         {
-            Log.Debug("POST {Url}", url);
+            AppLog.Debug("POST {Url}", url);
             var response = await _httpClient.PostAsJsonAsync(url, data);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "POST {Url} failed", url);
+            AppLog.Warning(ex, "POST {Url} failed", url);
             return false;
         }
     }
@@ -93,12 +92,12 @@ public sealed class ApiService
     {
         try
         {
-            Log.Debug("GET (string) {Url}", url);
+            AppLog.Debug("GET (string) {Url}", url);
             return await _httpClient.GetStringAsync(url);
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "GET (string) {Url} failed", url);
+            AppLog.Warning(ex, "GET (string) {Url} failed", url);
             return null;
         }
     }

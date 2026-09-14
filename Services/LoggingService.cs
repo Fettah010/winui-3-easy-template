@@ -3,23 +3,38 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using DevTemWinUi3.Services.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Json;
+using Serilog.Extensions.Logging;
 
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Central logging setup for the app (Serilog). Writes to the debugger
-/// console and to daily-rolling files under the Logs/ folder next to the
-/// executable, keeping the last 14 days. Every event also lands in the
+/// Central logging setup for the app. This copy is the serilog backend:
+/// debugger console + daily-rolling files (14 days) + the shared
 /// in-memory <see cref="InMemoryLogSink"/> for the live tail and export.
+/// App code logs through the backend-agnostic <see cref="AppLog"/> facade
+/// (Microsoft.Extensions.Logging); the public surface here stays
+/// backend-neutral (<see cref="LogLevel"/>, not Serilog types) so the
+/// diagnostics page and tests compile for every backend.
 /// </summary>
 public static class LoggingService
 {
     public const string LogDirectory = "Logs";
     public const string LogFileName = "applog-.log";
+
+    /// <summary>Scaffold-time backend name (serilog here).</summary>
+    public const string BackendName = "serilog";
+
+    /// <summary>Whether this backend writes rolling log files.</summary>
+    public static bool HasFileSink => true;
+
+    /// <summary>Whether the enterprise Event Log collection is opted in.</summary>
+    public static bool IsEventLogEnabled => EventLogSink.IsEnabledByConfig();
+
     private const int LogRetentionDays = 14;
 
     /// <summary>Opt-in machine-readable sidecar via <c>DEVTEM_JSON_LOGS=1</c>.</summary>
@@ -31,20 +46,15 @@ public static class LoggingService
 
     private static readonly LoggingLevelSwitch _levelSwitch = new(LogEventLevel.Debug);
 
-    public static ILogger Log { get; private set; } = Serilog.Log.Logger;
-
     /// <summary>Live event buffer (newest ~1 000 events). Never null.</summary>
     public static InMemoryLogSink EventBuffer { get; } = new InMemoryLogSink();
-
-    /// <summary>Runtime level control (verbose toggle). Never throws.</summary>
-    public static LoggingLevelSwitch LevelSwitch => _levelSwitch;
 
     /// <summary>
     /// Effective minimum level (mirrors the Serilog configuration; the
     /// diagnostics page displays it). Defaults to Debug before
     /// <see cref="Initialize"/> runs.
     /// </summary>
-    public static LogEventLevel MinimumLevel { get; private set; } = LogEventLevel.Debug;
+    public static LogLevel MinimumLevel { get; private set; } = LogLevel.Debug;
 
     /// <summary>
     /// Resolved log directory (set by <see cref="Initialize"/>; defaults to
@@ -96,7 +106,7 @@ public static class LoggingService
                 shared: true,
                 outputTemplate: OutputTemplate,
                 formatProvider: CultureInfo.InvariantCulture)
-            .WriteTo.Sink(EventBuffer);
+            .WriteTo.Sink(new SerilogLogEntrySink(EventBuffer));
 
         // Enterprise collection: Error/Fatal also go to the Windows
         // Application log when the deployer opts in (DEVTEM_EVENT_LOG=1).
@@ -115,14 +125,18 @@ public static class LoggingService
                 shared: true);
         }
 
-        Log = config.CreateLogger();
+        var log = config.CreateLogger();
 
-        Serilog.Log.Logger = Log;
-        Log.Information("Logging initialized. Log path: {LogPath}", logPath);
+        Serilog.Log.Logger = log;
+        // Route the AppLog facade (Microsoft.Extensions.Logging) into this
+        // pipeline. Phase 2 swaps this factory for a native MEL one; call
+        // sites stay untouched.
+        try { AppLog.Initialize(new SerilogLoggerFactory(log, dispose: false)); } catch { }
+        AppLog.Information("Logging initialized. Log path: {LogPath}", logPath);
     }
 
     /// <summary>
-    /// Switches between Debug (default) and Verbose minimum levels at
+    /// Switches between Debug (default) and Trace minimum levels at
     /// runtime (verbose toggle). Never throws.
     /// </summary>
     public static void SetVerbose(bool verbose)
@@ -136,8 +150,7 @@ public static class LoggingService
 
     private static void ApplyLevel(bool verbose)
     {
-        var level = verbose ? LogEventLevel.Verbose : LogEventLevel.Debug;
-        _levelSwitch.MinimumLevel = level;
-        MinimumLevel = level;
+        _levelSwitch.MinimumLevel = verbose ? LogEventLevel.Verbose : LogEventLevel.Debug;
+        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
     }
 }

@@ -117,12 +117,12 @@ public static class ProtocolService
                 using (var command = scheme.CreateSubKey(@"shell\open\command"))
                     command?.SetValue(null, $"\"{exePath}\" \"%1\"");
             }
-            LoggingService.Log.Information("Protocol {Scheme} registered to {Exe}", Scheme, exePath);
+            AppLog.Information("Protocol {Scheme} registered to {Exe}", Scheme, exePath);
             return true;
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Protocol registration failed");
+            AppLog.Error(ex, "Protocol registration failed");
             return false;
         }
     }

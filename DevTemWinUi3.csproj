@@ -92,14 +92,20 @@
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260804001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
     <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="Sentry" Version="6.11.0" />
-    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.0" />
     <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
+
+  <!-- Feature packages: Sentry/EventLog live in Build/ so scaffold flags
+       can drop them (Flexibility Plan Phase 0c). Exists-guarded: the repo
+       always has them, future scaffolds may not. -->
+  <Import Project="Build\Features.Crash.props" Condition="Exists('Build\Features.Crash.props')" />
+  <Import Project="Build\Features.Logging.props" Condition="Exists('Build\Features.Logging.props')" />
 
 </Project>

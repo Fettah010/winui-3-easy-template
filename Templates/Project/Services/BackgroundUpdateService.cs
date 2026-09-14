@@ -19,9 +19,16 @@ public sealed class BackgroundUpdateService
 
     private BackgroundUpdateService() { }
 
-#if (updates)
+#if (updates == 'velopack')
+    private static UpdateService Updater => UpdateService.Current;
+    private static TimeSpan CheckInterval => UpdateService.PeriodicCheckInterval;
+#endif
+#if (updates == 'basic')
+    private static BasicGithubUpdateService Updater => BasicGithubUpdateService.Current;
+    private static TimeSpan CheckInterval => BasicGithubUpdateService.PeriodicCheckInterval;
+#endif
     /// <summary>
-    /// Re-checks for updates on <see cref="UpdateService.PeriodicCheckInterval"/>
+    /// Re-checks for updates on the backend's periodic interval
     /// while the app stays running. <see cref="CheckForUpdatesAsync"/> itself
     /// honors the auto-check setting and the installed-app guard, so this loop
     /// is a no-op for opted-out or unpackaged runs (one log line per tick).
@@ -30,9 +37,9 @@ public sealed class BackgroundUpdateService
     {
         try
         {
-            LoggingService.Log.Information(
-                "Periodic update checks scheduled every {Interval}", UpdateService.PeriodicCheckInterval);
-            using var timer = new PeriodicTimer(UpdateService.PeriodicCheckInterval);
+            AppLog.Information(
+                "Periodic update checks scheduled every {Interval}", CheckInterval);
+            using var timer = new PeriodicTimer(CheckInterval);
             while (await timer.WaitForNextTickAsync())
             {
                 await CheckForUpdatesAsync(mainWindow);
@@ -40,7 +47,7 @@ public sealed class BackgroundUpdateService
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Periodic update check loop ended");
+            AppLog.Error(ex, "Periodic update check loop ended");
         }
     }
 
@@ -66,11 +73,11 @@ public sealed class BackgroundUpdateService
 
     private async Task CheckForUpdatesCoreAsync(Window? mainWindow)
     {
-        var svc = UpdateService.Current;
+        var svc = Updater;
 
         if (!svc.IsInstalled)
         {
-            LoggingService.Log.Information("Auto-update check skipped: app is not installed");
+            AppLog.Information("Auto-update check skipped: app is not installed");
             return;
         }
 
@@ -78,7 +85,7 @@ public sealed class BackgroundUpdateService
         {
             if (!SettingsService.Current.AutoCheck)
             {
-                LoggingService.Log.Information("Auto-update check skipped: disabled in settings");
+                AppLog.Information("Auto-update check skipped: disabled in settings");
                 return;
             }
         }
@@ -89,11 +96,11 @@ public sealed class BackgroundUpdateService
             var result = await svc.CheckAsync();
             if (!result.HasUpdate)
             {
-                LoggingService.Log.Information("Auto-update: already on the latest version");
+                AppLog.Information("Auto-update: already on the latest version");
                 return;
             }
 
-            LoggingService.Log.Information(
+            AppLog.Information(
                 "Auto-update: v{Version} available, downloading in the background",
                 result.Version);
             await svc.DownloadPendingUpdateAsync();
@@ -104,7 +111,7 @@ public sealed class BackgroundUpdateService
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Auto-update check failed");
+            AppLog.Error(ex, "Auto-update check failed");
         }
     }
 
@@ -127,12 +134,11 @@ public sealed class BackgroundUpdateService
             };
 
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-                UpdateService.Current.ApplyPendingUpdateAndRestart();
+                Updater.ApplyPendingUpdateAndRestart();
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Restart prompt failed");
+            AppLog.Error(ex, "Restart prompt failed");
         }
     }
-#endif
 }

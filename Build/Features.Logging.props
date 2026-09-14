@@ -1,0 +1,8 @@
+<Project>
+  <!-- Windows Event Log sink dependency. Always scaffolded until the
+       `logging` choice lands (Flexibility Plan Phase 2); imported with
+       an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.EventLog" Version="10.0.0" />
+  </ItemGroup>
+</Project>

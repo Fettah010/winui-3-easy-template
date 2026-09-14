@@ -17,7 +17,7 @@ public partial class App : Application
 
         this.UnhandledException += (_, e) =>
         {
-            LoggingService.Log.Fatal(e.Exception, "Unhandled UI-thread exception");
+            AppLog.Fatal(e.Exception, "Unhandled UI-thread exception");
             CrashReportingService.Current.CaptureException(e.Exception, "ui-thread");
             e.Handled = false;
         };
@@ -32,7 +32,7 @@ public partial class App : Application
         // Show splash screen immediately (it reports real init phases below)
         _splash = new SplashScreen();
         _splash.Activate();
-        LoggingService.Log.Information(
+        AppLog.Information(
             "Splash shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
         DevTemWinUi3.Services.Diagnostics.AppMetrics.RecordStartupPhase(
             "splash", Program.StartupStopwatch.ElapsedMilliseconds);
@@ -55,7 +55,7 @@ public partial class App : Application
         {
             await TransitionToMainWindow();
         }
-        LoggingService.Log.Information(
+        AppLog.Information(
             "Main window shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
         DevTemWinUi3.Services.Diagnostics.AppMetrics.RecordStartupPhase(
             "window", Program.StartupStopwatch.ElapsedMilliseconds);
@@ -70,7 +70,7 @@ public partial class App : Application
 #if (database)
         _ = DatabaseInitializer.InitializeAsync();
 #endif
-#if (updates)
+#if (updates != 'none')
         _ = BackgroundUpdateService.Current.CheckForUpdatesAsync(MainWindowInstance);
         _ = BackgroundUpdateService.Current.RunPeriodicChecksAsync(MainWindowInstance);
 #endif
@@ -92,7 +92,7 @@ public partial class App : Application
 
         var loc = LocalizationService.Current;
         _splash?.ReportProgress(0.4, loc.GetString("SplashLoadingServices"));
-        LoggingService.Log.Information(
+        AppLog.Information(
             "Services ready after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
     }
 
@@ -128,13 +128,13 @@ public partial class App : Application
             if (string.IsNullOrWhiteSpace(pending))
                 return;
             if (NavigationService.Current.TryNavigateByUri(pending, out var tag))
-                LoggingService.Log.Information("Deep link handled on launch: {Tag}", tag);
+                AppLog.Information("Deep link handled on launch: {Tag}", tag);
             else
-                LoggingService.Log.Warning("Deep link had no route: {Uri}", pending);
+                AppLog.Warning("Deep link had no route: {Uri}", pending);
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Deep link handling on launch failed");
+            AppLog.Error(ex, "Deep link handling on launch failed");
         }
     }
 

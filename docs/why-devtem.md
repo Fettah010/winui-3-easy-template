@@ -3,7 +3,7 @@
 DevTem is a production-ready **WinUI 3 starter template** for Windows desktop
 apps built with .NET and the Windows App SDK. It gives a team a working
 application foundation instead of a blank window: MVVM structure, a Mica shell,
-system-tray activation, Velopack auto-updates, localization, persisted
+system-tray activation, auto-updates (Velopack by default), localization, persisted
 settings, diagnostics, and a release pipeline are included and can be enabled
 or disabled when scaffolding.
 

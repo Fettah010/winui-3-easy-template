@@ -93,7 +93,7 @@ public sealed class NavigationService
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Navigation to {Tag} failed", tag);
+            AppLog.Error(ex, "Navigation to {Tag} failed", tag);
             NavigationFailed?.Invoke(this, tag);
             return false;
         }

@@ -1,25 +1,52 @@
 using System;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using DevTemWinUi3.Services.Diagnostics;
+using Microsoft.Extensions.Logging;
+#if (logging == 'serilog')
+using System.Diagnostics;
+using System.Globalization;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Json;
+using Serilog.Extensions.Logging;
+#endif
 
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Central logging setup for the app (Serilog). Writes to the debugger
-/// console and to daily-rolling files under the Logs/ folder next to the
-/// executable, keeping the last 14 days. Every event also lands in the
-/// in-memory <see cref="InMemoryLogSink"/> for the live tail and export.
+/// Central logging setup for the app. The backend is a scaffold-time
+/// choice (<c>__LOGGING__</c>): serilog (debugger console + rolling files),
+/// mel (debugger + optional Event Log, no files), or none (no-op, with the
+/// in-memory buffer only when health is on). App code logs through the
+/// backend-agnostic <see cref="AppLog"/> facade; the public surface here
+/// stays backend-neutral (<see cref="LogLevel"/>, not Serilog types) so
+/// the diagnostics page and tests compile for every backend.
 /// </summary>
 public static class LoggingService
 {
     public const string LogDirectory = "Logs";
     public const string LogFileName = "applog-.log";
+
+    /// <summary>Scaffold-time backend name (serilog, mel, or none).</summary>
+    public const string BackendName = "__LOGGING__";
+
+    /// <summary>Whether this backend writes rolling log files.</summary>
+    public static bool HasFileSink =>
+        string.Equals(BackendName, "serilog", StringComparison.Ordinal);
+
+    /// <summary>Whether the enterprise Event Log collection is opted in.</summary>
+#if (logging == 'serilog')
+    public static bool IsEventLogEnabled => EventLogSink.IsEnabledByConfig();
+#endif
+#if (logging == 'mel')
+    public static bool IsEventLogEnabled => EventLogLoggerProvider.IsEnabledByConfig();
+#endif
+#if (logging == 'none')
+    public static bool IsEventLogEnabled => false;
+#endif
+#if (logging == 'serilog')
+
     private const int LogRetentionDays = 14;
 
     /// <summary>Opt-in machine-readable sidecar via <c>DEVTEM_JSON_LOGS=1</c>.</summary>
@@ -30,32 +57,37 @@ public static class LoggingService
         "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 
     private static readonly LoggingLevelSwitch _levelSwitch = new(LogEventLevel.Debug);
-
-    public static ILogger Log { get; private set; } = Serilog.Log.Logger;
+#endif
+#if (logging == 'mel')
+    private static ILoggerFactory? _factory;
+    private static readonly object _factoryLock = new();
+#endif
+#if (logging == 'none')
+    // No stored factory: the process-lifetime logger keeps its providers
+    // alive; there is nothing to rebuild or dispose.
+#endif
 
     /// <summary>Live event buffer (newest ~1 000 events). Never null.</summary>
     public static InMemoryLogSink EventBuffer { get; } = new InMemoryLogSink();
 
-    /// <summary>Runtime level control (verbose toggle). Never throws.</summary>
-    public static LoggingLevelSwitch LevelSwitch => _levelSwitch;
-
     /// <summary>
-    /// Effective minimum level (mirrors the Serilog configuration; the
-    /// diagnostics page displays it). Defaults to Debug before
-    /// <see cref="Initialize"/> runs.
+    /// Effective minimum level (the diagnostics page displays it).
+    /// Defaults to Debug before <see cref="Initialize"/> runs.
     /// </summary>
-    public static LogEventLevel MinimumLevel { get; private set; } = LogEventLevel.Debug;
+    public static LogLevel MinimumLevel { get; private set; } = LogLevel.Debug;
 
     /// <summary>
     /// Resolved log directory (set by <see cref="Initialize"/>; defaults to
     /// the primary location so crash paths can report it even when init
-    /// never ran). Never throws.
+    /// never ran). Only the serilog backend creates it and writes files.
+    /// Never throws.
     /// </summary>
     public static string CurrentLogDirectory { get; private set; } =
         Path.Combine(AppContext.BaseDirectory, LogDirectory);
 
     public static void Initialize()
     {
+#if (logging == 'serilog')
         // Serilog's own misconfiguration is otherwise silent: route it to
         // the debugger output so a broken pipeline is diagnosable.
         try { Serilog.Debugging.SelfLog.Enable(msg => Debug.WriteLine(msg)); } catch { }
@@ -95,8 +127,10 @@ public static class LoggingService
                 retainedFileCountLimit: LogRetentionDays,
                 shared: true,
                 outputTemplate: OutputTemplate,
-                formatProvider: CultureInfo.InvariantCulture)
-            .WriteTo.Sink(EventBuffer);
+                formatProvider: CultureInfo.InvariantCulture);
+#if (health)
+        config.WriteTo.Sink(new SerilogLogEntrySink(EventBuffer));
+#endif
 
         // Enterprise collection: Error/Fatal also go to the Windows
         // Application log when the deployer opts in (DEVTEM_EVENT_LOG=1).
@@ -115,14 +149,47 @@ public static class LoggingService
                 shared: true);
         }
 
-        Log = config.CreateLogger();
+        var log = config.CreateLogger();
 
-        Serilog.Log.Logger = Log;
-        Log.Information("Logging initialized. Log path: {LogPath}", logPath);
+        Serilog.Log.Logger = log;
+        // Route the AppLog facade (Microsoft.Extensions.Logging) into this
+        // pipeline. Call sites stay untouched across backends.
+        try { AppLog.Initialize(new SerilogLoggerFactory(log, dispose: false)); } catch { }
+        AppLog.Information("Logging initialized. Log path: {LogPath}", logPath);
+#endif
+#if (logging == 'mel')
+        bool verbose = false;
+        try { verbose = SettingsService.Current.VerboseLogging; } catch { }
+        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        CurrentLogDirectory = Path.Combine(AppContext.BaseDirectory, LogDirectory);
+
+        lock (_factoryLock)
+        {
+            _factory?.Dispose();
+            _factory = BuildFactory();
+            try { AppLog.Initialize(_factory); } catch { }
+        }
+        AppLog.Information("Logging initialized (mel backend). Events go to the debugger and the in-app buffer; no log files are written.");
+#endif
+#if (logging == 'none')
+        bool verbose = false;
+        try { verbose = SettingsService.Current.VerboseLogging; } catch { }
+        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        CurrentLogDirectory = Path.Combine(AppContext.BaseDirectory, LogDirectory);
+
+        var factory = LoggerFactory.Create(static builder =>
+        {
+#if (health)
+            builder.AddProvider(new InMemoryLogSinkLoggerProvider(EventBuffer));
+#endif
+        });
+        try { AppLog.Initialize(factory); } catch { }
+        AppLog.Information("Logging initialized (none backend). Calls are no-ops except the in-app buffer.");
+#endif
     }
 
     /// <summary>
-    /// Switches between Debug (default) and Verbose minimum levels at
+    /// Switches between Debug (default) and Trace minimum levels at
     /// runtime (verbose toggle). Never throws.
     /// </summary>
     public static void SetVerbose(bool verbose)
@@ -134,10 +201,41 @@ public static class LoggingService
         catch { }
     }
 
+#if (logging == 'serilog')
     private static void ApplyLevel(bool verbose)
     {
-        var level = verbose ? LogEventLevel.Verbose : LogEventLevel.Debug;
-        _levelSwitch.MinimumLevel = level;
-        MinimumLevel = level;
+        _levelSwitch.MinimumLevel = verbose ? LogEventLevel.Verbose : LogEventLevel.Debug;
+        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
     }
+#endif
+#if (logging == 'mel')
+    private static ILoggerFactory BuildFactory() =>
+        LoggerFactory.Create(builder =>
+        {
+            builder.SetMinimumLevel(MinimumLevel);
+            builder.AddDebug();
+#if (health)
+            builder.AddProvider(new InMemoryLogSinkLoggerProvider(EventBuffer));
+#endif
+            if (EventLogLoggerProvider.IsEnabledByConfig())
+                builder.AddProvider(new EventLogLoggerProvider());
+        });
+
+    private static void ApplyLevel(bool verbose)
+    {
+        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        lock (_factoryLock)
+        {
+            _factory?.Dispose();
+            _factory = BuildFactory();
+            try { AppLog.Initialize(_factory); } catch { }
+        }
+    }
+#endif
+#if (logging == 'none')
+    private static void ApplyLevel(bool verbose)
+    {
+        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+    }
+#endif
 }

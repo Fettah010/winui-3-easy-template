@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using DevTemWinUi3.Services.Diagnostics;
-using Serilog.Events;
 
 namespace DevTemWinUi3.Services;
 
@@ -189,24 +188,20 @@ public static class DiagnosticsService
         }
     }
 
-    private static BufferedLogEvent MapBufferedEvent(LogEvent e)
+    private static BufferedLogEvent MapBufferedEvent(LogEntry e)
     {
         try
         {
-            string message;
-            try { message = e.RenderMessage(CultureInfo.InvariantCulture); }
-            catch { message = e.MessageTemplate.Text; }
-            string? source = null;
+            string message = e.Message ?? string.Empty;
+            string? source = string.IsNullOrWhiteSpace(e.Category) ? null : e.Category;
             string? exceptionText = null;
             var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 foreach (var kv in e.Properties)
                 {
-                    try { properties[kv.Key] = Truncate(kv.Value.ToString(), 500); } catch { }
+                    try { properties[kv.Key] = Truncate(kv.Value ?? string.Empty, 500); } catch { }
                 }
-                if (e.Properties.TryGetValue("SourceContext", out var v))
-                    source = v.ToString().Trim('"');
             }
             catch { }
             try
@@ -216,7 +211,7 @@ public static class DiagnosticsService
             }
             catch { }
             return new BufferedLogEvent(
-                e.Timestamp, e.Level.ToString(), message ?? string.Empty,
+                e.Timestamp, e.Level.ToString(), message,
                 source, e.Exception is not null, exceptionText, properties);
         }
         catch
@@ -305,7 +300,7 @@ public static class DiagnosticsService
         }
         catch (Exception ex)
         {
-            try { LoggingService.Log.Error(ex, "Diagnostic bundle export failed"); } catch { }
+            try { AppLog.Error(ex, "Diagnostic bundle export failed"); } catch { }
             return false;
         }
     }

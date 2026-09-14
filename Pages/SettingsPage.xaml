@@ -79,7 +79,7 @@
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
-                <ctk:SettingsCard Header="{loc:Loc Key=SettingsLanguage}" Description="{loc:Loc Key=SettingsLanguageDesc}">
+                <ctk:SettingsCard x:Name="LanguageCard" Header="{loc:Loc Key=SettingsLanguage}" Description="{loc:Loc Key=SettingsLanguageDesc}">
                     <ComboBox
                         x:Name="LanguageComboBox"
                         AutomationProperties.AutomationId="LanguageComboBox"

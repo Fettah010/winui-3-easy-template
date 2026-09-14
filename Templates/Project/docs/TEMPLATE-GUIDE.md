@@ -49,7 +49,8 @@ Use the explicit extension markers when adding application code:
 - `<devtem:services>` in `Services/ServiceLocator.cs`
 - `<devtem:routes>` in `MainWindow.xaml.cs`
 - `Services/SettingsService.cs` for persisted settings
-- all three localization dictionaries for new keys
+- all localization dictionaries for new keys (`EnStrings` only in
+  English-only scaffolds)
 
 `Scripts/add-page.ps1` validates unique anchors, refuses dirty repositories,
 and rolls back on failure.
@@ -117,7 +118,9 @@ when the page needs custom wiring halfway).
 | `-Icon` | Nav icon (a WinUI `Symbol` member): Home, Document, Shop, Mail, Calendar, People, Globe, Pictures, Video, Camera, Map, Phone | `Document` |
 
 The script scaffolds `devtem-page` with your title/icon, pastes the strings
-(EN + `TODO-translate` es/fr) into `Services/Localization/`, registers the
+into `Services/Localization/` (EN + `TODO-translate` es/fr; EN only in
+English-only scaffolds, where the script is unsupported — add strings to
+`EnStrings.cs` by hand), registers the
 VM (rewriting the `DevTemWinUi3.*` namespaces to yours automatically), adds
 route + bound nav item, then builds (0 warnings) and runs the tests. It
 refuses dirty trees, and any failure rolls the tree back. Afterwards: replace
@@ -257,7 +260,7 @@ Notes from the Velopack docs (verified against `vpk pack -h`):
 
 `Scripts/build-and-release.ps1` does not sign today — extend its `vpk pack`
 call with `--signParams` once you hold a cert (omit the whole section with
-`--updates false`: no installer exists to sign).
+`--updates none`: no installer exists to sign).
 
 ### MSIX packaging (sideload or Store)
 

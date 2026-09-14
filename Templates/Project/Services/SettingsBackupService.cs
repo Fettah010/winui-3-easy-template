@@ -24,7 +24,7 @@ public static class SettingsBackupService
         try { SettingsService.Current.ResetToDefaults(); } catch { }
         try { LocalizationService.Current.ResetLanguage(); } catch { }
         try { CrashReportingService.AddBreadcrumb("Settings reset", "settings"); } catch { }
-        try { LoggingService.Log.Information("Settings reset to defaults"); } catch { }
+        try { AppLog.Information("Settings reset to defaults"); } catch { }
     }
 
     /// <summary>Current user preferences as a JSON-serializable snapshot.</summary>
@@ -60,12 +60,12 @@ public static class SettingsBackupService
             var json = JsonSerializer.Serialize(Capture(), s_jsonOptions);
             File.WriteAllText(path, json);
             try { CrashReportingService.AddBreadcrumb("Settings exported", "settings"); } catch { }
-            LoggingService.Log.Information("Settings exported to {Path}", path);
+            AppLog.Information("Settings exported to {Path}", path);
             return true;
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Settings export failed");
+            AppLog.Error(ex, "Settings export failed");
             return false;
         }
     }
@@ -107,13 +107,13 @@ public static class SettingsBackupService
                     LocalizationService.Current.SetLanguage(tag);
             }
 
-            LoggingService.Log.Information("Settings imported from {Path}", path);
+            AppLog.Information("Settings imported from {Path}", path);
             try { CrashReportingService.AddBreadcrumb("Settings imported", "settings"); } catch { }
             return true;
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Settings import failed");
+            AppLog.Error(ex, "Settings import failed");
             return false;
         }
     }

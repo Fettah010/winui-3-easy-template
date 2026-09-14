@@ -1,0 +1,7 @@
+<Project>
+  <!-- Sentry crash reporting. Always scaffolded until the `crash` flag
+       lands (Flexibility Plan Phase 3); imported with an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="Sentry" Version="6.11.0" />
+  </ItemGroup>
+</Project>

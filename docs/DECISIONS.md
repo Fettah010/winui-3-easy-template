@@ -63,6 +63,84 @@ in git history; this file saves the next agent the archaeology.
   dimensions, aspect ratio, and generated output before replacing assets.
   ICO/logo variants then feed the app, tray, shortcut, splash, About, MSIX,
   and package surfaces.
+- **2026-09-14 — Flexibility plan supersedes diagnostics plan.**
+  `docs/DIAGNOSTICS-PLAN.md` shipped (Phases 0–4 in v0.0.3-beta) and is
+  deleted from both trees; the live engineering plan is
+  `docs/FLEXIBILITY-PLAN.md` (mirrored verbatim). `DISCOVERY-PLAN.md`
+  and `TEMPLATE-REUSABILITY-ROADMAP.md` are kept: discovery still has
+  open phases (A3/A4, B, C, D) and the roadmap has 85 open boxes that
+  need triage before any retirement.
+- **2026-09-14 — Phase 0 logging seam: AppLog over MEL, Serilog stays.**
+  Call sites move from static Serilog (`LoggingService.Log`,
+  `Serilog.Log`) to a new `Services/AppLog.cs` static facade backed by
+  `Microsoft.Extensions.Logging.ILogger` via the official
+  `Serilog.Extensions.Logging` bridge. `LevelSwitch`/`MinimumLevel`/
+  `EventBuffer` stay Serilog-typed until Phase 2; the MEL
+  `InMemoryLogSinkLoggerProvider` ships implemented + tested but unwired
+  (wiring now would double-emit into the buffer).
+- **2026-09-14 — Opinion packages move to Exists-guarded props.**
+  `Sentry` → `Build/Features.Crash.props`,
+  `System.Diagnostics.EventLog` → `Build/Features.Logging.props`
+  (mirrored byte-identical), preparing the `crash`/`logging` flags.
+  Toolkit/MEDI stay in the csproj (deferred axes).
+- **2026-09-14 — Parity script owns a guard manifest.**
+  Hash comparison cannot catch blind-copy `#if` wipes (Phase-1
+  incident), so `test-mirror-parity.ps1` carries `$requiredGuards`
+  (ordered `#if` conditions per conditioned file) and fails on mismatch.
+  Update the manifest whenever guards intentionally change.
+- **2026-09-14 — Phase 1: no NullUpdateService.**
+  `updates=none` keeps the status-quo null registration (the VM is
+  null-tolerant by design), so a Null impl would be dead weight. Basic
+  owns its `HttpClient` (stays orthogonal to the `http` flag), reports
+  `IsInstalled=true` (no installer to detect; checks run even in dev,
+  which makes the flow testable), and needs a `.exe` release asset.
+  `BackgroundUpdateService` serves both backends through guarded
+  concrete `Updater`/`CheckInterval` properties (CA1859 forbids the
+  interface-typed version); its tests stay velopack-only (basic would
+  hit the network). `--updates false` is now `--updates none` across
+  presets, guides, and the matrix (10 combos).
+- **2026-09-14 — Phase 2: LogEntry is the buffer currency, no file gate.**
+  Serilog `LogEvent` and MEL records both convert to a backend-agnostic
+  `LogEntry` (MEL `LogLevel` canonical), so the diagnostics page, export,
+  and tests compile for every backend with zero `#if`. `MinimumLevel`
+  went MEL-typed everywhere; `LevelSwitch` and `LoggingService.Log` are
+  deleted (zero references). File APIs needed no gate (no files exist
+  without the serilog backend); the VM only auto-selects the live tail
+  and hides the file view via `HasFileSink`. `none` still buffers when
+  health is on (buffer provider gated on `#if (health)` in every
+  backend). `mel` tradeoff stated in its guide: no files, no JSON
+  sidecar. `BackendName` rides `__LOGGING__` replaces (no extra `#if`).
+- **2026-09-14 — Phase 3: crash is a veneer, not guards.**
+  Instead of guarding ~16 call sites, `CrashReportingService` became an
+  SDK-free veneer over `ICrashReporter` (one `#if (crash)` at creation;
+  `SentryCrashReporter` + props excluded when off). All callers compile
+  unchanged and no-op; `CrashReportingTests` run everywhere (they assert
+  the inert path). The diagnostics crash toggle hides via a `#if`ed VM
+  visibility property (XAML binds unconditionally). CA1859 on the seam
+  field is suppressed by design.
+- **2026-09-14 — Phase 3: tests=false keeps a shell project.**
+  `Tests/**/*.cs` is excluded but the csproj + sln entry stay, so
+  `dotnet build` (solution) works and `dotnet test` passes vacuously;
+  the matrix skips the test step and asserts the absence instead.
+  Translation-asserting tests are handled per kind: coverage +
+  service-loc + toast-strings excluded/guarded for en-only, while the
+  settings round-trip test adapts at runtime (no `#if`).
+- **2026-09-14 — Phase 4: deferred axes, with reasons.**
+  Documented, not forgotten: (a) MVVM-toolkit choice — would fork every
+  VM file while Toolkit remains the community standard (cost ≫ value);
+  (b) test-framework choice — doubles test maintenance for a preference
+  MSTest already satisfies as the VS default; (c) `packaging: msix` at
+  scaffold time — needs identity, signing, and CI redesign against the
+  unpackaged core, deserves its own plan; (d) interactive init wizard —
+  script post-actions need user approval, worse UX than flags; revisit
+  only past ~12 flags. Each gets reconsidered on user demand, not on
+  principle.
+- **2026-09-14 — Version policy for flexibility work.**
+  New template surface (params, values) = template package MINOR bump
+  (0.1.6 → 0.2.0); app follows patch/beta as usual (Velopack versions
+  must keep increasing, one version per channel). Param names and choice
+  values are stable from 0.2.0: renames would silently break user
+  scripts, so new options arrive as new values, never renames.
 - **2026-09-14 — Generated documentation is profile-aware by composition.**
   `docs/FEATURES.md` reports the selected switches and next steps, while
   feature-specific guides are excluded at scaffold time when their feature is

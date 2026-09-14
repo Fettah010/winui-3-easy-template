@@ -29,7 +29,7 @@ public sealed class BackgroundUpdateService
     {
         try
         {
-            LoggingService.Log.Information(
+            AppLog.Information(
                 "Periodic update checks scheduled every {Interval}", UpdateService.PeriodicCheckInterval);
             using var timer = new PeriodicTimer(UpdateService.PeriodicCheckInterval);
             while (await timer.WaitForNextTickAsync())
@@ -39,7 +39,7 @@ public sealed class BackgroundUpdateService
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Periodic update check loop ended");
+            AppLog.Error(ex, "Periodic update check loop ended");
         }
     }
 
@@ -69,7 +69,7 @@ public sealed class BackgroundUpdateService
 
         if (!svc.IsInstalled)
         {
-            LoggingService.Log.Information("Auto-update check skipped: app is not installed");
+            AppLog.Information("Auto-update check skipped: app is not installed");
             return;
         }
 
@@ -77,7 +77,7 @@ public sealed class BackgroundUpdateService
         {
             if (!SettingsService.Current.AutoCheck)
             {
-                LoggingService.Log.Information("Auto-update check skipped: disabled in settings");
+                AppLog.Information("Auto-update check skipped: disabled in settings");
                 return;
             }
         }
@@ -88,11 +88,11 @@ public sealed class BackgroundUpdateService
             var result = await svc.CheckAsync();
             if (!result.HasUpdate)
             {
-                LoggingService.Log.Information("Auto-update: already on the latest version");
+                AppLog.Information("Auto-update: already on the latest version");
                 return;
             }
 
-            LoggingService.Log.Information(
+            AppLog.Information(
                 "Auto-update: v{Version} available, downloading in the background",
                 result.Version);
             await svc.DownloadPendingUpdateAsync();
@@ -103,7 +103,7 @@ public sealed class BackgroundUpdateService
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Auto-update check failed");
+            AppLog.Error(ex, "Auto-update check failed");
         }
     }
 
@@ -130,7 +130,7 @@ public sealed class BackgroundUpdateService
         }
         catch (Exception ex)
         {
-            LoggingService.Log.Error(ex, "Restart prompt failed");
+            AppLog.Error(ex, "Restart prompt failed");
         }
     }
 }

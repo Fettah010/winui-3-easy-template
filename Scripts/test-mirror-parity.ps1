@@ -85,13 +85,53 @@ $conditioned = @(
     "Pages\SettingsPage.xaml.cs",
     "Scripts\init-template.ps1",
     "Services\BackgroundUpdateService.cs",
+    "Services\CrashReportingService.cs",
     "Services\LocalizationService.cs",
+    "Services\LoggingService.cs",
     "Services\ServiceLocator.cs",
     "Services\SystemTrayService.cs",
     "Tests\Services\ServiceLocatorTests.cs",
+    "Tests\Services\DesktopToastServiceTests.cs",
     "ViewModels\SettingsPageViewModel.cs",
+    "ViewModels\DiagnosticsPageViewModel.cs",
     "docs\TEMPLATE-GUIDE.md"
 )
+
+# Guard manifest (Flexibility Plan Phase 0d): hash comparison cannot catch
+# a blind app->template copy that wipes `#if` guards (the template then
+# looks MORE like the app, so hashes still match — the Phase-1 incident).
+# Each conditioned file maps to its ordered `#if` conditions in the
+# template copy (template-side names). Update this manifest whenever guards
+# intentionally change — a mismatch failure names the file.
+$requiredGuards = @{
+    "AGENTS.md"                                = @()
+    "App.xaml.cs"                              = @("(database)", "(updates != 'none')")
+    "__SafeName__.csproj"                      = @()
+    "__SafeName__.sln"                         = @()
+    "Directory.Build.props"                    = @()
+    "MainWindow.xaml"                          = @()
+    "MainWindow.xaml.cs"                       = @("(tray)", "(health)", "(tray)", "(tray)", "(tray)", "(tray)", "(tray)", "(tray)")
+    "Program.cs"                               = @("(updates == 'velopack')", "(health)", "(health)", "(updates == 'velopack')")
+    "README.md"                                = @()
+    "Pages\AboutPage.xaml"                     = @()
+    "Pages\AboutPage.xaml.cs"                  = @()
+    "Pages\HomePage.xaml"                      = @()
+    "Pages\HomePage.xaml.cs"                   = @()
+    "Pages\SettingsPage.xaml"                  = @()
+    "Pages\SettingsPage.xaml.cs"               = @()
+    "Scripts\init-template.ps1"                = @()
+    "Services\BackgroundUpdateService.cs"      = @("(updates == 'velopack')", "(updates == 'basic')")
+    "Services\LocalizationService.cs"          = @("(localization)", "(localization)")
+    "Services\LoggingService.cs"               = @("(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(health)", "(logging == 'mel')", "(logging == 'none')", "(health)", "(logging == 'serilog')", "(logging == 'mel')", "(health)", "(logging == 'none')")
+    "Services\CrashReportingService.cs"        = @("(crash)")
+    "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(health)", "(http)")
+    "Services\SystemTrayService.cs"            = @()
+    "Tests\Services\ServiceLocatorTests.cs"    = @("(http)", "(database)", "(http)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(health)")
+    "Tests\Services\DesktopToastServiceTests.cs" = @("(localization)")
+    "ViewModels\SettingsPageViewModel.cs"      = @("(tray)")
+    "ViewModels\DiagnosticsPageViewModel.cs"   = @("(crash)")
+    "docs\TEMPLATE-GUIDE.md"                   = @()
+}
 
 # File renames between the trees (content must still match).
 $renames = @{
@@ -232,6 +272,22 @@ try {
 }
 catch {
     $failures += "version check failed to run: $($_.Exception.Message)"
+}
+
+# Guard check: ordered `#if` conditions per conditioned file must match
+# the manifest above (catches guard wipes that hash comparison misses).
+foreach ($entry in $requiredGuards.GetEnumerator()) {
+    $guardPath = Join-Path $templateRoot $entry.Key
+    if (-not (Test-Path -LiteralPath $guardPath)) {
+        $failures += "guard manifest: template file missing: $($entry.Key)"
+        continue
+    }
+    $actual = @(Select-String -LiteralPath $guardPath -Pattern '^\s*#if\s+(.+?)\s*$' |
+        ForEach-Object { $_.Matches[0].Groups[1].Value.Trim() })
+    $expected = @($entry.Value)
+    if (($actual -join "`n") -cne ($expected -join "`n")) {
+        $failures += "guard mismatch in $($entry.Key): expected [$($expected -join ', ')] but found [$($actual -join ', ')]"
+    }
 }
 
 if ($failures.Count -gt 0) {

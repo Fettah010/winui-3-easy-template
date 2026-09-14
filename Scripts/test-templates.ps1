@@ -1,8 +1,8 @@
 # Scaffold matrix for the dotnet-new templates: installs both templates from
-# this repo, scaffolds all-on / all-off / no-tray / no-updates / no-diagnostics,
-# wires a page end-to-end inside all-on via add-page.ps1, then builds
-# (0 warnings, 0 errors) and tests each scaffold. Fails the run on the first
-# broken combo.
+# this repo, scaffolds all-on / all-off / profiles / single-feature-offs /
+# per-update-backend / per-logging-backend, wires a page end-to-end inside
+# add-page.ps1, then builds (0 warnings, 0 errors) and tests each scaffold.
+# Fails the run on the first broken combo.
 #
 #   powershell -File Scripts/test-templates.ps1                 # full matrix
 #   powershell -File Scripts/test-templates.ps1 -Combos allon,alloff
@@ -11,9 +11,13 @@
 # Same matrix runs in CI (.github/workflows/templates.yml).
 
 param(
-    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "nohttp", "nodiag"),
+    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "updbasic", "logmel", "lognone", "nocrash", "noloc", "notests", "nohttp", "nodiag"),
     [switch]$KeepTemp
 )
+
+# `powershell -File` passes `-Combos a,b` through as one string; accept both
+# comma-joined and real arrays.
+$Combos = @($Combos | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
 
 $ErrorActionPreference = "Stop"
 
@@ -22,15 +26,21 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("devtem-matrix-" + [Sys
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
 $comboDefs = @{
-    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Health = $true; Attribution = $true }
-    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = $false; Health = $true; Attribution = $true }
-    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = $true; Health = $true; Attribution = $true }
-    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";     Display = "NoUpd App";  Company = "Nu"; Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "false"); Http = $true; Database = $true; Tray = $true; Updates = $false; Health = $true; Attribution = $true }
-    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh"; Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = $true; Health = $true; Attribution = $true }
-    "nodiag"  = @{ Name = "NoDiagApp";   Safe = "NoDiagApp";    Display = "NoDiag App"; Company = "Nd"; Repo = "nd/app";        Scheme = "nd://";   Flags = @("--health", "false"); Http = $true; Database = $true; Tray = $true; Updates = $true; Health = $false; Attribution = $true }
-    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "false", "--database", "false", "--http", "false", "--health", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = $false; Health = $false; Attribution = $false }
-    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "false", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = $false; Health = $true; Attribution = $true }
-    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = $true; Health = $true; Attribution = $true }
+    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "none", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";     Display = "NoUpd App";  Company = "Nu"; Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "none"); Http = $true; Database = $true; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "updbasic" = @{ Name = "BasicUpdApp"; Safe = "BasicUpdApp"; Display = "BasicUpd App"; Company = "Bu"; Repo = "bu/app";      Scheme = "bu://";   Flags = @("--updates", "basic"); Http = $true; Database = $true; Tray = $true; Updates = "basic"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh"; Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "nodiag"  = @{ Name = "NoDiagApp";   Safe = "NoDiagApp";    Display = "NoDiag App"; Company = "Nd"; Repo = "nd/app";        Scheme = "nd://";   Flags = @("--health", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $false; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "nocrash" = @{ Name = "NoCrashApp";  Safe = "NoCrashApp";   Display = "NoCrash App"; Company = "Nc"; Repo = "nc/app";      Scheme = "nc://";   Flags = @("--crash", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $false; Localization = $true; Tests = $true }
+    "noloc"   = @{ Name = "NoLocApp";    Safe = "NoLocApp";     Display = "NoLoc App";  Company = "Nlo"; Repo = "nlo/app";     Scheme = "nlo://";  Flags = @("--localization", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $false; Tests = $true }
+    "notests" = @{ Name = "NoTestsApp";  Safe = "NoTestsApp";   Display = "NoTests App"; Company = "Nt"; Repo = "ntests/app";  Scheme = "ntests://"; Flags = @("--tests", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $false }
+    "logmel"  = @{ Name = "MelLogApp";   Safe = "MelLogApp";    Display = "MelLog App"; Company = "Ml"; Repo = "ml/app";        Scheme = "ml://";   Flags = @("--logging", "mel"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "mel"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "lognone" = @{ Name = "NoLogApp";    Safe = "NoLogApp";     Display = "NoLog App";  Company = "Nl"; Repo = "nl/app";        Scheme = "nl://";   Flags = @("--logging", "none"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "none"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "none", "--database", "false", "--http", "false", "--health", "false", "--logging", "none", "--crash", "false", "--localization", "false", "--tests", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = "none"; Logging = "none"; Health = $false; Attribution = $false; Crash = $false; Localization = $false; Tests = $false }
+    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "none", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
 }
 
 $failed = 0
@@ -54,12 +64,31 @@ function Assert-FeatureManifest([string]$outDir) {
         throw "feature manifest is missing"
     }
     $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
-    foreach ($name in @("tray", "updates", "database", "http", "health")) {
+    foreach ($name in @("tray", "updates", "database", "http", "health", "crash", "localization", "tests")) {
         if ($null -eq $manifest.features.$name) {
             throw "feature manifest is missing '$name'"
         }
         if ($null -eq $manifest.features.$name.files) {
             throw "feature manifest has no file list for '$name'"
+        }
+    }
+    foreach ($value in @("velopack", "basic", "none")) {
+        if ($null -eq $manifest.features.updates.values.$value) {
+            throw "feature manifest is missing updates value '$value'"
+        }
+        if ($null -eq $manifest.features.updates.values.$value.files) {
+            throw "feature manifest has no file list for updates value '$value'"
+        }
+    }
+    if ($null -eq $manifest.features.logging) {
+        throw "feature manifest is missing 'logging'"
+    }
+    foreach ($value in @("serilog", "mel", "none")) {
+        if ($null -eq $manifest.features.logging.values.$value) {
+            throw "feature manifest is missing logging value '$value'"
+        }
+        if ($null -eq $manifest.features.logging.values.$value.files) {
+            throw "feature manifest has no file list for logging value '$value'"
         }
     }
     Write-Host "feature manifest OK"
@@ -68,7 +97,7 @@ function Assert-FeatureManifest([string]$outDir) {
 function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
     $readmePath = Join-Path $outDir "README.md"
     $readme = Get-Content -Raw $readmePath
-    foreach ($marker in @("Starter profiles", "--tray false", "--updates false", "--database false", "--http false", "--health false")) {
+    foreach ($marker in @("Starter profiles", "--tray false", "--updates none", "--database false", "--http false", "--health false", "--logging none", "--crash false", "--localization false", "--tests false")) {
         if ($readme -notmatch [regex]::Escape($marker)) {
             throw "generated README is missing profile marker '$marker'"
         }
@@ -76,10 +105,14 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
     $features = Get-Content -Raw (Join-Path $outDir "docs\FEATURES.md")
     foreach ($pair in @(
         @("System tray", $definition.Tray),
-        @("Velopack updates", $definition.Updates),
+        @("Auto-updates", $definition.Updates),
         @("SQLite database", $definition.Database),
         @("Typed HTTP client", $definition.Http),
         @("Diagnostics page", $definition.Health),
+        @("Logging backend", $definition.Logging),
+        @("Crash reporting", $definition.Crash),
+        @("Three-language UI", $definition.Localization),
+        @("MSTest suite", $definition.Tests),
         @("DevTem attribution", $definition.Attribution)
     )) {
         $expected = [string]$pair[1]
@@ -89,7 +122,6 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
     }
     $guides = @{
         tray = $definition.Tray
-        updates = $definition.Updates
         database = $definition.Database
         http = $definition.Http
         diagnostics = $definition.Health
@@ -99,6 +131,22 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
         if ($guide.Value -ne (Test-Path -LiteralPath $guidePath)) {
             throw "feature guide presence is incorrect for $($guide.Key)"
         }
+    }
+    $velopackGuide = Join-Path $outDir "docs\feature-guides\updates-velopack.md"
+    if (($definition.Updates -eq "velopack") -ne (Test-Path -LiteralPath $velopackGuide)) {
+        throw "updates-velopack guide presence is incorrect for updates=$($definition.Updates)"
+    }
+    $basicGuide = Join-Path $outDir "docs\feature-guides\updates-basic.md"
+    if (($definition.Updates -eq "basic") -ne (Test-Path -LiteralPath $basicGuide)) {
+        throw "updates-basic guide presence is incorrect for updates=$($definition.Updates)"
+    }
+    $serilogGuide = Join-Path $outDir "docs\feature-guides\logging-serilog.md"
+    if (($definition.Logging -eq "serilog") -ne (Test-Path -LiteralPath $serilogGuide)) {
+        throw "logging-serilog guide presence is incorrect for logging=$($definition.Logging)"
+    }
+    $melGuide = Join-Path $outDir "docs\feature-guides\logging-mel.md"
+    if (($definition.Logging -eq "mel") -ne (Test-Path -LiteralPath $melGuide)) {
+        throw "logging-mel guide presence is incorrect for logging=$($definition.Logging)"
     }
     Write-Host "profile documentation OK"
 }
@@ -172,6 +220,73 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     elseif ((Test-Path -LiteralPath $diagPagePath) -or (Test-Path -LiteralPath $diagCrashPath) -or (Test-Path -LiteralPath $diagGuidePath)) {
         throw "diagnostics feature files remain when disabled"
     }
+    $hasVelopack = $definition.Updates -eq "velopack"
+    $hasBasic = $definition.Updates -eq "basic"
+    $hasBackground = $definition.Updates -ne "none"
+    foreach ($triple in @(
+        @("Services\UpdateService.cs", $hasVelopack),
+        @("Build\Features.Updates.Velopack.props", $hasVelopack),
+        @("Services\BasicGithubUpdateService.cs", $hasBasic),
+        @("Build\Features.Updates.Basic.props", $hasBasic),
+        @("Services\BackgroundUpdateService.cs", $hasBackground),
+        @(".github\workflows\release.yml", $hasVelopack)
+    )) {
+        $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
+        if ($triple[1] -ne $present) {
+            throw "updates=$($definition.Updates): presence is incorrect for $($triple[0])"
+        }
+    }
+    $isSerilog = $definition.Logging -eq "serilog"
+    $isMel = $definition.Logging -eq "mel"
+    foreach ($triple in @(
+        @("Services\Diagnostics\SerilogLogEntrySink.cs", $isSerilog),
+        @("Services\Diagnostics\EventLogSink.cs", $isSerilog),
+        @("Services\Diagnostics\ThreadIdEnricher.cs", $isSerilog),
+        @("Build\Features.Logging.Serilog.props", $isSerilog),
+        @("Services\Diagnostics\EventLogLoggerProvider.cs", $isMel),
+        @("Build\Features.Logging.Mel.props", $isMel)
+    )) {
+        $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
+        if ($triple[1] -ne $present) {
+            throw "logging=$($definition.Logging): presence is incorrect for $($triple[0])"
+        }
+    }
+    $loggingService = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\LoggingService.cs"))
+    if ($loggingService -notmatch [regex]::Escape('BackendName = "' + $definition.Logging + '"')) {
+        throw "scaffolded BackendName is not '$($definition.Logging)'"
+    }
+    $hasCrash = $definition.Crash
+    foreach ($triple in @(
+        @("Services\SentryCrashReporter.cs", $hasCrash),
+        @("Build\Features.Crash.props", $hasCrash)
+    )) {
+        $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
+        if ($triple[1] -ne $present) {
+            throw "crash=${hasCrash}: presence is incorrect for $($triple[0])"
+        }
+    }
+    $hasLoc = $definition.Localization
+    foreach ($triple in @(
+        @("Services\Localization\EsStrings.cs", $hasLoc),
+        @("Services\Localization\FrStrings.cs", $hasLoc)
+    )) {
+        $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
+        if ($triple[1] -ne $present) {
+            throw "localization=${hasLoc}: presence is incorrect for $($triple[0])"
+        }
+    }
+    $testSources = @(Get-ChildItem -LiteralPath (Join-Path $outDir "Tests") -Recurse -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Extension -eq '.cs' })
+    if ($definition.Tests -and $testSources.Count -eq 0) {
+        throw "tests=true: no test sources scaffolded"
+    }
+    if ((-not $definition.Tests) -and $testSources.Count -gt 0) {
+        throw "tests=false: test sources remain ($($testSources.Count) files)"
+    }
+    $testsCsproj = Join-Path $outDir ("Tests\" + $definition.Safe + ".Tests.csproj")
+    if (-not (Test-Path -LiteralPath $testsCsproj)) {
+        throw "test project shell is missing"
+    }
     Write-Host "identity OK ($safe / $display / $scheme / $repo)"
 }
 
@@ -211,7 +326,7 @@ try {
     if (-not (Invoke-Step "install devtem-page" { & dotnet new install (Join-Path $repoRoot "Templates\Page") })) { throw "install failed" }
 
     foreach ($combo in $Combos) {
-        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/nohttp/nodiag)" }
+        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/updbasic/logmel/lognone/nocrash/noloc/notests/nohttp/nodiag)" }
         $c = $comboDefs[$combo]
         $outDir = Join-Path $tempRoot "$combo\$($c.Name)"
 
@@ -296,12 +411,18 @@ try {
         }
         Write-Host "build ${combo}: 0 warnings, 0 errors" -ForegroundColor Green
 
-        $testOut = & dotnet test (Join-Path $outDir "Tests\$($c.Safe).Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q 2>&1 | Out-String
-        if ($LASTEXITCODE -ne 0 -or $testOut -notmatch 'Passed!' -or $testOut -match 'Failed:\s+[1-9]') {
-            Write-Host "FAILED: tests for $combo" -ForegroundColor Red
-            Write-Host $testOut
-            $failed++
-            continue
+        $testOut = ""
+        if ($c.Tests) {
+            $testOut = & dotnet test (Join-Path $outDir "Tests\$($c.Safe).Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q 2>&1 | Out-String
+            if ($LASTEXITCODE -ne 0 -or $testOut -notmatch 'Passed!' -or $testOut -match 'Failed:\s+[1-9]') {
+                Write-Host "FAILED: tests for $combo" -ForegroundColor Red
+                Write-Host $testOut
+                $failed++
+                continue
+            }
+        }
+        else {
+            Write-Host "tests skipped (tests feature off, shell project builds)"
         }
         Write-Host "PASSED: $combo" -ForegroundColor Green
     }

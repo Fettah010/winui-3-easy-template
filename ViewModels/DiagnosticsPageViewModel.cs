@@ -77,6 +77,12 @@ public partial class DiagnosticsPageViewModel : ObservableObject
     [ObservableProperty]
     private bool _crashReportingEnabled;
 
+    /// <summary>
+    /// The crash toggle is only offered when the crash feature was
+    /// scaffolded; otherwise the veneer is a no-op with nothing to consent to.
+    /// </summary>
+    public Visibility CrashReportingVisibility => Visibility.Visible;
+
     [ObservableProperty]
     private int _selectedViewIndex;
 
@@ -126,6 +132,10 @@ public partial class DiagnosticsPageViewModel : ObservableObject
     public DiagnosticsPageViewModel(IFilePickerService? pickers = null)
     {
         _pickers = pickers ?? new FilePickerService();
+        // Backends without a file sink (mel, none) open on the live tail:
+        // the file view would only ever show its empty state.
+        if (!LoggingService.HasFileSink)
+            SelectedViewIndex = ViewLive;
         Refresh();
     }
 
@@ -165,7 +175,10 @@ public partial class DiagnosticsPageViewModel : ObservableObject
 
     partial void OnSelectedViewIndexChanged(int value)
     {
-        FileViewVisibility = value == ViewLive ? Visibility.Collapsed : Visibility.Visible;
+        // The file view stays hidden for backends without a file sink.
+        FileViewVisibility = value == ViewLive || !LoggingService.HasFileSink
+            ? Visibility.Collapsed
+            : Visibility.Visible;
         LiveViewVisibility = value == ViewLive ? Visibility.Visible : Visibility.Collapsed;
         if (value == ViewLive)
             RefreshLive();
@@ -376,6 +389,8 @@ public partial class DiagnosticsPageViewModel : ObservableObject
     {
         if (string.Equals(level, "Verbose", StringComparison.OrdinalIgnoreCase))
             return "VRB";
+        if (string.Equals(level, "Trace", StringComparison.OrdinalIgnoreCase))
+            return "TRC";
         if (string.Equals(level, "Debug", StringComparison.OrdinalIgnoreCase))
             return "DBG";
         if (string.Equals(level, "Information", StringComparison.OrdinalIgnoreCase))
@@ -386,6 +401,8 @@ public partial class DiagnosticsPageViewModel : ObservableObject
             return "ERR";
         if (string.Equals(level, "Fatal", StringComparison.OrdinalIgnoreCase))
             return "FTL";
+        if (string.Equals(level, "Critical", StringComparison.OrdinalIgnoreCase))
+            return "CRT";
         return level;
     }
 

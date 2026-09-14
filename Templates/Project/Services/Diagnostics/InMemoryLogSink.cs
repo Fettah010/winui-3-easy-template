@@ -1,21 +1,22 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace DevTemWinUi3.Services.Diagnostics;
 
 /// <summary>
-/// Bounded in-memory Serilog sink: keeps the newest N events for the live
-/// tail, structured filtering, and export. Drop-oldest on overflow.
-/// Never throws — diagnostics must not crash the app it observes.
+/// Bounded in-memory log buffer: keeps the newest N <see cref="LogEntry"/>
+/// records for the live tail, structured filtering, and export.
+/// Drop-oldest on overflow. Never throws — diagnostics must not crash the
+/// app it observes. Backend-agnostic: Serilog feeds it through
+/// <c>SerilogLogEntrySink</c>, MEL through
+/// <c>InMemoryLogSinkLoggerProvider</c>.
 /// </summary>
-public sealed class InMemoryLogSink : ILogEventSink
+public sealed class InMemoryLogSink
 {
     public const int DefaultCapacity = 1000;
 
-    private readonly ConcurrentQueue<LogEvent> _events = new();
+    private readonly ConcurrentQueue<LogEntry> _events = new();
     private readonly int _capacity;
 
     public InMemoryLogSink(int capacity = DefaultCapacity)
@@ -25,20 +26,20 @@ public sealed class InMemoryLogSink : ILogEventSink
 
     public int Count => _events.Count;
 
-    public void Emit(LogEvent logEvent)
+    public void Emit(LogEntry entry)
     {
         try
         {
-            if (logEvent is null)
+            if (entry is null)
                 return;
-            _events.Enqueue(logEvent);
+            _events.Enqueue(entry);
             while (_events.Count > _capacity && _events.TryDequeue(out _)) { }
         }
         catch { }
     }
 
     /// <summary>Snapshot, newest first. Empty on any error.</summary>
-    public IReadOnlyList<LogEvent> SnapshotNewestFirst()
+    public IReadOnlyList<LogEntry> SnapshotNewestFirst()
     {
         try
         {
@@ -48,7 +49,7 @@ public sealed class InMemoryLogSink : ILogEventSink
         }
         catch
         {
-            return Array.Empty<LogEvent>();
+            return Array.Empty<LogEntry>();
         }
     }
 }

@@ -4,6 +4,28 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+## [Unreleased]
+
+Template flexibility overhaul (plan `docs/FLEXIBILITY-PLAN.md`,
+Phases 0–4): vendor lock-ins become scaffold-time choices with smooth
+defaults. No app behavior change on default scaffolds.
+
+### Added
+
+- `updates` template choice: `velopack` (default), `basic`
+  (zero-dependency GitHub-releases checker behind the same
+  `IUpdateService` seam), or `none` (`--updates basic`).
+- `logging` template choice: `serilog` (default), `mel` (debugger +
+  Event Log, no files), or `none` (`--logging mel`). App code logs
+  through the backend-agnostic `AppLog` facade; the diagnostics buffer
+  is backend-neutral (`LogEntry`).
+- `crash`, `localization`, `tests` template flags: Sentry behind a
+  no-op veneer when dropped, English-only UI (picker hides itself),
+  and an empty test-project shell (`--crash false --localization false
+  --tests false`).
+- Per-value feature guides (`updates-basic.md`, `logging-mel.md`) and
+  value-aware `docs/FEATURES.md` / `template-features.json`.
+
 ## [0.0.3-beta] — 2026-09-14
 
 Diagnostics overhaul (plan `docs/DIAGNOSTICS-PLAN.md`, Phases 0–4), a

@@ -13,10 +13,11 @@ dotnet new install DevTem.Templates
 
 ## `devtem-winui` — full desktop app
 
-Unpackaged WinUI 3 app: Mica window, system tray, Velopack auto-updates,
-optional SQLite and HTTP services, 3-language UI (EN/ES/FR), persisted settings,
-Serilog logging + optional Sentry crash reports, MSIX packaging script,
-release pipeline.
+Unpackaged WinUI 3 app: Mica window, system tray, auto-updates (Velopack
+by default; basic checker or none), optional SQLite and HTTP services,
+3-language UI (EN/ES/FR; English-only available), persisted settings,
+flexible logging (Serilog by default) + optional Sentry crash reports,
+MSIX packaging script, release pipeline.
 
 ```powershell
 dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
@@ -30,11 +31,13 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--company` | Pack author |
 | `--repo` | GitHub `org/name` (feeds, links, CI) |
 | `--scheme` | Deep-link URI scheme (`acme://`) |
-| `--tray` / `--updates` / `--database` / `--http` | Feature on/off (`false` drops it; all default on) |
+| `--tray` / `--database` / `--http` / `--health` / `--crash` / `--localization` / `--tests` | Feature on/off (`false` drops it; all default on) |
+| `--updates` | Auto-updates: `velopack` (default), `basic` (checker), `none` |
+| `--logging` | Logging backend: `serilog` (default), `mel`, `none` |
 
 Names with spaces work (`-n "My App"` → `My_App` identifiers and files).
-In Visual Studio the parameters render as dialog fields and checkboxes.
-Every generated project also includes `docs/FEATURES.md`, which records the
+In Visual Studio the parameters render as dialog fields, checkboxes, and
+dropdowns (the choices). Every generated project also includes `docs/FEATURES.md`, which records the
 selected options and next steps; disabled feature guides are omitted.
 
 ### Profile presets
@@ -45,8 +48,8 @@ options:
 
 | Profile | Command flags | Included optional services |
 | --- | --- | --- |
-| Minimal | `--tray false --updates false --database false --http false --attribution false` | None |
-| Desktop | `--updates false --database false --http false` | Tray and desktop notifications |
+| Minimal | `--tray false --updates none --database false --http false --health false --logging none --crash false --localization false --tests false --attribution false` | None |
+| Desktop | `--updates none --database false --http false` | Tray and desktop notifications |
 | Production | no feature overrides | Tray, updates, SQLite, HTTP, attribution |
 
 Apply a preset by copying its flags into the scaffold command, then change

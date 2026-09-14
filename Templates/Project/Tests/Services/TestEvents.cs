@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
-using Serilog.Events;
-using Serilog.Parsing;
+using DevTemWinUi3.Services.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace DevTemWinUi3.Tests.Services;
 
-/// <summary>Factory for Serilog events in headless tests (no logger needed).</summary>
+/// <summary>Factory for backend-agnostic buffer entries in headless tests (no logger needed).</summary>
 internal static class TestEvents
 {
-    private static readonly MessageTemplateParser s_parser = new();
-
-    internal static LogEvent Make(
+    internal static LogEntry Make(
         string message,
         string sourceContext = "Test.Space",
-        LogEventLevel level = LogEventLevel.Information,
+        LogLevel level = LogLevel.Information,
         Exception? exception = null)
     {
-        var template = s_parser.Parse(message);
-        var properties = new List<LogEventProperty>
-        {
-            new("SourceContext", new ScalarValue(sourceContext)),
-        };
-        return new LogEvent(DateTimeOffset.UtcNow, level, exception, template, properties);
+        return new LogEntry(
+            DateTimeOffset.UtcNow,
+            level,
+            sourceContext,
+            message,
+            exception,
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
     }
 }

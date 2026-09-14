@@ -250,7 +250,7 @@ public partial class SettingsPageViewModel : ObservableObject
         {
             // Unpackaged run: explain via the animated in-app toast (modern
             // WinUI style) instead of the inline status card.
-            LoggingService.Log.Information("Update check: app is not installed, showing toast");
+            AppLog.Information("Update check: app is not installed, showing toast");
             NotificationService.Current.Info(loc.GetString("NotifUpdates"), loc.GetString("SettingsNotInstalled"));
             return;
         }
