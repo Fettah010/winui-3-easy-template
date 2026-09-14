@@ -99,11 +99,27 @@ public class LocalizationCoverageTests
         Assert.AreEqual("Diagnóstico", loc.GetString("NavDiagnostics"));
         Assert.AreEqual("Actualizar", loc.GetString("DiagnosticsRefresh"));
         Assert.AreEqual("Aún no hay archivos de registro.", loc.GetString("DiagnosticsNoLogs"));
+        Assert.AreEqual("Buscar en los registros…", loc.GetString("DiagnosticsSearchPlaceholder"));
+        Assert.AreEqual("Todos los niveles", loc.GetString("DiagnosticsLevelAll"));
+        Assert.AreEqual("Copiar", loc.GetString("DiagnosticsCopy"));
+        Assert.AreEqual("Borrar", loc.GetString("DiagnosticsClear"));
+        Assert.AreEqual("Ninguna línea coincide con el filtro.", loc.GetString("DiagnosticsNoMatch"));
+        Assert.AreEqual("1 de 4 líneas", loc.GetString("DiagnosticsLines", 1, 4));
 
         loc.SetLanguage("fr-FR");
         Assert.AreEqual("Diagnostic", loc.GetString("NavDiagnostics"));
         Assert.AreEqual("Actualiser", loc.GetString("DiagnosticsRefresh"));
         Assert.AreEqual("Aucun journal pour l'instant.", loc.GetString("DiagnosticsNoLogs"));
+        Assert.AreEqual("Rechercher dans les journaux…", loc.GetString("DiagnosticsSearchPlaceholder"));
+        Assert.AreEqual("Tous les niveaux", loc.GetString("DiagnosticsLevelAll"));
+        Assert.AreEqual("Copier", loc.GetString("DiagnosticsCopy"));
+        Assert.AreEqual("Effacer", loc.GetString("DiagnosticsClear"));
+        Assert.AreEqual("Aucune ligne ne correspond au filtre.", loc.GetString("DiagnosticsNoMatch"));
+        Assert.AreEqual("1 sur 4 lignes", loc.GetString("DiagnosticsLines", 1, 4));
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Search logs…", loc.GetString("DiagnosticsSearchPlaceholder"));
+        Assert.AreEqual("1 of 4 lines", loc.GetString("DiagnosticsLines", 1, 4));
     }
 
     [TestMethod]

@@ -215,6 +215,7 @@ public sealed class AppSmokeTests
         DismissFirstRunDialogIfPresent(RecheckTimeout);
 
         ClickNavAndWaitForPage("NavAboutItem", "AboutTitleText");
+        ClickNavAndWaitForPage("NavDiagnosticsItem", "DiagnosticsTitleText");
         ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
         ClickNavAndWaitForPage("NavHomeItem", "HomeTitleText");
     }

@@ -7,11 +7,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
     xmlns:loc="using:DevTemWinUi3.Controls"
+    xmlns:ctrl="using:DevTemWinUi3.Controls"
     mc:Ignorable="d"
     NavigationCacheMode="Disabled">
 
     <!-- DataContext (DiagnosticsPageViewModel) is resolved from the DI container
-         in code-behind, never newed up in XAML. -->
+         in code-behind BEFORE InitializeComponent so compiled bindings
+         ({x:Bind ViewModel.…}) see it on first evaluation, never newed up in XAML. -->
 
     <Grid>
         <VisualStateManager.VisualStateGroups>
@@ -75,14 +77,15 @@
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=DiagnosticsLogs}">
-                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                    <!-- WrapPanel (not StackPanel): longer translations wrap
+                         instead of clipping on narrow windows. -->
+                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
                         <ComboBox
                             x:Name="LogFileComboBox"
                             AutomationProperties.AutomationId="LogFileComboBox"
                             ItemsSource="{x:Bind ViewModel.LogFiles, Mode=OneWay}"
                             SelectedItem="{x:Bind ViewModel.SelectedLogFile, Mode=TwoWay}"
-                            MinWidth="180"
-                            HorizontalAlignment="Right"/>
+                            MinWidth="180"/>
                         <Button
                             AutomationProperties.AutomationId="RefreshLogsButton"
                             Content="{loc:Loc Key=DiagnosticsRefresh}"
@@ -92,8 +95,47 @@
                             Content="{loc:Loc Key=DiagnosticsOpenFolder}"
                             Click="OpenLogFolderButton_Click"
                             Style="{ThemeResource AccentButtonStyle}"/>
-                    </StackPanel>
+                    </ctrl:WrapPanel>
                 </ctk:SettingsCard>
+
+                <!-- Filter row: search + level + copy/clear. Plain card so the
+                     viewer below stays the visual focus. -->
+                <ctk:SettingsCard>
+                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Stretch">
+                        <TextBox
+                            x:Name="SearchBox"
+                            AutomationProperties.AutomationId="DiagnosticsSearchBox"
+                            PlaceholderText="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
+                            Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            MinWidth="180"/>
+                        <ComboBox
+                            x:Name="LevelComboBox"
+                            AutomationProperties.AutomationId="DiagnosticsLevelCombo"
+                            SelectedIndex="{x:Bind ViewModel.SelectedLevelIndex, Mode=TwoWay}"
+                            MinWidth="140">
+                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelAll}"/>
+                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelDebug}"/>
+                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelInfo}"/>
+                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelWarning}"/>
+                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelError}"/>
+                        </ComboBox>
+                        <Button
+                            x:Name="CopyButton"
+                            AutomationProperties.AutomationId="DiagnosticsCopyButton"
+                            Content="{loc:Loc Key=DiagnosticsCopy}"
+                            Click="CopyButton_Click"/>
+                        <Button
+                            AutomationProperties.AutomationId="DiagnosticsClearButton"
+                            Content="{loc:Loc Key=DiagnosticsClear}"
+                            Click="ClearButton_Click"/>
+                    </ctrl:WrapPanel>
+                </ctk:SettingsCard>
+
+                <TextBlock
+                    x:Name="LogCountText"
+                    AutomationProperties.AutomationId="DiagnosticsLogCountText"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
                 <Border
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -102,14 +144,26 @@
                     CornerRadius="8"
                     Padding="12">
                     <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <TextBlock
-                            x:Name="LogText"
-                            AutomationProperties.AutomationId="DiagnosticsLogText"
-                            Text="{x:Bind ViewModel.LogText, Mode=OneWay}"
-                            FontFamily="Consolas"
-                            FontSize="12"
-                            TextWrapping="NoWrap"
-                            IsTextSelectionEnabled="True"/>
+                        <Grid>
+                            <TextBlock
+                                x:Name="LogText"
+                                AutomationProperties.AutomationId="DiagnosticsLogText"
+                                Text="{x:Bind ViewModel.LogText, Mode=OneWay}"
+                                FontFamily="Consolas"
+                                FontSize="12"
+                                TextWrapping="NoWrap"
+                                IsTextSelectionEnabled="True"/>
+                            <!-- Empty state is a SEPARATE element: writing the
+                                 placeholder into LogText would clobber the
+                                 compiled binding above. -->
+                            <TextBlock
+                                x:Name="EmptyStateText"
+                                AutomationProperties.AutomationId="DiagnosticsEmptyText"
+                                Style="{ThemeResource BodyTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed"/>
+                        </Grid>
                     </ScrollViewer>
                 </Border>
             </StackPanel>

@@ -19,9 +19,10 @@ public sealed partial class SettingsPage : Page, INavigationAware
 
     public SettingsPage()
     {
-        this.InitializeComponent();
-        // ViewModel comes from the container (transient per page), never new.
+        // Resolve BEFORE InitializeComponent so {x:Bind ViewModel.…}
+        // bindings evaluate against the real instance on first load.
         ViewModel = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
+        this.InitializeComponent();
         DataContext = ViewModel;
 
         // Static labels and update state bind in XAML (VM-owned); only the

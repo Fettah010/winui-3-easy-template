@@ -92,7 +92,9 @@ public static class DiagnosticsService
 
     /// <summary>
     /// Last <paramref name="maxLines"/> lines of a log file. Refuses paths
-    /// outside the log directory. Empty string on any error.
+    /// outside the log directory. Empty string on any error. Opens with
+    /// <see cref="FileShare.ReadWrite"/> so the Serilog writer lock never
+    /// blanks the view, and keeps only the tail in memory.
     /// </summary>
     public static string ReadLogTail(string path, int maxLines = DefaultTailLines)
     {
@@ -107,8 +109,17 @@ public static class DiagnosticsService
                 return string.Empty;
             if (!File.Exists(full))
                 return string.Empty;
-            var lines = File.ReadAllLines(full);
-            return string.Join(Environment.NewLine, lines.Skip(Math.Max(0, lines.Length - maxLines)));
+            var tail = new Queue<string>(Math.Min(maxLines, 1024));
+            using var stream = new FileStream(full, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+            string? line;
+            while ((line = reader.ReadLine()) is not null)
+            {
+                if (tail.Count == maxLines)
+                    tail.Dequeue();
+                tail.Enqueue(line);
+            }
+            return string.Join(Environment.NewLine, tail);
         }
         catch
         {

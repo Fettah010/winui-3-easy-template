@@ -10,6 +10,7 @@ namespace DevTemWinUi3.Tests.Services;
 public class DiagnosticsServiceTests
 {
     private static readonly string[] s_logLines = new[] { "one", "two", "three", "four" };
+    private static readonly string[] s_tailLines = new[] { "l1", "l2", "l3", "l4", "l5" };
 
     private string _storePath = string.Empty;
 
@@ -58,6 +59,46 @@ public class DiagnosticsServiceTests
             string tail = DiagnosticsService.ReadLogTail(file, 2);
             Assert.DoesNotContain("one", tail);
             Assert.Contains("three", tail);
+            Assert.Contains("four", tail);
+        }
+        finally
+        {
+            try { File.Delete(file); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void ReadLogTail_ReturnsOnlyTail()
+    {
+        var dir = DiagnosticsService.LogDirectoryPath;
+        try { Directory.CreateDirectory(dir); } catch { }
+        var file = Path.Combine(dir, "applog-20990201.log");
+        try
+        {
+            File.WriteAllLines(file, s_tailLines);
+            string tail = DiagnosticsService.ReadLogTail(file, 2);
+            Assert.DoesNotContain("l3", tail);
+            Assert.Contains("l4", tail);
+            Assert.Contains("l5", tail);
+        }
+        finally
+        {
+            try { File.Delete(file); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void ReadLogTail_ReadsThroughSharedWriteLock()
+    {
+        // Serilog holds the live file open: the view must still read it.
+        var dir = DiagnosticsService.LogDirectoryPath;
+        try { Directory.CreateDirectory(dir); } catch { }
+        var file = Path.Combine(dir, "applog-20990202.log");
+        try
+        {
+            File.WriteAllLines(file, s_logLines);
+            using var locked = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+            string tail = DiagnosticsService.ReadLogTail(file, 4);
             Assert.Contains("four", tail);
         }
         finally

@@ -10,8 +10,10 @@ public sealed partial class AboutPage : Page, INavigationAware
 
     public AboutPage()
     {
-        this.InitializeComponent();
+        // Assign BEFORE InitializeComponent so {x:Bind AppVersion} binds
+        // against the real value on first evaluation.
         AppVersion = AppInfo.Current.Version;
+        this.InitializeComponent();
     }
 
     public void OnNavigatedTo(object? parameter)
