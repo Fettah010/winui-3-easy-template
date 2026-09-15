@@ -243,3 +243,11 @@ in git history; this file saves the next agent the archaeology.
   (same precedent as `DIAGNOSTICS-PLAN.md`). History stays in
   `CHANGELOG.md` + `DECISIONS.md`; open work still lives in
   `DISCOVERY-PLAN.md` and `TEMPLATE-REUSABILITY-ROADMAP.md`, which stay.
+- **2026-09-15 — Dual-track is runtime-aware, symbol-free.**
+  One binary serves GitHub + Store via `AppFeatures.IsExternallyManaged`
+  (scaffold flag OR packaged run); six VM call sites, zero guard or
+  `template.json` changes, presets stay docs-only. A packaged engine
+  scaffold gets its own handler string (neither Store- nor feed-text is
+  accurate there). Template ships patch `0.3.1` (content-only, no
+  surface change — MINOR policy covers symbols/values). `release.yml`
+  MSIX leg skips without `DEVTEM_MSIX_PUBLISHER` so forks stay green.

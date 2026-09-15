@@ -337,6 +337,27 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void NewDualTrackKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual(
+            "Updates are handled by Windows (Microsoft Store or the installer feed).",
+            loc.GetString("SettingsUpdatesExternalPackaged"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual(
+            "Las actualizaciones las gestiona Windows (Microsoft Store o el feed de instalación).",
+            loc.GetString("SettingsUpdatesExternalPackaged"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual(
+            "Les mises à jour sont gérées par Windows (Microsoft Store ou le flux d'installation).",
+            loc.GetString("SettingsUpdatesExternalPackaged"));
+    }
+
+    [TestMethod]
     public void Dictionaries_ContainNoHardcodedVersions()
     {        var versionLike = new System.Text.RegularExpressions.Regex(@"\bv\d+\.\d+");
         var offenders = new System.Collections.Generic.List<string>();

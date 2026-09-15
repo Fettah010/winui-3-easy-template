@@ -163,3 +163,63 @@ jobs:
           if ($env:PRERELEASE -eq "true") { $releaseArgs["PreRelease"] = $true }
           & ./Scripts/build-and-release.ps1 @releaseArgs
           if ($LASTEXITCODE -ne 0) { throw "Release script failed with exit code $LASTEXITCODE" }
+
+  # Dual-track MSIX leg: same tag, same version — packs the Store upload
+  # (.msixupload) from the runtime-adaptive binary and attaches it to the
+  # GitHub Release (doubles as the sideload feed host). Skips gracefully
+  # when DEVTEM_MSIX_PUBLISHER is unset (forks stay green); Store
+  # submission itself stays manual (store-submit.yml) or publish-store.ps1.
+  msix:
+    name: MSIX upload (dual-track)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    needs: [release]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Resolve tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = if ("${{ github.event_name }}" -eq "push") { "${{ github.ref_name }}" } else { "v${{ inputs.version }}" }
+          Write-Output "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Build Store upload (or skip without a Publisher)
+        shell: pwsh
+        env:
+          PUBLISHER: ${{ secrets.DEVTEM_MSIX_PUBLISHER }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PUBLISHER)) {
+            Write-Host "DEVTEM_MSIX_PUBLISHER unset - skipping MSIX leg (Velopack release above is unaffected)."
+            return
+          }
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/build-msix.ps1 -Validate -Publisher "$env:PUBLISHER"
+          if ($LASTEXITCODE -ne 0) { throw "MSIX pre-flight failed with exit code $LASTEXITCODE" }
+          powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/build-msix.ps1 -StoreUpload -Publisher "$env:PUBLISHER"
+          if ($LASTEXITCODE -ne 0) { throw "MSIX upload build failed with exit code $LASTEXITCODE" }
+
+      - name: Attach .msixupload to the release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PUBLISHER: ${{ secrets.DEVTEM_MSIX_PUBLISHER }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PUBLISHER)) {
+            Write-Host "DEVTEM_MSIX_PUBLISHER unset - nothing to attach."
+            return
+          }
+          $uploads = @(Get-ChildItem -LiteralPath "Releases/Msix" -Filter "*.msixupload" -ErrorAction SilentlyContinue)
+          if ($uploads.Count -eq 0) { throw "No .msixupload found under Releases/Msix." }
+          foreach ($u in $uploads) {
+            & gh release upload "$env:TAG" $u.FullName --clobber
+            if ($LASTEXITCODE -ne 0) { throw "gh release upload failed with exit code $LASTEXITCODE" }
+          }

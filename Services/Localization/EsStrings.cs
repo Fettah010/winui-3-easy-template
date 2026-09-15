@@ -104,6 +104,7 @@ internal static class EsStrings
         ["SettingsNotInstalled"] = "Las actualizaciones solo están disponibles para apps instaladas.",
         ["SettingsUpdatesExternalStore"] = "Las actualizaciones las gestiona Microsoft Store.",
         ["SettingsUpdatesExternalAppInstaller"] = "Las actualizaciones las gestiona el feed de AppInstaller (se comprueban al iniciar y en segundo plano).",
+        ["SettingsUpdatesExternalPackaged"] = "Las actualizaciones las gestiona Windows (Microsoft Store o el feed de instalación).",
         ["SettingsOpenStore"] = "Abrir Microsoft Store",
         ["SettingsOpenWindowsSettings"] = "Abrir la configuración de Apps de Windows",
         ["SettingsCheckFailed"] = "Error al verificar",

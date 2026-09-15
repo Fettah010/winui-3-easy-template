@@ -104,6 +104,7 @@ internal static class EnStrings
         ["SettingsNotInstalled"] = "Updates are only available for installed apps.",
         ["SettingsUpdatesExternalStore"] = "Updates are handled by the Microsoft Store.",
         ["SettingsUpdatesExternalAppInstaller"] = "Updates are handled by the AppInstaller feed (checked on launch and in the background).",
+        ["SettingsUpdatesExternalPackaged"] = "Updates are handled by Windows (Microsoft Store or the installer feed).",
         ["SettingsOpenStore"] = "Open Microsoft Store",
         ["SettingsOpenWindowsSettings"] = "Open Windows Apps settings",
         ["SettingsCheckFailed"] = "Check failed",

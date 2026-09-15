@@ -141,4 +141,21 @@ public class UpdateCenterViewModelTests
         Assert.IsFalse(vm.CanCheck);
         Assert.IsFalse(string.IsNullOrWhiteSpace(vm.StatusMessage));
     }
+
+    [TestMethod]
+    public void ExternalHandlerText_BothViewModelsAgree()
+    {
+        // Relational across scaffold modes (matrix runs every combo).
+        // Runners are always unpackaged, so the packaged-dual branch is
+        // unreachable here; packaged routing is proven by the install
+        // checklist instead.
+        var loc = LocalizationService.Current;
+        loc.SetLanguage("en-US");
+        string expected = AppFeatures.UpdateMode == "store"
+            ? loc.GetString("SettingsUpdatesExternalStore")
+            : loc.GetString("SettingsUpdatesExternalAppInstaller");
+
+        Assert.AreEqual(expected, SettingsPageViewModel.ExternalHandlerText(loc));
+        Assert.AreEqual(expected, UpdateCenterViewModel.ExternalHandlerText(loc));
+    }
 }

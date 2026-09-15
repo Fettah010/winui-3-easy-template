@@ -18,4 +18,15 @@ public class AppFeaturesTests
             AppFeatures.UpdateMode is "appinstaller" or "store",
             AppFeatures.IsExternalUpdateMode);
     }
+
+    [TestMethod]
+    public void ExternallyManaged_CoversExternalModesAndPackagedRuns()
+    {
+        // Relational, same matrix rule as above. Unit tests always run
+        // unpackaged, so IsPackaged is false here and the seam must equal
+        // the scaffold flag; packaged runs take the slim surface (proven
+        // by the packaged install checklist, not headless).
+        Assert.IsFalse(AppInfo.IsPackaged);
+        Assert.AreEqual(AppFeatures.IsExternalUpdateMode, AppFeatures.IsExternallyManaged);
+    }
 }

@@ -520,6 +520,29 @@ try {
         }
         Write-Host "build ${combo}: 0 warnings, 0 errors" -ForegroundColor Green
 
+        # Dual-track proof (allon only): the Velopack scaffold must also
+        # stage as MSIX (DryRun needs no SDK) — same binary, both routes.
+        if ($combo -eq "allon") {
+            $msixOut = ""
+            Push-Location $outDir
+            try {
+                $msixOut = & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $outDir "Scripts\build-msix.ps1") -DryRun 2>&1 | Out-String
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "FAILED: msix DryRun for $combo (exit $LASTEXITCODE)" -ForegroundColor Red
+                    Write-Host $msixOut
+                    $failed++
+                    continue
+                }
+            }
+            finally { Pop-Location }
+            if ($msixOut -notmatch "Staging valid") {
+                Write-Host "FAILED: msix DryRun for $combo did not stage" -ForegroundColor Red
+                $failed++
+                continue
+            }
+            Write-Host "msix DryRun ${combo}: staging valid" -ForegroundColor Green
+        }
+
         $testOut = ""
         if ($c.Tests) {
             $testOut = & dotnet test (Join-Path $outDir "Tests\$($c.Safe).Tests.csproj") -c Debug -p:Platform=x64 --nologo -v q 2>&1 | Out-String

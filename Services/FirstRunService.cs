@@ -57,8 +57,8 @@ public sealed class FirstRunService
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• New Update Center: progress + release notes
-• First-run setup wizard (portable installs)
+• One binary for GitHub and Store releases
+• Update Center follows Windows when packaged
 • Same features, cleaner and faster internals";
     }
 }

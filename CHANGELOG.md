@@ -4,6 +4,18 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+
+## [0.0.6-beta] - 2026-09-15
+
+### Added
+
+- Dual-track distribution (plan `docs/DUAL-TRACK-PLAN.md`): one
+  `portable + velopack` binary serves GitHub and the Store. Packaged
+  runs take the slim update status surface via the new
+  `AppFeatures.IsExternallyManaged` seam (scaffold modes unchanged);
+  `release.yml` packs the Store upload on every tag when
+  `DEVTEM_MSIX_PUBLISHER` is set, plus a `distribution-dual.md` guide.
+
 ## [0.0.4-beta] — 2026-09-14
 
 Template flexibility overhaul (plan `docs/FLEXIBILITY-PLAN.md`,

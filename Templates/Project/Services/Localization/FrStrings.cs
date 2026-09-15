@@ -104,6 +104,7 @@ internal static class FrStrings
         ["SettingsNotInstalled"] = "Les mises à jour ne sont disponibles que pour les apps installées.",
         ["SettingsUpdatesExternalStore"] = "Les mises à jour sont gérées par le Microsoft Store.",
         ["SettingsUpdatesExternalAppInstaller"] = "Les mises à jour sont gérées par le flux AppInstaller (vérifiées au lancement et en arrière-plan).",
+        ["SettingsUpdatesExternalPackaged"] = "Les mises à jour sont gérées par Windows (Microsoft Store ou le flux d'installation).",
         ["SettingsOpenStore"] = "Ouvrir le Microsoft Store",
         ["SettingsOpenWindowsSettings"] = "Ouvrir les paramètres Applications de Windows",
         ["SettingsCheckFailed"] = "Échec de la vérification",

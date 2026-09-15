@@ -274,6 +274,7 @@ internal service:
 | Desktop | `--updates none --database false --http false` | Minimal plus tray and desktop notifications |
 | Production | no overrides | All optional services and release tooling |
 | Store | `--distribution msix --updates store --setup false` | Packaged MSIX for Store submission (tray stays valid packaged; autostart moves to `StartupTask`) |
+| Dual | `--publisher "CN=Your-ID"` (on Production defaults) | One binary for GitHub (Velopack) + Store (same MSIX); see `distribution-dual.md` |
 
 Copy a preset's flags into the scaffold command and override any individual
 flag. Individual flags always win; profiles are intentionally documentation

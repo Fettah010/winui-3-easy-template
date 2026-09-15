@@ -76,11 +76,9 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
         try
         {
             var loc = LocalizationService.Current;
-            if (AppFeatures.IsExternalUpdateMode)
+            if (AppFeatures.IsExternallyManaged)
             {
-                StatusMessage = AppFeatures.UpdateMode == "store"
-                    ? loc.GetString("SettingsUpdatesExternalStore")
-                    : loc.GetString("SettingsUpdatesExternalAppInstaller");
+                StatusMessage = ExternalHandlerText(loc);
                 VersionLine = AppInfo.Current.VersionDisplay;
                 PendingVersion = AppInfo.Current.VersionDisplay;
                 ReleaseNotes = string.Empty;
@@ -118,7 +116,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     /// <summary>Runs the check; publishes version + notes on success.</summary>
     public async Task CheckAsync(CancellationToken ct = default)
     {
-        if (_updates is null || _busy || AppFeatures.IsExternalUpdateMode)
+        if (_updates is null || _busy || AppFeatures.IsExternallyManaged)
             return;
         var loc = LocalizationService.Current;
         _busy = true;
@@ -173,7 +171,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
         {
             _busy = false;
             IsBusy = false;
-            if (!AppFeatures.IsExternalUpdateMode && _updates is not null)
+            if (!AppFeatures.IsExternallyManaged && _updates is not null)
                 CanCheck = true;
         }
     }
@@ -246,6 +244,20 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     {
         try { return LocalizationService.Current.GetString("InstallFailedDetail", detail); }
         catch { return detail; }
+    }
+
+    /// <summary>
+    /// Handler line for the slim status surface (mirrors the Settings VM:
+    /// Store text in store mode, packaged-dual text for engine scaffolds
+    /// running packaged, feed text otherwise).
+    /// </summary>
+    internal static string ExternalHandlerText(LocalizationService loc)
+    {
+        if (AppFeatures.UpdateMode == "store")
+            return loc.GetString("SettingsUpdatesExternalStore");
+        if (AppInfo.IsPackaged)
+            return loc.GetString("SettingsUpdatesExternalPackaged");
+        return loc.GetString("SettingsUpdatesExternalAppInstaller");
     }
 
     private void SetOnUiThread(Action update)

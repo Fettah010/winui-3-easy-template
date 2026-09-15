@@ -26,4 +26,13 @@ internal static class AppFeatures
 
     /// <summary>Updates managed outside the app (Store / AppInstaller feed).</summary>
     public static bool IsExternalUpdateMode => UpdateMode is "appinstaller" or "store";
+
+    /// <summary>
+    /// Updates the app must not drive itself: scaffold-external modes plus
+    /// any packaged run (the install dir is read-only there, so even a
+    /// compiled-in Velopack engine can never apply). This is what makes one
+    /// binary dual-track: unpackaged it follows the scaffold engine,
+    /// packaged it takes the slim status surface.
+    /// </summary>
+    public static bool IsExternallyManaged => IsExternalUpdateMode || AppInfo.IsPackaged;
 }

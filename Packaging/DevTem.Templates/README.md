@@ -56,6 +56,7 @@ options:
 | Desktop | `--updates none --database false --http false` | Tray and desktop notifications |
 | Production | no feature overrides | Tray, updates, SQLite, HTTP, attribution |
 | Store | `--distribution msix --updates store --setup false` | Packaged MSIX for Store submission |
+| Dual | `--publisher "CN=Your-ID"` (on defaults) | One binary for GitHub (Velopack) + Store (same MSIX) |
 
 Apply a preset by copying its flags into the scaffold command, then change
 any individual flag as needed. Individual flags are authoritative; there is

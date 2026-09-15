@@ -238,17 +238,16 @@ public partial class SettingsPageViewModel : ObservableObject
     public void RefreshUpdateLabels()
     {
         var loc = LocalizationService.Current;
-        if (AppFeatures.IsExternalUpdateMode)
+        if (AppFeatures.IsExternallyManaged)
         {
-            // Store / AppInstaller own the flow: no channel, no check
+            // Externally owned (Store / AppInstaller, or any packaged run:
+            // the install dir is read-only there): no channel, no check
             // button — the status card carries the handler, the version,
             // and the action (both entry points route to the owner).
             UpdateCheckCardVisibility = Visibility.Collapsed;
             UpdateCardVisibility = Visibility.Visible;
             UpdateCardHeader = loc.GetString("SettingsUpdates");
-            UpdateCardDescription = AppFeatures.UpdateMode == "store"
-                ? loc.GetString("SettingsUpdatesExternalStore")
-                : loc.GetString("SettingsUpdatesExternalAppInstaller");
+            UpdateCardDescription = ExternalHandlerText(loc);
             UpdateStatusMessage = AppInfo.Current.VersionDisplay;
             InstallButtonText = AppFeatures.UpdateMode == "store"
                 ? loc.GetString("SettingsOpenStore")
@@ -275,7 +274,7 @@ public partial class SettingsPageViewModel : ObservableObject
     /// </summary>
     public async Task CheckForUpdatesAsync(CancellationToken ct = default)
     {
-        if (AppFeatures.IsExternalUpdateMode)
+        if (AppFeatures.IsExternallyManaged)
         {
             await OpenExternalUpdateSourceAsync();
             return;
@@ -354,7 +353,7 @@ public partial class SettingsPageViewModel : ObservableObject
     /// </summary>
     public async Task InstallPendingUpdateAsync(CancellationToken ct = default)
     {
-        if (AppFeatures.IsExternalUpdateMode)
+        if (AppFeatures.IsExternallyManaged)
         {
             await OpenExternalUpdateSourceAsync();
             return;
@@ -413,9 +412,10 @@ public partial class SettingsPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Opens the external update owner: the Store listing (store mode) or
-    /// Windows Apps settings where the AppInstaller feed can be managed
-    /// (appinstaller mode). No-op for engine modes. Never throws.
+    /// Opens the external update owner: the Store listing (store mode),
+    /// Windows Apps settings where the feed can be managed (appinstaller
+    /// mode, or any packaged run whose scaffold engine cannot apply).
+    /// Never throws.
     /// </summary>
     public async Task OpenExternalUpdateSourceAsync()
     {
@@ -427,13 +427,27 @@ public partial class SettingsPageViewModel : ObservableObject
                     ? "ms-windows-store://pdp/?PFN=" + Uri.EscapeDataString(pfn)
                     : "ms-windows-store://home",
                 "appinstaller" => "ms-settings:appsfeatures",
-                _ => null,
+                _ => AppInfo.IsPackaged ? "ms-settings:appsfeatures" : null,
             };
             if (uri is null)
                 return;
             _ = await Windows.System.Launcher.LaunchUriAsync(new Uri(uri));
         }
         catch { }
+    }
+
+    /// <summary>
+    /// Handler line for the slim status surface: Store text in store mode,
+    /// packaged-dual text for engine scaffolds running packaged, feed text
+    /// otherwise. Pure lookup (headless-testable).
+    /// </summary>
+    internal static string ExternalHandlerText(LocalizationService loc)
+    {
+        if (AppFeatures.UpdateMode == "store")
+            return loc.GetString("SettingsUpdatesExternalStore");
+        if (AppInfo.IsPackaged)
+            return loc.GetString("SettingsUpdatesExternalPackaged");
+        return loc.GetString("SettingsUpdatesExternalAppInstaller");
     }
 
     private void ResetInstallState()

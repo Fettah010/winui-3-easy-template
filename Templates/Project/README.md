@@ -53,6 +53,9 @@ dotnet new devtem-winui -n MyApp
 
 # Store: packaged MSIX for Microsoft Store submission
 dotnet new devtem-winui -n MyApp --distribution msix --updates store --setup false
+
+# Dual: one binary for GitHub (Velopack) + Store (same MSIX, see distribution-dual.md)
+dotnet new devtem-winui -n MyApp --publisher "CN=Your-ID"
 ```
 
 These are documented presets rather than a separate `--profile` parameter;
@@ -208,6 +211,12 @@ is portable-only (Windows owns location and shortcuts for MSIX).
 git tag v0.0.1-beta
 git push origin v0.0.1-beta        # -> .github/workflows/release.yml runs
 ```
+
+Dual-track: the same tag also packs the Store `.msixupload` when the
+`DEVTEM_MSIX_PUBLISHER` repo secret is set (skipped gracefully without
+it) — one binary, GitHub + Store at one version. See
+`docs/feature-guides/distribution-dual.md` for the rules that bite
+(same family or reinstall, Store owns Store installs).
 
 Or run it manually from the **Actions** tab: *Run workflow* → enter the version
 (e.g. `0.0.1-beta`) → select *beta* channel.

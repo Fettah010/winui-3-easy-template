@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
@@ -16,20 +15,19 @@
     <AssemblyName>DevTemWinUi3</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
-    <Version>0.0.5</Version>
-    <AssemblyVersion>0.0.5.0</AssemblyVersion>
-    <FileVersion>0.0.5.0</FileVersion>
+    <Version>0.0.6</Version>
+    <AssemblyVersion>0.0.6.0</AssemblyVersion>
+    <FileVersion>0.0.6.0</FileVersion>
     <!-- Product version shown by Windows; carries the channel suffix for beta
          builds (e.g. 0.0.5-beta) so the app can default to its own channel.
          Keep in sync: stable releases use the plain version. -->
-    <InformationalVersion>0.0.5-beta</InformationalVersion>
+    <InformationalVersion>0.0.6-beta</InformationalVersion>
     <NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
     <UseXamlCompilerExecutable>false</UseXamlCompilerExecutable>
     <!-- ReadyToRun for Release: pre-compiled managed code shortens cold-start
          JIT on installed builds (slightly larger package, faster launch). -->
     <PublishReadyToRun Condition="'$(Configuration)' == 'Release'">true</PublishReadyToRun>
   </PropertyGroup>
-
   <ItemGroup>
     <!-- app.ico MUST be explicit Content (not just ApplicationIcon): only Content
          is guaranteed to flow into publish output and the Velopack installer.
@@ -44,13 +42,11 @@
     <Content Include="Assets\Logo-32.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\Logo-16.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Remove="Tests\**" />
     <None Remove="Tests\**" />
     <Content Remove="Tests\**" />
   </ItemGroup>
-
   <!-- FlaUI smoke tests drive the built exe; they are never app code. -->
   <ItemGroup>
     <Compile Remove="UI\**" />
@@ -58,7 +54,6 @@
     <Content Remove="UI\**" />
     <Page Remove="UI\**" />
   </ItemGroup>
-
   <!-- Template packaging project: ships templates, never app code. Its obj/
        AssemblyInfo must never join this compilation (CS0579 duplicates). -->
   <ItemGroup>
@@ -66,7 +61,6 @@
     <None Remove="Packaging\**" />
     <Content Remove="Packaging\**" />
   </ItemGroup>
-
   <!-- Archived reference code is documentation, not product code. -->
   <ItemGroup>
     <Compile Remove="docs\**" />
@@ -74,7 +68,6 @@
     <None Remove="docs\**" />
     <Content Remove="docs\**" />
   </ItemGroup>
-
   <!-- dotnet-new scaffolding sources: template files, not product code. -->
   <ItemGroup>
     <Compile Remove="Templates\**" />
@@ -82,7 +75,6 @@
     <None Remove="Templates\**" />
     <Content Remove="Templates\**" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
@@ -102,12 +94,10 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Velopack" Version="1.2.0" />
   </ItemGroup>
-
   <!-- Feature packages: Sentry/EventLog live in Build/ so scaffold flags
        can drop them (Flexibility Plan Phase 0c). Exists-guarded: the repo
        always has them, future scaffolds may not. -->
   <Import Project="Build\Features.Crash.props" Condition="Exists('Build\Features.Crash.props')" />
   <Import Project="Build\Features.Logging.props" Condition="Exists('Build\Features.Logging.props')" />
   <Import Project="Build\Features.Distribution.props" Condition="Exists('Build\Features.Distribution.props')" />
-
 </Project>
