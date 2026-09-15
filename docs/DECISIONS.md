@@ -251,3 +251,11 @@ in git history; this file saves the next agent the archaeology.
   accurate there). Template ships patch `0.3.1` (content-only, no
   surface change — MINOR policy covers symbols/values). `release.yml`
   MSIX leg skips without `DEVTEM_MSIX_PUBLISHER` so forks stay green.
+- **2026-09-15 — Auto-apply off; prepared updates prompt.**
+  `VelopackApp.SetAutoApplyOnStartup(false)` keeps launches fast; a
+  previous session's prepared update surfaces as the standard restart
+  prompt after the first frame (`PendingRestartVersion` seam, apply
+  falls back to disk). Silent pre-window work is a UX bug, not speed.
+- **2026-09-15 — UpdateCenter takes the Settings page shell.**
+  Same Grid viewport wrapper (the shift fix), captions, and card
+  language; pages must never bare-StackPanel inside a ScrollViewer.

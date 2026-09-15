@@ -10,58 +10,119 @@
     mc:Ignorable="d">
 
     <Grid>
+        <!-- Narrow windows get tighter page padding so cards keep breathing room. -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="LayoutStates">
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="UpdateCenterPanel.Padding" Value="16,16,16,24"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="860"/>
+                    </VisualState.StateTriggers>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="980" HorizontalAlignment="Stretch">
+        <!-- Grid wrapper: forces viewport-width measure so the inner panel is
+             always exactly min(viewport, MaxWidth), positioned identically on
+             every load. A bare StackPanel sizes to its longest unwrapped
+             line, which parked the whole page off-center until the status
+             text grew (same latent trap fixed on SettingsPage). -->
+        <Grid>
+        <StackPanel x:Name="UpdateCenterPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="980" HorizontalAlignment="Stretch">
 
-            <TextBlock AutomationProperties.AutomationId="UpdateCenterTitleText" Text="{loc:Loc Key=UpdateCenterTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            <TextBlock AutomationProperties.AutomationId="UpdateCenterTitleText" Text="{loc:Loc Key=UpdateCenterTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <TextBlock
+                Text="{loc:Loc Key=UpdateCenterDesc}"
+                Style="{ThemeResource BodyTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap"/>
 
-            <ctk:SettingsCard
-                Header="{x:Bind ViewModel.VersionLine, Mode=OneWay}"
-                Description="{x:Bind ViewModel.StatusMessage, Mode=OneWay}">
-                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                    <Button
-                        x:Name="UpdateCheckButton"
-                        AutomationProperties.AutomationId="UpdateCheckButton"
-                        Content="{loc:Loc Key=SettingsCheckNow}"
-                        IsEnabled="{x:Bind ViewModel.CanCheck, Mode=OneWay}"
-                        Click="UpdateCheckButton_Click"
-                        Style="{ThemeResource AccentButtonStyle}"/>
-                    <Button
-                        x:Name="UpdateDownloadButton"
-                        AutomationProperties.AutomationId="UpdateDownloadButton"
-                        Content="{loc:Loc Key=UpdateCenterDownload}"
-                        IsEnabled="{x:Bind ViewModel.CanDownload, Mode=OneWay}"
-                        Click="UpdateDownloadButton_Click"/>
-                    <Button
-                        x:Name="UpdateInstallButton"
-                        AutomationProperties.AutomationId="UpdateInstallButton"
-                        Content="{loc:Loc Key=SettingsInstall}"
-                        IsEnabled="{x:Bind ViewModel.CanInstall, Mode=OneWay}"
-                        Click="UpdateInstallButton_Click"/>
-                </StackPanel>
-            </ctk:SettingsCard>
-
-            <ProgressBar
-                x:Name="UpdateProgressBar"
-                AutomationProperties.AutomationId="UpdateProgressBar"
-                Minimum="0" Maximum="100"
-                Value="{x:Bind ViewModel.DownloadProgress, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.ProgressVisibility, Mode=OneWay}"
-                ShowPaused="False" ShowError="False"/>
-
-            <ctk:SettingsCard
-                Header="{loc:Loc Key=UpdateCenterNotesHeader}"
-                Visibility="{x:Bind ViewModel.NotesVisibility, Mode=OneWay}"
-                HorizontalContentAlignment="Stretch">
+            <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
-                    x:Name="UpdateNotesText"
-                    Text="{x:Bind ViewModel.ReleaseNotes, Mode=OneWay}"
-                    Style="{ThemeResource BodyTextBlockStyle}"
-                    TextWrapping="Wrap"
-                    IsTextSelectionEnabled="True"/>
-            </ctk:SettingsCard>
+                    Text="{loc:Loc Key=UpdateCenterStatus}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard
+                    Header="{x:Bind ViewModel.VersionLine, Mode=OneWay}"
+                    Description="{x:Bind ViewModel.StatusMessage, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button
+                            x:Name="UpdateCheckButton"
+                            AutomationProperties.AutomationId="UpdateCheckButton"
+                            Content="{loc:Loc Key=SettingsCheckNow}"
+                            IsEnabled="{x:Bind ViewModel.CanCheck, Mode=OneWay}"
+                            Click="UpdateCheckButton_Click"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                        <Button
+                            x:Name="UpdateDownloadButton"
+                            AutomationProperties.AutomationId="UpdateDownloadButton"
+                            Content="{loc:Loc Key=UpdateCenterDownload}"
+                            IsEnabled="{x:Bind ViewModel.CanDownload, Mode=OneWay}"
+                            Click="UpdateDownloadButton_Click"/>
+                        <Button
+                            x:Name="UpdateInstallButton"
+                            AutomationProperties.AutomationId="UpdateInstallButton"
+                            Content="{loc:Loc Key=SettingsInstall}"
+                            IsEnabled="{x:Bind ViewModel.CanInstall, Mode=OneWay}"
+                            Click="UpdateInstallButton_Click"/>
+                    </StackPanel>
+                </ctk:SettingsCard>
+
+                <ProgressBar
+                    x:Name="UpdateProgressBar"
+                    AutomationProperties.AutomationId="UpdateProgressBar"
+                    Minimum="0" Maximum="100"
+                    Value="{x:Bind ViewModel.DownloadProgress, Mode=OneWay}"
+                    Visibility="{x:Bind ViewModel.ProgressVisibility, Mode=OneWay}"
+                    ShowPaused="False" ShowError="False"/>
+            </StackPanel>
+
+            <StackPanel Spacing="8" Margin="0,8,0,0">
+                <TextBlock
+                    Text="{loc:Loc Key=UpdateCenterDetails}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard Header="{loc:Loc Key=UpdateCenterCurrentVersion}">
+                    <TextBlock
+                        x:Name="UpdateCurrentVersionText"
+                        Text="{x:Bind ViewModel.CurrentVersion, Mode=OneWay}"
+                        VerticalAlignment="Center"/>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=UpdateCenterNotesHeader}"
+                    Visibility="{x:Bind ViewModel.NotesVisibility, Mode=OneWay}"
+                    HorizontalContentAlignment="Stretch">
+                    <TextBlock
+                        x:Name="UpdateNotesText"
+                        Text="{x:Bind ViewModel.ReleaseNotes, Mode=OneWay}"
+                        Style="{ThemeResource BodyTextBlockStyle}"
+                        TextWrapping="Wrap"
+                        IsTextSelectionEnabled="True"/>
+                </ctk:SettingsCard>
+
+                <TextBlock
+                    x:Name="UpdateLastCheckedText"
+                    Text="{x:Bind ViewModel.LastCheckedText, Mode=OneWay}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    TextWrapping="Wrap"/>
+            </StackPanel>
 
         </StackPanel>
+        </Grid>
     </ScrollViewer>
     </Grid>
 </Page>

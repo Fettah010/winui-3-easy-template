@@ -62,6 +62,12 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
 
     public bool HasPendingUpdate => _pending is not null;
 
+    /// <summary>
+    /// Always null: the basic backend has no cross-session prepared
+    /// state (nothing survives a restart to prompt for).
+    /// </summary>
+    public string? PendingRestartVersion => null;
+
     private HttpClient Http
     {
         get

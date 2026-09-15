@@ -19,6 +19,7 @@ public class SettingsUpdateFlowTests
     {
         public bool IsInstalled { get; set; } = true;
         public bool HasPendingUpdate { get; set; }
+        public string? PendingRestartVersion => null;
         public UpdateCheckResult Result { get; set; } = new(false, null);
         public Exception? CheckError;
         public int CheckCalls;

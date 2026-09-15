@@ -16,6 +16,15 @@ public interface IUpdateService
 
     bool HasPendingUpdate { get; }
 
+    /// <summary>
+    /// Version of a downloaded-but-unapplied update from a previous
+    /// session, if any (null when nothing waits). Lets startup offer a
+    /// visible restart prompt instead of applying silently before the
+    /// window appears. Backends without cross-session state return null.
+    /// Never throws.
+    /// </summary>
+    string? PendingRestartVersion { get; }
+
     void SetChannel(string channel);
 
     Task<UpdateCheckResult> CheckAsync();

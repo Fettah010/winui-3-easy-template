@@ -128,7 +128,12 @@ public static class Program
             return;
         }
 
+        // Auto-apply stays OFF on purpose: applying a pending update here
+        // would stall launch with no UI. Launches stay fast; a prepared
+        // update surfaces as a visible restart prompt after the first
+        // frame (BackgroundUpdateService, via PendingRestartVersion).
         VelopackApp.Build()
+            .SetAutoApplyOnStartup(false)
             .OnFirstRun(_ => AppLog.Information("First run after install"))
             .OnRestarted(_ => AppLog.Information("Restarted after update"))
             .Run();

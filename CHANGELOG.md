@@ -6,6 +6,27 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.8-beta] - 2026-09-15
+
+### Fixed
+
+- Slow silent launch when an update waited: Velopack auto-apply ran
+  before the window with no UI. Auto-apply is now off
+  (`SetAutoApplyOnStartup(false)`); launches stay fast and a prepared
+  update surfaces as a visible restart prompt after the first frame
+  (new `IUpdateService.PendingRestartVersion`, apply falls back to the
+  previous session's prepared update).
+- Update Center card parked off-center until the first check: the page
+  missed the viewport-width Grid wrapper (same latent trap as
+  SettingsPage).
+
+### Added
+
+- Update Center upgrade: status/details sections, current-version and
+  last-checked rows, auto-check on first arrival per session, refreshed
+  copy in all three languages.
+
 ## [0.0.7-beta] - 2026-09-15
 
 ### Fixed

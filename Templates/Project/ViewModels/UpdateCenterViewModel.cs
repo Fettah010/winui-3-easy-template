@@ -58,10 +58,26 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     [ObservableProperty]
     private bool _canInstall;
 
+    /// <summary>Installed version, shown in the details card. Never changes.</summary>
+    [ObservableProperty]
+    private string _currentVersion = string.Empty;
+
+    /// <summary>Last-check line ("Last checked …" or empty before any check).</summary>
+    [ObservableProperty]
+    private string _lastCheckedText = string.Empty;
+
+    /// <summary>
+    /// Whether a check completed this session (success or no-update).
+    /// The page checks on first arrival so it never sits stale; failures
+    /// leave it false so the next visit retries.
+    /// </summary>
+    public bool HasCheckedThisSession { get; private set; }
+
     public UpdateCenterViewModel(IUpdateService? updates = null)
     {
         _updates = updates;
         try { _uiThread = SynchronizationContext.Current; } catch { }
+        try { CurrentVersion = AppInfo.Current.Version; } catch { }
         RefreshLabels();
     }
 
@@ -87,6 +103,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
                 CanCheck = false;
                 CanDownload = false;
                 CanInstall = false;
+                HasCheckedThisSession = true;
                 return;
             }
             if (_updates is null)
@@ -100,6 +117,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
                 CanCheck = false;
                 CanDownload = false;
                 CanInstall = false;
+                HasCheckedThisSession = true;
                 return;
             }
             StatusMessage = HasUpdate && !string.IsNullOrWhiteSpace(PendingVersion)
@@ -128,6 +146,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
             StatusMessage = loc.GetString("SettingsChecking");
             var result = await _updates.CheckAsync();
             ct.ThrowIfCancellationRequested();
+            StampLastChecked(loc);
             if (!result.HasUpdate)
             {
                 HasUpdate = false;
@@ -138,6 +157,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
                 StatusMessage = loc.GetString("SettingsNoUpdate");
                 CanDownload = false;
                 CanInstall = false;
+                HasCheckedThisSession = true;
                 return;
             }
             HasUpdate = true;
@@ -156,6 +176,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
             StatusMessage = loc.GetString("UpdateAvailableVersion", PendingVersion);
             CanDownload = true;
             CanInstall = false;
+            HasCheckedThisSession = true;
             AppLog.Information("UpdateCenter: v{Version} available", PendingVersion);
         }
         catch (OperationCanceledException)
@@ -244,6 +265,29 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     {
         try { return LocalizationService.Current.GetString("InstallFailedDetail", detail); }
         catch { return detail; }
+    }
+
+    /// <summary>
+    /// Checks when nothing completed yet this session (page arrivals
+    /// without an explicit "check" parameter). Failures leave the flag
+    /// clear so the next visit retries; the button always can too.
+    /// </summary>
+    public Task EnsureCheckedAsync(CancellationToken ct = default)
+    {
+        if (HasCheckedThisSession)
+            return Task.CompletedTask;
+        return CheckAsync(ct);
+    }
+
+    private void StampLastChecked(LocalizationService loc)
+    {
+        try
+        {
+            LastCheckedText = loc.GetString(
+                "UpdateCenterLastChecked",
+                DateTime.Now.ToString("g", System.Globalization.CultureInfo.CurrentCulture));
+        }
+        catch { }
     }
 
     /// <summary>

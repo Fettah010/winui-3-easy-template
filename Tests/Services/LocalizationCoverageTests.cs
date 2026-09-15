@@ -358,6 +358,31 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void NewUpdateCenterKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Update Center", loc.GetString("UpdateCenterTitle"));
+        Assert.AreEqual("STATUS", loc.GetString("UpdateCenterStatus"));
+        Assert.AreEqual("DETAILS", loc.GetString("UpdateCenterDetails"));
+        Assert.AreEqual("Current version", loc.GetString("UpdateCenterCurrentVersion"));
+        Assert.Contains("Last checked", loc.GetString("UpdateCenterLastChecked", "x"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Centro de actualizaciones", loc.GetString("UpdateCenterTitle"));
+        Assert.AreEqual("ESTADO", loc.GetString("UpdateCenterStatus"));
+        Assert.AreEqual("DETALLES", loc.GetString("UpdateCenterDetails"));
+        Assert.AreEqual("Versión actual", loc.GetString("UpdateCenterCurrentVersion"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Centre de mise à jour", loc.GetString("UpdateCenterTitle"));
+        Assert.AreEqual("ÉTAT", loc.GetString("UpdateCenterStatus"));
+        Assert.AreEqual("DÉTAILS", loc.GetString("UpdateCenterDetails"));
+        Assert.AreEqual("Version actuelle", loc.GetString("UpdateCenterCurrentVersion"));
+    }
+
+    [TestMethod]
     public void Dictionaries_ContainNoHardcodedVersions()
     {        var versionLike = new System.Text.RegularExpressions.Regex(@"\bv\d+\.\d+");
         var offenders = new System.Collections.Generic.List<string>();

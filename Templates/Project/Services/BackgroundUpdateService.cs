@@ -75,6 +75,22 @@ public sealed class BackgroundUpdateService
     {
         var svc = Updater;
 
+        // A previous session's prepared update waits on disk (auto-apply
+        // is off so launch never stalls): offer it visibly instead of a
+        // fresh check. Any choice ends this tick (no double prompt).
+        string? prepared = null;
+        try { prepared = svc.PendingRestartVersion; } catch { }
+        if (!string.IsNullOrWhiteSpace(prepared))
+        {
+            AppLog.Information(
+                "Auto-update: v{Version} prepared last session, prompting",
+                prepared);
+            if (mainWindow is null)
+                return;
+            mainWindow.DispatcherQueue.TryEnqueue(() => PromptRestart(prepared, mainWindow));
+            return;
+        }
+
         if (!svc.IsInstalled)
         {
             AppLog.Information("Auto-update check skipped: app is not installed");

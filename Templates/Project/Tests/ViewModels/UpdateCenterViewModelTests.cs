@@ -17,15 +17,18 @@ public class UpdateCenterViewModelTests
     {
         public bool IsInstalled { get; set; } = true;
         public bool HasPendingUpdate { get; set; }
+        public string? PendingRestartVersion => null;
         public UpdateCheckResult Result { get; set; } = new(false, null);
         public Exception? CheckError;
         public int ProgressToReport = 100;
         public int ApplyCalls;
+        public int CheckCalls;
 
         public void SetChannel(string channel) { }
 
         public Task<UpdateCheckResult> CheckAsync()
         {
+            CheckCalls++;
             if (CheckError is not null)
                 throw CheckError;
             HasPendingUpdate = Result.HasUpdate;
@@ -69,6 +72,47 @@ public class UpdateCenterViewModelTests
         Assert.IsFalse(vm.CanCheck);
         Assert.IsFalse(vm.CanDownload);
         Assert.IsFalse(vm.CanInstall);
+    }
+
+    [TestMethod]
+    public void Construction_PublishesCurrentVersion()
+    {
+        var vm = new UpdateCenterViewModel(new FakeUpdates());
+
+        Assert.AreEqual(AppInfo.Current.Version, vm.CurrentVersion);
+        Assert.AreEqual(string.Empty, vm.LastCheckedText);
+        // Relational across scaffold modes: external scaffolds resolve
+        // the slim status at construction (flag set), engine scaffolds
+        // wait for the first check. Runners are always unpackaged.
+        Assert.AreEqual(AppFeatures.IsExternalUpdateMode, vm.HasCheckedThisSession);
+    }
+
+    [TestMethod]
+    public async Task Check_StampsLastCheckedAndSessionFlag()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(new FakeUpdates());
+
+        await vm.CheckAsync();
+
+        Assert.IsTrue(vm.HasCheckedThisSession);
+        Assert.Contains("Last checked", vm.LastCheckedText);
+    }
+
+    [TestMethod]
+    public async Task EnsureChecked_RunsOncePerSession()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var updates = new FakeUpdates();
+        var vm = new UpdateCenterViewModel(updates);
+
+        await vm.EnsureCheckedAsync();
+        await vm.EnsureCheckedAsync();
+
+        Assert.AreEqual(1, updates.CheckCalls);
+        Assert.IsTrue(vm.HasCheckedThisSession);
     }
 
     [TestMethod]

@@ -26,8 +26,12 @@ public sealed partial class UpdateCenterPage : Page, INavigationAware
     {
         // Background update flow routes here with "check" to run a check on
         // arrival (the ViewModel guards re-entrancy and missing engines).
+        // Plain arrivals check once per session so the page never sits
+        // stale; failures retry on the next visit or the button.
         if (parameter is string s && s.Equals("check", StringComparison.OrdinalIgnoreCase))
             _ = ViewModel.CheckAsync();
+        else
+            _ = ViewModel.EnsureCheckedAsync();
     }
 
     public void OnNavigatedFrom()

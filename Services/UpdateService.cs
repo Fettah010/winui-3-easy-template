@@ -142,7 +142,29 @@ public sealed class UpdateService : IUpdateService, IDisposable
 
     private UpdateInfo? _pendingUpdate;
 
-    public bool HasPendingUpdate => _pendingUpdate is not null;
+    public bool HasPendingUpdate
+    {
+        get
+        {
+            if (_pendingUpdate is not null)
+                return true;
+            try { return Manager.UpdatePendingRestart is not null; }
+            catch { return false; }
+        }
+    }
+
+    /// <summary>
+    /// Version waiting from a previous session (downloaded, unapplied).
+    /// Null when nothing waits or the backend is unreachable. Never throws.
+    /// </summary>
+    public string? PendingRestartVersion
+    {
+        get
+        {
+            try { return Manager.UpdatePendingRestart?.Version?.ToString(); }
+            catch { return null; }
+        }
+    }
 
     /// <summary>
     /// Checks the feed and stashes any update as the pending one (replacing
@@ -177,15 +199,24 @@ public sealed class UpdateService : IUpdateService, IDisposable
     /// <summary>
     /// Applies the pending update and restarts the app. WinUI apps must
     /// terminate the current process so the updater can swap files safely.
-    /// No-op when nothing is pending.
+    /// Prefers the session pending update, falls back to a previous
+    /// session's prepared update. No-op when nothing is pending.
     /// </summary>
     public void ApplyPendingUpdateAndRestart()
     {
-        var pending = _pendingUpdate;
+        Velopack.VelopackAsset? pending = _pendingUpdate is null
+            ? TryGetDiskPending()
+            : (Velopack.VelopackAsset) _pendingUpdate;
         if (pending is null)
             return;
         Manager.ApplyUpdatesAndRestart(pending);
         Environment.Exit(0);
+    }
+
+    private Velopack.VelopackAsset? TryGetDiskPending()
+    {
+        try { return Manager.UpdatePendingRestart; }
+        catch { return null; }
     }
 
     public void Dispose()

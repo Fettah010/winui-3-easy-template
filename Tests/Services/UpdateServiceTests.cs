@@ -41,4 +41,12 @@ public class UpdateServiceTests
         // and test runs are never Velopack-installed.
         Assert.IsFalse(UpdateService.Current.IsInstalled);
     }
+
+    [TestMethod]
+    public void PendingRestartVersion_IsNull_ForUnpackagedTestRuns()
+    {
+        // Nothing can wait on disk without a Velopack install layout;
+        // must never throw headless (startup reads this every launch).
+        Assert.IsNull(UpdateService.Current.PendingRestartVersion);
+    }
 }
