@@ -201,6 +201,9 @@ public sealed class AppSmokeTests
     {
         var window = RequireWindow();
         DismissFirstRunDialogIfPresent(RecheckTimeout);
+        // Fresh machines land on the first-run wizard, not Home: drive it
+        // to completion (no-op when already completed) before asserting.
+        CompleteSetupWizardIfPresent(NavigateTimeout);
 
         Assert.AreEqual(AppWindowTitle, window.Title);
         var title = WaitForElement("HomeTitleText", NavigateTimeout);
@@ -229,25 +232,10 @@ public sealed class AppSmokeTests
 
         // First-run only: on repeat runs the wizard is already completed
         // (persisted don't-show-again) and this path is a no-op pass.
-        var next = WaitForElement("SetupWizardNextButton", RecheckTimeout);
-        if (next is null)
-        {
-            var title = WaitForElement("SetupWizardTitleText", RecheckTimeout);
-            if (title is null)
-                return;
-        }
-        for (int i = 0; i < 4; i++)
-        {
-            var nextButton = WaitForElement("SetupWizardNextButton", NavigateTimeout);
-            if (nextButton is null)
-                break;
-            try { nextButton.Focus(); } catch { }
-            try { nextButton.Click(); } catch { }
-        }
-        var complete = WaitForElement("SetupWizardCompleteButton", NavigateTimeout);
-        Assert.IsNotNull(complete, "Wizard Complete button did not appear on the last step.");
-        try { complete.Focus(); } catch { }
-        try { complete.Click(); } catch { }
+        // (Test order is not guaranteed — App_Launches may have completed
+        // it first via the same helper.)
+        if (!CompleteSetupWizardIfPresent(RecheckTimeout))
+            return;
         var home = WaitForElement("HomeTitleText", NavigateTimeout);
         Assert.IsNotNull(home, "Home page did not appear after wizard Complete.");
     }
@@ -524,6 +512,39 @@ public sealed class AppSmokeTests
 
         if (includeWhatsNew)
             DismissWhatsNewDialogIfPresent(timeout);
+    }
+
+    /// <summary>
+    /// Drives the first-run setup wizard to completion when it is showing
+    /// (fresh machines navigate there instead of Home). Returns true when
+    /// the wizard was present; false is a no-op pass (already completed).
+    /// Shared by App_Launches (which must tolerate a first-run start) and
+    /// the dedicated wizard path test.
+    /// </summary>
+    private static bool CompleteSetupWizardIfPresent(TimeSpan timeout)
+    {
+        var title = WaitForElement("SetupWizardTitleText", timeout);
+        if (title is null)
+        {
+            // The pips may render before the title registers: one more
+            // probe via the Next button before calling it absent.
+            if (WaitForElement("SetupWizardNextButton", RecheckTimeout) is null)
+                return false;
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            var nextButton = WaitForElement("SetupWizardNextButton", NavigateTimeout);
+            if (nextButton is null)
+                break;
+            try { nextButton.Focus(); } catch { }
+            try { nextButton.Click(); } catch { }
+        }
+        var complete = WaitForElement("SetupWizardCompleteButton", NavigateTimeout);
+        if (complete is null)
+            return true;
+        try { complete.Focus(); } catch { }
+        try { complete.Click(); } catch { }
+        return true;
     }
 
     /// <summary>

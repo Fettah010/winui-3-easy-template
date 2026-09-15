@@ -353,7 +353,13 @@ try {
         }
         $upload = Join-Path $OutputDir ($bundleBase + ".msixupload")
         if (Test-Path -LiteralPath $upload) { Remove-Item -LiteralPath $upload -Force }
-        Compress-Archive -LiteralPath $bundle -DestinationPath $upload
+        # Compress-Archive (PowerShell 7, used by CI) only accepts .zip as
+        # the destination extension: zip to a temp name, then move it over
+        # the .msixupload (a zip by content — the Store accepts that).
+        $zipTemp = [System.IO.Path]::ChangeExtension($upload, ".zip")
+        if (Test-Path -LiteralPath $zipTemp) { Remove-Item -LiteralPath $zipTemp -Force }
+        Compress-Archive -LiteralPath $bundle -DestinationPath $zipTemp
+        Move-Item -LiteralPath $zipTemp -Destination $upload -Force
         Write-Host "Store upload wrapped: $upload (bundle only - the Store signs it; add .appxsym before zipping if you ship symbols)"
     }
 }
