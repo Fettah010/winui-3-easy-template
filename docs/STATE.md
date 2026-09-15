@@ -5,10 +5,10 @@ the bootstrap checklist in `AGENTS.md`. Refresh this file before ending
 the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 this file holds only **current facts**.
 
-- **Goal:** distribution plan P0–P4 shipped. Commit `39dd1cd` pushed; `v0.0.5-beta` + `beta` live.
+- **Goal:** store automation 1–6 done uncommitted (plan `docs/STORE-AUTOMATION-PLAN.md` all ticked) — commit on request.
 - **Version:** app `0.0.5-beta`; template package `0.3.0`.
-- **Tags:** `v0.0.5-beta` pushed (release.yml CI builds GitHub Release); `templates-v0.3.0` pushed (templates-publish.yml packs + pushes NuGet).
-- **Branches:** `main` @ `39dd1cd` (pushed); `beta` tracks `v0.0.5-beta` (force-pushed, verified).
-- **Tree:** P4 uncommitted — FEATURES manifest (setup files, UpdateCenter-always rule), profiles + Store preset (TEMPLATE-GUIDE, both READMEs, NuGet README), AGENTS layout rows + symbols, WORKFLOW tiers/runbook, versions (app 0.0.5-beta, template 0.3.0, CITATION, CHANGELOG dated, what's-new text).
-- **CI health (last known):** local build 0/0, tests 212+4 skipped, parity OK (141 files), FULL matrix PASSED (21 combos) + init-template scratch, Pack DryRun staging valid. Packaged-runtime + feed round-trip + WACK = manual checklists (no makeappx/WACK locally). Matrix fits the 30min CI timeout — no job split.
-- **Next:** commit P0-P4 on request → tag `v0.0.5-beta` + `templates-v0.3.0` (human runs). Open: `DISCOVERY-PLAN.md` A3/A4+B/C/D, roadmap triage (85 boxes), add-page for en-only scaffolds.
+- **Tags:** `v0.0.5-beta` and `templates-v0.3.0` shipped and CI-green.
+- **Branches:** `main` @ `5ab75ea` (+ uncommitted store automation 1–6); `beta` tracks `v0.0.5-beta`.
+- **Tree:** uncommitted — items 1–4 (prior session) + item 6 `new-store-listing.ps1` (README-derived drafts, git-ignored `Store/`) + item 5 `submit-store.ps1` (submission API, env creds) + manual `store-submit.yml` (msix-only exclude) + matrix presence asserts + templates.yml CI paths + guide/AGENTS rows.
+- **CI health (last known):** local build 0/0, tests 212+4 skipped, parity OK (145 files), matrix subset PASSED (msixstore, allon, nosetup, msixapp) + init-template scratch, `-Validate`/submit-WhatIf/listing generation proven, YAML parses. Live Store round-trip still needs a real tenant (first real submission is the proof).
+- **Next:** commit on request. Open: `DISCOVERY-PLAN.md` A3/A4+B/C/D, roadmap triage (85 boxes), add-page for en-only scaffolds.

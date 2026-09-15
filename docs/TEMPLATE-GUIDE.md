@@ -255,6 +255,7 @@ not by choice.
 | `--updates` | Update mechanism: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX (`--distribution msix`) | `--updates basic` |
 | `--distribution` | Distribution format: `portable` (default, unpackaged) or `msix` (packaged, for Store or sideload) | `--distribution msix` |
 | `--setup` | First-run setup wizard: install location, shortcuts, launch options (`false` drops it; portable only, ignored for msix) | `--setup false` |
+| `--publisher` | MSIX Publisher ID: Partner Center ID (Store) or cert subject (sideload); pre-fills the manifest + `build-msix.ps1` | `--publisher "CN=Acme"` |
 | `--attribution` | Keep the one-line DevTem source comment in generated `DevTemAttribution.cs` | `true` |
 
 Names with spaces work: `-n "My App"` produces `My_App` identifiers and

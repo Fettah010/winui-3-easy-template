@@ -197,9 +197,11 @@ Releases, and your users get the update in-app.
 
 Packaged scaffolds (`--distribution msix`) ship as one runtime-adaptive
 binary: pack it with `Scripts/build-msix.ps1` (Store `.msixupload` via
-`-StoreUpload`, sideload feed via `-AppInstaller`) and submit or host the
-output. First-run setup wizard is portable-only (Windows owns location
-and shortcuts for MSIX).
+`-StoreUpload -Publisher "<your Publisher ID>"`, sideload feed via
+`-AppInstaller`) and submit or host the output. `Scripts/publish-store.ps1`
+wraps the whole Store flow (validate → upload → WACK → Partner Center);
+scaffold with `--publisher` to pre-fill your ID. First-run setup wizard
+is portable-only (Windows owns location and shortcuts for MSIX).
 
 ```powershell
 # 1. Bump the version, commit, then tag and push a release

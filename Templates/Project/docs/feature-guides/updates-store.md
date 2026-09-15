@@ -38,8 +38,20 @@ Microsoft Store" button deep-linking the listing).
 ## Release cadence notes
 
 - Version quads must increase (`0.0.5.0` > `0.0.4.0`); the script reads
-  `<Version>` from the csproj.
+  `<Version>` from the csproj (`Scripts/bump-version.ps1` bumps it plus
+  CITATION + CHANGELOG in one go).
 - Staged rollouts and package flights are managed in Partner Center
   (the app needs no code for either).
+
+## Automation (optional)
+
+- `Scripts/publish-store.ps1 -Publisher "<your ID>"`: validate, build
+  the upload, run WACK when installed, open Partner Center.
+- `Scripts/submit-store.ps1`: submit the newest `.msixupload` via the
+  Partner Center submission API (needs a one-time Azure AD app; creds
+  via `DEVTEM_STORE_*` env vars, never committed). Same flow runs in
+  CI from Actions > store-submit (manual dispatch; repo secrets).
+- `Scripts/new-store-listing.ps1`: drafts `Store/` description +
+  checklists from the README for the manual listing form.
 - Submission automation exists (Store submission API) but is out of
   scope here — submissions are manual, releases are package uploads.

@@ -4,8 +4,10 @@
   Identity Name/Version/Publisher, generates tile art from Assets/Logo.png,
   and calls makeappx (plus optional signtool signing).
 
-  Publisher MUST match your signing certificate subject (default CN=DevTem
-  is a placeholder — pass -Publisher with your own, e.g. "CN=Acme").
+  Publisher MUST match your signing certificate subject. The default below
+  is a placeholder — pass -Publisher with your Publisher ID (Partner Center)
+  or cert subject (sideload), e.g. "CN=Acme". The publisher template
+  parameter pre-fills it at scaffold time.
   The StartupTask is registered disabled: users enable it in Windows
   Settings > Apps > Startup. Registry autostart (HKCU Run) does not apply
   to packaged runs — the app disables that toggle itself (AppInfo.IsPackaged).

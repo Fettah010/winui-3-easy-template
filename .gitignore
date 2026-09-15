@@ -5,6 +5,9 @@ Releases/
 ReleasesLocal/
 nupkgs/
 
+# Generated Store listing drafts (Scripts/new-store-listing.ps1)
+Store/
+
 # App runtime output (Serilog)
 Logs/
 

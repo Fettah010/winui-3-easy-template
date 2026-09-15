@@ -45,7 +45,7 @@ $comboDefs = @{
     "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
     "nosetup" = @{ Name = "NoSetupApp";  Safe = "NoSetupApp";   Display = "NoSetup App"; Company = "Ns"; Repo = "ns/app";       Scheme = "ns://";   Flags = @("--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $false }
     "msixapp" = @{ Name = "AppInstallerApp"; Safe = "AppInstallerApp"; Display = "AppInstaller App"; Company = "Ai"; Repo = "ai/app"; Scheme = "ai://"; Flags = @("--distribution", "msix", "--updates", "appinstaller", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "appinstaller"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false }
-    "msixstore" = @{ Name = "StoreApp";  Safe = "StoreApp";     Display = "Store App"; Company = "St"; Repo = "st/app";        Scheme = "st://";   Flags = @("--distribution", "msix", "--updates", "store", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "store"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false }
+    "msixstore" = @{ Name = "StoreApp";  Safe = "StoreApp";     Display = "Store App"; Company = "St"; Repo = "st/app";        Scheme = "st://";   Flags = @("--distribution", "msix", "--updates", "store", "--setup", "false", "--publisher", "CN=Store-Test"); Http = $true; Database = $true; Tray = $true; Updates = "store"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false; Publisher = "CN=Store-Test" }
     "msixnone" = @{ Name = "MsixNoneApp"; Safe = "MsixNoneApp"; Display = "MsixNone App"; Company = "Mn"; Repo = "mn/app";      Scheme = "mn://";   Flags = @("--distribution", "msix", "--updates", "none", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false }
     "badupd"  = @{ Name = "BadUpdApp";   Safe = "BadUpdApp";    Display = "BadUpd App"; Company = "Bu2"; Repo = "bu2/app";      Scheme = "bu2://";  Flags = @("--updates", "store"); Http = $true; Database = $true; Tray = $true; Updates = "store"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true; ExpectBuildFailure = $true; ExpectedError = "cannot be combined with --distribution portable" }
     "badupd2" = @{ Name = "BadUpd2App";  Safe = "BadUpd2App";   Display = "BadUpd2 App"; Company = "Bu3"; Repo = "bu3/app";     Scheme = "bu3://";  Flags = @("--distribution", "msix", "--updates", "velopack", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false; ExpectBuildFailure = $true; ExpectedError = "cannot be combined with --distribution msix" }
@@ -214,6 +214,13 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     if ($manifestText -notmatch [regex]::Escape("<DisplayName>$display</DisplayName>")) {
         throw "manifest display name is not '$display'"
     }
+    # Publisher engine proof: msixstore scaffolds a custom ID, every other
+    # combo keeps the CN=DevTem placeholder (per-run -Publisher still wins).
+    $expectedPublisher = "CN=DevTem"
+    if ($definition.Publisher) { $expectedPublisher = $definition.Publisher }
+    if ($manifestText -notmatch [regex]::Escape('Publisher="' + $expectedPublisher + '"')) {
+        throw "manifest Publisher is not '$expectedPublisher'"
+    }
     $metadata = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\Helpers\AppMetadata.cs"))
     if ($metadata -notmatch [regex]::Escape('"' + $scheme + '"')) {
         throw "AppMetadata protocol prefix is not '$scheme'"
@@ -293,17 +300,25 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     }
     # P3: setup wizard files ship iff setup is on; UpdateCenter ships in
     # every combo (null-tolerant NoEngine status when updates=none).
+    # Store automation: submit workflow + scripts ship with msix; the
+    # listing/publish/bump scripts ship everywhere (docs + release tools).
+    $isMsix = $definition.Distribution -eq "msix"
     foreach ($triple in @(
         @("Pages\SetupWizardPage.xaml", $definition.Setup),
         @("Pages\SetupWizardPage.xaml.cs", $definition.Setup),
         @("ViewModels\SetupWizardViewModel.cs", $definition.Setup),
         @("Services\SetupWizardService.cs", $definition.Setup),
         @("Pages\UpdateCenterPage.xaml", $true),
-        @("ViewModels\UpdateCenterViewModel.cs", $true)
+        @("ViewModels\UpdateCenterViewModel.cs", $true),
+        @(".github\workflows\store-submit.yml", $isMsix),
+        @("Scripts\submit-store.ps1", $true),
+        @("Scripts\publish-store.ps1", $true),
+        @("Scripts\bump-version.ps1", $true),
+        @("Scripts\new-store-listing.ps1", $true)
     )) {
         $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
         if ($triple[1] -ne $present) {
-            throw "setup=$($definition.Setup): presence is incorrect for $($triple[0])"
+            throw "setup=$($definition.Setup) distribution=$($definition.Distribution): presence is incorrect for $($triple[0])"
         }
     }
     if ($distProps -notmatch [regex]::Escape("<DevTemSetupWizard>" + [string]$definition.Setup + "</DevTemSetupWizard>")) {

@@ -141,6 +141,14 @@
       "replaces": "__SETUP__",
       "description": "Include the first-run setup wizard: install location, shortcuts, launch options (--setup false to drop; portable only, ignored for msix)."
     },
+    "publisher": {
+      "type": "parameter",
+      "datatype": "string",
+      "displayName": "MSIX publisher",
+      "defaultValue": "CN=DevTem",
+      "replaces": "CN=DevTem",
+      "description": "Publisher ID for MSIX packaging: your Partner Center Publisher ID (Store) or signing cert subject (sideload). Pre-fills the manifest and build-msix.ps1; per-run -Publisher still wins."
+    },
     "database": {
       "type": "parameter",
       "datatype": "bool",
@@ -287,7 +295,8 @@
         {
           "condition": "(distribution != 'msix')",
           "exclude": [
-            "docs/feature-guides/distribution-msix.md"
+            "docs/feature-guides/distribution-msix.md",
+            ".github/workflows/store-submit.yml"
           ]
         },
         {

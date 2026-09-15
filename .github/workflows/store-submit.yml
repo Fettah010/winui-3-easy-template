@@ -1,0 +1,66 @@
+name: store-submit
+
+# Manual Store submission: validates, builds the .msixupload, and submits
+# it via the Partner Center submission API (Scripts/submit-store.ps1).
+# One-time setup: an Azure AD app with submission rights, stored as repo
+# secrets DEVTEM_STORE_APP_ID / DEVTEM_STORE_TENANT_ID /
+# DEVTEM_STORE_CLIENT_ID / DEVTEM_STORE_CLIENT_SECRET (never committed).
+# Certification takes days; the workflow commits the submission and
+# returns - track it in Partner Center. The manual flow
+# (Scripts/publish-store.ps1) stays the fallback.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publisher:
+        description: "MSIX Publisher ID (must match Partner Center)"
+        required: true
+        type: string
+      publishMode:
+        description: "Publish behavior once certification passes"
+        required: false
+        default: "Immediate"
+        type: choice
+        options:
+          - Immediate
+          - Manual
+
+concurrency:
+  group: store-submit
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  submit:
+    name: Build upload & submit
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pre-flight validation (no SDK)
+        shell: pwsh
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/build-msix.ps1 -Validate -Publisher "${{ inputs.publisher }}"
+
+      - name: Build Store upload
+        shell: pwsh
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/build-msix.ps1 -StoreUpload -Publisher "${{ inputs.publisher }}"
+
+      - name: Submit to Partner Center
+        shell: pwsh
+        env:
+          DEVTEM_STORE_APP_ID: ${{ secrets.DEVTEM_STORE_APP_ID }}
+          DEVTEM_STORE_TENANT_ID: ${{ secrets.DEVTEM_STORE_TENANT_ID }}
+          DEVTEM_STORE_CLIENT_ID: ${{ secrets.DEVTEM_STORE_CLIENT_ID }}
+          DEVTEM_STORE_CLIENT_SECRET: ${{ secrets.DEVTEM_STORE_CLIENT_SECRET }}
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/submit-store.ps1 -TargetPublishMode "${{ inputs.publishMode }}"

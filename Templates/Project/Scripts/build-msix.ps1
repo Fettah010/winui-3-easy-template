@@ -6,6 +6,11 @@
 #   powershell -File Scripts/build-msix.ps1 -AppInstaller -InstallUrl "https://example.com/msix/"
 #   powershell -File Scripts/build-msix.ps1 -StoreUpload -CertificatePath C:\certs\app.pfx -Publisher "CN=Acme"
 #
+# Pre-flight checks without the SDK or a publish (placeholder Publisher,
+# version quad, manifest, tile source):
+#
+#   powershell -File Scripts/build-msix.ps1 -Validate -Publisher "CN=Acme"
+#
 # Needs the Windows SDK (makeappx; signtool for signing). DryRun validates
 # everything short of makeappx (including .appinstaller XML emission), so
 # template/CI edits can be checked anywhere.
@@ -30,7 +35,8 @@ param(
     [switch]$AppInstaller,
     [string]$InstallUrl = "",
     [int]$HoursBetweenUpdateChecks = 12,
-    [switch]$StoreUpload
+    [switch]$StoreUpload,
+    [switch]$Validate
 )
 
 $ErrorActionPreference = "Stop"
@@ -114,6 +120,57 @@ Write-Host "MSIX version: $Version ($arch), publisher: $Publisher"
 
 foreach ($path in @($csproj, $manifestSrc, $logoSrc)) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing required file: $path" }
+}
+
+# Pre-flight validation: fast, no SDK, no publish. Fails the run on
+# placeholder identity and bad versions; tag comparison is best-effort
+# (warns when git or tags are unavailable, e.g. fresh scaffolds).
+if ($Validate) {
+    if ($Publisher -eq "CN=DevTem") {
+        throw "Publisher is still the CN=DevTem placeholder. Pass -Publisher with your Partner Center Publisher ID (Store) or signing cert subject (sideload)."
+    }
+    $quad = $Version -replace '-.*$', ''
+    $quadParts = @($quad.Split('.'))
+    while ($quadParts.Count -lt 4) { $quadParts += "0" }
+    foreach ($p in $quadParts) {
+        $n = 0
+        if (-not [int]::TryParse($p, [ref]$n) -or $n -lt 0 -or $n -gt 65534) {
+            throw "Version part '$p' is not valid for MSIX (0-65534 per quad)."
+        }
+    }
+    $quad = ($quadParts[0..3] -join ".")
+    Write-Host "Version quad OK: $quad"
+    [xml]$checkManifest = Get-Content -LiteralPath $manifestSrc
+    if ([string]::IsNullOrWhiteSpace($checkManifest.Package.Identity.Name)) { throw "Manifest Identity Name is empty." }
+    if ([string]::IsNullOrWhiteSpace($checkManifest.Package.Identity.Publisher)) { throw "Manifest Identity Publisher is empty." }
+    Write-Host "Manifest OK: $($checkManifest.Package.Identity.Name) / $($checkManifest.Package.Identity.Publisher)"
+    $tagError = ""
+    try {
+        $tags = @(git tag --list "v*" 2>$null)
+        $max = $null
+        foreach ($t in $tags) {
+            $m = [regex]::Match($t, '^v?(\d+)\.(\d+)\.(\d+)')
+            if (-not $m.Success) { continue }
+            $cand = [Version]"$($m.Groups[1]).$($m.Groups[2]).$($m.Groups[3]).0"
+            if ($max -eq $null -or $cand -gt $max) { $max = $cand }
+        }
+        if ($max -ne $null) {
+            if ([Version]"$quad" -le $max) {
+                throw "Version quad $quad does not increase over latest tag ($max). Bump it first (Scripts/bump-version.ps1)."
+            }
+            Write-Host "Version increases over latest tag ($max)."
+        }
+        else { Write-Host "WARNING: no v* tags found, skipping increase check." -ForegroundColor Yellow }
+    }
+    catch {
+        $tagError = $_.Exception.Message
+    }
+    if ($tagError -like "Version quad*") { throw $tagError }
+    if (-not [string]::IsNullOrWhiteSpace($tagError)) {
+        Write-Host "WARNING: tag comparison skipped ($tagError)" -ForegroundColor Yellow
+    }
+    Write-Host "Validate PASSED (publisher, version, manifest, tile source)." -ForegroundColor Green
+    return
 }
 
 function Find-SdkTool([string]$exeName) {

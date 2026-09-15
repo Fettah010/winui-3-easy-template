@@ -35,6 +35,7 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--tray` / `--database` / `--http` / `--health` / `--crash` / `--localization` / `--tests` | Feature on/off (`false` drops it; all default on) |
 | `--updates` | Auto-updates: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX |
 | `--distribution` | Distribution format: `portable` (default) or `msix` (Store or sideload) |
+| `--publisher` | MSIX Publisher ID (Partner Center or cert subject; pre-fills manifest + script) |
 | `--setup` | First-run setup wizard (portable only; `false` drops it) |
 | `--logging` | Logging backend: `serilog` (default), `mel`, `none` |
 

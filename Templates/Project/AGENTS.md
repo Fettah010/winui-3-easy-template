@@ -75,10 +75,16 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Assets/app.ico` | App + installer + tray + shortcut icon (single source, `vpk --icon`). |
 | `Assets/Logo*.png` | In-app logo PNGs (splash, title bar, Home, About). |
 | `Scripts/build-and-release.ps1` | **Single source of truth** for building+publishing a release (updates feature). |
+| `Scripts/build-msix.ps1` | Packs MSIX + `.appinstaller`/`.msixupload`; `-Validate` pre-flights without the SDK. |
+| `Scripts/publish-store.ps1` | One-command Store flow: validate → upload → WACK → Partner Center. |
+| `Scripts/bump-version.ps1` | Bumps csproj + CITATION + CHANGELOG stub. |
+| `Scripts/submit-store.ps1` | Submits the `.msixupload` via the Partner Center API (env creds, manual fallback). |
+| `Scripts/new-store-listing.ps1` | Drafts `Store/` listing + checklists from the README (git-ignored). |
 | `Scripts/create-shortcut.ps1` | Creates desktop shortcuts for the app (launch + `(Dev)` build-and-run). |
 | `Scripts/run-app.ps1` | Build-if-needed + launch dev loop (target of the `(Dev)` shortcut). |
 | `run-dev.vbs` / `run-dev.bat` | Dev-only `dotnet run` launchers (repo-relative paths). The desktop shortcut targets the built exe directly (fast cold start). |
 | `.github/workflows/release.yml` | CI release pipeline (updates feature). |
+| `.github/workflows/store-submit.yml` | Manual Store submission CI (msix scaffolds; Partner Center secrets). |
 | `Tests/` | MSTest unit test project. |
 | `README.md` | User-facing docs/questions. |
 | `AGENTS.md` | This file - guidance for AI agents. |
