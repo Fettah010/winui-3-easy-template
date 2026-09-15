@@ -252,7 +252,9 @@ not by choice.
 | `--repo` | GitHub `org/name` (feeds, links, CI) | `acme/desk-app` |
 | `--scheme` | Deep-link scheme (registered end-to-end: HKCU self-register on first run, manifest for MSIX; `Scripts/register-protocol.ps1` for manual setup) | `acme://` |
 | `--tray/--database/--http/--health/--crash/--localization/--tests` | Feature on/off (`false` drops it) | `--tray false` |
-| `--updates` | Update mechanism: `velopack` (default), `basic` (checker), `none` | `--updates basic` |
+| `--updates` | Update mechanism: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX (`--distribution msix`) | `--updates basic` |
+| `--distribution` | Distribution format: `portable` (default, unpackaged) or `msix` (packaged, for Store or sideload) | `--distribution msix` |
+| `--setup` | First-run setup wizard: install location, shortcuts, launch options (`false` drops it; portable only, ignored for msix) | `--setup false` |
 | `--attribution` | Keep the one-line DevTem source comment in generated `DevTemAttribution.cs` | `true` |
 
 Names with spaces work: `-n "My App"` produces `My_App` identifiers and
@@ -270,6 +272,7 @@ internal service:
 | Minimal | `--tray false --updates none --database false --http false --health false --logging none --crash false --localization false --tests false --attribution false` | Shell, settings, English UI |
 | Desktop | `--updates none --database false --http false` | Minimal plus tray and desktop notifications |
 | Production | no overrides | All optional services and release tooling |
+| Store | `--distribution msix --updates store --setup false` | Packaged MSIX for Store submission (tray stays valid packaged; autostart moves to `StartupTask`) |
 
 Copy a preset's flags into the scaffold command and override any individual
 flag. Individual flags always win; profiles are intentionally documentation
@@ -279,13 +282,14 @@ How flags work (verified over all-on, all-off, and mixed scaffolds):
 
 - **Files**: services, tests, release scripts and feature packages are
   excluded per flag (`sources.modifiers` in `template.json`).
-- **Code**: `.cs` `#if (tray|...)` blocks and `#if (updates == 'velopack')`-style
+- **Code**: `.cs` `#if (tray|setup|...)` blocks and `#if (updates == 'velopack')`-style
   value comparisons (the engine only
   evaluates markers in code files).
 - **Packages**: `Build/Features.*.props` imported with `Exists` guards, so
   one static csproj serves every combo.
 - **UI**: no markers in `.xaml` (the engine ignores them there) — instead
-  `Services/AppFeatures.cs` (values rendered from the flags) gates
+  `Services/AppFeatures.cs` (values rendered from the flags: distribution,
+  setup, update mode) gates
   visibility, and `HomePage` fills its card grid from the visible cards.
 - **Docs**: `README`/`AGENTS` rows carry `(feature)` qualifiers.
 

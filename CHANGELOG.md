@@ -72,12 +72,37 @@ generation, branding configuration, and validation improvements.
 - Optional tray, updates, database, HTTP, and attribution features are
   documented and validated independently.
 
-## [0.0.5-beta] — unreleased
+## [0.0.5-beta] — 2026-09-15
 
-Internal restructure release. No behavior changes — same features, cleaner
-layers, all proven by the full verification tier.
+Distribution + installer release (plan `docs/DISTRIBUTION-PLAN.md`,
+Phases 0–4): the template gains a `distribution` dimension, native
+MSIX update values, and a first-run setup wizard. Defaults stay
+`portable` + `velopack`, so default scaffolds behave as before.
+
+### Added
+
+- `distribution` template choice: `portable` (default, unpackaged) or
+  `msix` (packaged, Store or sideload). One runtime-adaptive binary:
+  data root, autostart (`StartupTask`), protocol, and singleton fork
+  on `AppInfo.IsPackaged` — no compile-time forks.
+- `updates` values `appinstaller` / `store` (msix-only): native
+  `.appinstaller` feed support (`build-msix.ps1 -AppInstaller`,
+  schema 2021) and Store submission path (`-StoreUpload`,
+  Partner Center checklist). Slim status surface in Settings +
+  Update Center when updates are externally owned.
+- `setup` template flag (portable-only): first-run setup wizard
+  (`SetupWizardPage`, PipsPager steps, persisted don't-show-again).
+- Update Center page: check → download (live progress) → install
+  with release notes; `basic` shares the same visual language
+  through `IUpdateService`. Store preset:
+  `--distribution msix --updates store --setup false`.
+- Template package MINOR bump (`0.2.0` → `0.3.0`) per the standing
+  version policy.
 
 ### Changed
+
+Internal restructure. No behavior changes on default scaffolds — same features, cleaner
+layers, all proven by the full verification tier.
 
 - Localization: per-language files, XAML bindings (`{loc:Loc}`), instant
   switch everywhere, no hardcoded versions in strings.

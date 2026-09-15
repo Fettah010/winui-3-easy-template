@@ -140,9 +140,106 @@ in git history; this file saves the next agent the archaeology.
   (0.1.6 → 0.2.0); app follows patch/beta as usual (Velopack versions
   must keep increasing, one version per channel). Param names and choice
   values are stable from 0.2.0: renames would silently break user
-  scripts, so new options arrive as new values, never renames.
+  scripts, so new options arrive    as new values, never renames.
+- **2026-09-14 — Distribution plan answers (installer/updater openness).**
+  (a) Velopack-headless, zero new deps: no "SiriusUpdater" exists
+  (NuGet/GitHub deep search); AutoUpdater.NET is WinForms/WPF-dialogs
+  only; NetSparkle deferred unless headless proves insufficient.
+  (b) Store = full packaged variant (`distribution` dimension), not
+  docs-only — answers the Phase-4 deferred `packaging: msix` item.
+  (c) Custom UI = portable wizard + UpdateCenter pages; msix/Store gets
+  a slim status page (path/shortcut controls impossible for MSIX).
+  (d) `updates` gains `appinstaller` + `store` (msix-only).
+  (e) Defaults stay (portable+velopack); matrix grows representatively.
+  External classic installer exe rejected (never Store-signable).
+- **2026-09-14 — Distribution plan filed, now the live plan.**
+  `docs/DISTRIBUTION-PLAN.md` (mirrored verbatim to
+  `Templates/Project/docs/`); `FLEXIBILITY-PLAN.md` stays as the
+  shipped-record. Bootstrap reading order moves to the new plan.
+- **2026-09-14 — P0: engine constraints can't gate param combos.**
+  `template.json` `constraints` only cover the host (os/sdk/workload),
+  so invalid distribution/updates pairs fail at BUILD time via the
+  `DevTemValidateDistribution` MSBuild target (headline error, proven
+  by the `badupd` matrix combo) — not at scaffold time. Values reach
+  MSBuild as `__DISTRIBUTION__`/`__SETUP__`/`__UPDATES__` tokens in
+  `Build/Features.Distribution.props` (conditioned file, no `#if`
+  regions — same pattern as `BackendName`/`__LOGGING__`).
+- **2026-09-14 — P0: compound `||` works in template `#if`.**
+  `App.xaml.cs` uses `#if (updates == 'velopack' || updates == 'basic')`
+  (replacing `!= 'none'`); scratch scaffolds proved velopack/basic keep
+  the region and store drops it, markers stripped both ways.
+  `BackgroundUpdateService.cs` is excluded for appinstaller/store
+  (same as none) until the P2 status surface.
+- **2026-09-14 — P1: runtime-adaptive, not compile-time forks.**
+  Spike outcome: external packaging (`build-msix.ps1` + manifest, both
+  already tokenized) means one binary serves both distributions, so all
+  forks are runtime branches on `AppInfo.IsPackaged` — no
+  `SingleInstanceService`, no `WindowsPackageType` swap, no new
+  `Packaging/` manifest (that dir holds the NuGet pack project anyway).
+  Mutex singleton kept for packaged too (works, same user;
+  `AppInstance` redirection = risk without benefit). `WACK deferred`:
+  no App Certification Kit on the build machine (command in the guide);
+  `msix.yml` re-proves pack+sign when packaging inputs change.
+- **2026-09-14 — P1: DB/logs move under the data root (both distros).**
+  `AppPaths.DataFolder` centralizes it (packaged: `LocalFolder`;
+  else `%LocalAppData%`). Portable side effect, intended: Velopack
+  updates stop orphaning the database and logs in versioned folders.
+  Packaged installs start with a fresh data path (no auto-migration —
+  stated in the guide).
+- **2026-09-14 — P2: AppFeatures is a real shared seam now.**
+  It was scaffolded but never referenced. It now exists in both trees
+  (conditioned file, `@()` guards — tokens, not `#if`) with the full
+  symbol set (`UpdateMode` extended to appinstaller/store,
+  `Distribution`, `SetupWizard`, `IsExternalUpdateMode`) and drives the
+  Settings slim-status UI. VM/XAML bind to it — no XAML conditionals.
+- **2026-09-14 — P2: mode-gated tests via Assert.Inconclusive.**
+  Engine-flow and external-flow suites live in one verbatim test file,
+  each self-skipping when the scaffold mode doesn't match. No excludes,
+  no `#if`, matrix-compatible (exit 0, `Passed!` present). Silent
+  early-returns were rejected (they would hide regressions as passes).
+- **2026-09-14 — P2: no Unicode inside expandable PS strings.**
+  A U+2014 em-dash inside `"..."` breaks the Windows PowerShell 5.1
+  tokenizer (proven by bisection: cascade parse errors far downstream).
+  ASCII-only in `"..."`/here-strings; Unicode stays in `#` comments.
+  (Earlier `$()/::` theories were red herrings.)
+- **2026-09-14 — P0: file edits can break parity via line endings.**
+  Parity hashes bytes: LF introduced into CRLF mirror files fails the
+  check with identical visible text. Normalize to CRLF after touching
+  hash-compared files. (Blind app→template copies of conditioned files
+  wipe `#if` guards — restore from git and hand-edit instead.)
 - **2026-09-14 — Generated documentation is profile-aware by composition.**
-  `docs/FEATURES.md` reports the selected switches and next steps, while
-  feature-specific guides are excluded at scaffold time when their feature is
-  disabled. The base README remains stable and points to the generated
-  summary instead of pretending every optional service exists.
+   `docs/FEATURES.md` reports the selected switches and next steps, while
+   feature-specific guides are excluded at scaffold time when their feature is
+   disabled. The base README remains stable and points to the generated
+   summary instead of pretending every optional service exists.
+- **2026-09-15 — P3: UpdateCenter ships in every combo (null-tolerant).**
+  `updates=none` keeps the Update Center page as a status surface
+  (`UpdateCenterNoEngine`) instead of dropping it: one binary, no
+  route/DI guards, no matrix-only build breaks. The VM is null-tolerant
+  by design (same rule as the Settings VM); `basic` reuses the same
+  visual language through the shared `IUpdateService` seam (reskin =
+  shared styles, no new logic).
+- **2026-09-15 — P3: wizard success is a static glyph, notes stay plain.**
+  Zero new dependencies: no Toolkit Markdown/Lottie packages. The Done
+  step uses a `FontIcon` checkmark and release notes stay a `TextBlock`
+  (markdown renders as readable plain text). Animated Lottie success +
+  rich markdown rendering revisit past real demand, not principle
+  (same rule as the Velopack-headless updater choice).
+- **2026-09-15 — P3: FirstRunDialogService is conditioned on setup.**
+  The wizard branch (`ShouldShowSetupWizard` + `setupwizard` navigation)
+  sits behind `#if (setup)`; `!setup` scaffolds keep today's welcome
+  dialog with zero wizard references. Guard-manifest + `nosetup` matrix
+  combo prove the seam (parity catches guard wipes, matrix catches
+  missing-file breaks).
+- **2026-09-15 — P4: distribution ships in 0.0.5-beta / templates 0.3.0.**
+  The existing unreleased `0.0.5-beta` restructure section becomes the
+  dated distribution release section (both land together; defaults
+  unchanged so the release notes stay honest). Template MINOR per the
+  standing version policy (new symbols + values); app patch-beta
+  (Velopack versions must keep increasing). No symbol renames.
+- **2026-09-15 — Shipped plans deleted (distribution + flexibility).**
+  `DISTRIBUTION-PLAN.md` is done (P0–P4 in 0.0.5-beta) and
+  `FLEXIBILITY-PLAN.md` shipped in 0.0.4-beta, so both leave both trees
+  (same precedent as `DIAGNOSTICS-PLAN.md`). History stays in
+  `CHANGELOG.md` + `DECISIONS.md`; open work still lives in
+  `DISCOVERY-PLAN.md` and `TEMPLATE-REUSABILITY-ROADMAP.md`, which stay.

@@ -61,7 +61,9 @@ public partial class App : Application
             "window", Program.StartupStopwatch.ElapsedMilliseconds);
 
         // Deep link that started this process (if any) wins over the home page.
-        HandlePendingProtocolUri();
+        // Unpackaged: command line (Program.PendingProtocolUri, already
+        // activation-resolved in Program for packaged runs).
+        HandlePendingProtocolUri(Program.PendingProtocolUri ?? ProtocolService.GetPackagedProtocolUri());
 
         // Heavy work deferred past the first frame so the window appears ASAP:
         // database init and the update check run while the user already sees UI.
@@ -70,7 +72,7 @@ public partial class App : Application
 #if (database)
         _ = DatabaseInitializer.InitializeAsync();
 #endif
-#if (updates != 'none')
+#if (updates == 'velopack' || updates == 'basic')
         _ = BackgroundUpdateService.Current.CheckForUpdatesAsync(MainWindowInstance);
         _ = BackgroundUpdateService.Current.RunPeriodicChecksAsync(MainWindowInstance);
 #endif
@@ -120,11 +122,10 @@ public partial class App : Application
     /// Navigates to the deep link that started this process, if any.
     /// Runs after the main window is visible so the nav frame exists.
     /// </summary>
-    private void HandlePendingProtocolUri()
+    private void HandlePendingProtocolUri(string? pending)
     {
         try
         {
-            var pending = Program.PendingProtocolUri;
             if (string.IsNullOrWhiteSpace(pending))
                 return;
             if (NavigationService.Current.TryNavigateByUri(pending, out var tag))

@@ -57,8 +57,8 @@ public sealed class FirstRunService
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• Restart and update prompts fully translated
-• Same features, cleaner and faster internals
-• Bug fixes and performance improvements";
+• New Update Center: progress + release notes
+• First-run setup wizard (portable installs)
+• Same features, cleaner and faster internals";
     }
 }

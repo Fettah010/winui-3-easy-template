@@ -194,6 +194,11 @@ public sealed partial class SettingsPage : Page, INavigationAware
     private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e) =>
         await ViewModel.InstallPendingUpdateAsync();
 
+    private void OpenUpdateCenterButton_Click(object sender, RoutedEventArgs e)
+    {
+        try { NavigationService.Current.NavigateTo("updates"); } catch { }
+    }
+
     private async void ImportSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ViewModel.ImportSettingsCommand.ExecuteAsync(null);

@@ -3,13 +3,20 @@
 #   powershell -File Scripts/build-msix.ps1 -DryRun
 #   powershell -File Scripts/build-msix.ps1
 #   powershell -File Scripts/build-msix.ps1 -CertificatePath C:\certs\app.pfx -CertificatePassword "secret" -Publisher "CN=Acme"
+#   powershell -File Scripts/build-msix.ps1 -AppInstaller -InstallUrl "https://example.com/msix/"
+#   powershell -File Scripts/build-msix.ps1 -StoreUpload -CertificatePath C:\certs\app.pfx -Publisher "CN=Acme"
 #
 # Needs the Windows SDK (makeappx; signtool for signing). DryRun validates
-# everything short of makeappx, so template/CI edits can be checked anywhere.
+# everything short of makeappx (including .appinstaller XML emission), so
+# template/CI edits can be checked anywhere.
 # Publisher MUST match the signing certificate subject. Unsigned packages
 # validate the pipeline but cannot be installed (sign them, even self-signed).
 # Velopack users: MSIX replaces the Velopack installer, not the app — the
 # in-app update UI reports "not installed" under MSIX by design.
+# -AppInstaller emits a 2021-schema .appinstaller feed file next to the
+# package (native on-launch + background updates for sideloaded installs).
+# -StoreUpload bundles the package and wraps it as .msixupload (Store
+# submission format; the Store signs it — no cert needed for that path).
 
 param(
     [string]$Version = "",
@@ -19,7 +26,11 @@ param(
     [string]$CertificatePassword = "",
     [string]$TimestampUrl = "http://timestamp.digicert.com",
     [string]$OutputDir = "",
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$AppInstaller,
+    [string]$InstallUrl = "",
+    [int]$HoursBetweenUpdateChecks = 12,
+    [switch]$StoreUpload
 )
 
 $ErrorActionPreference = "Stop"
@@ -170,6 +181,54 @@ try {
     catch { throw "Staged manifest is not well-formed XML: $_" }
     Write-Host "Staging valid: $appDir"
 
+    # .appinstaller feed content is fully determined at stage time (manifest
+    # + version/arch/publisher + deterministic package file name), so it is
+    # built and validated here — DryRun proves it without makeappx.
+    $msixFileName = "DevTemWinUi3_" + $Version + "_" + $arch + ".msix"
+    $installerXml = $null
+    $installerFileName = [System.IO.Path]::GetFileNameWithoutExtension($msixFileName) + ".appinstaller"
+    if ($AppInstaller) {
+        $feedBase = $InstallUrl
+        if ([string]::IsNullOrWhiteSpace($feedBase)) {
+            if ($DryRun) { $feedBase = "https://example.com/msix/" }
+            else { throw "-AppInstaller needs -InstallUrl (public base URL hosting the .msix, trailing slash added if missing)." }
+        }
+        if (-not $feedBase.EndsWith("/")) { $feedBase += "/" }
+        [xml]$staged = Get-Content -LiteralPath (Join-Path $appDir "AppxManifest.xml")
+        $pkgName = $staged.Package.Identity.Name
+        if ([string]::IsNullOrWhiteSpace($pkgName)) { throw "Staged manifest has no Identity Name." }
+        $mainUri = $feedBase + $msixFileName
+        # Pre-escape (plain $vars below): subexpressions inside
+        # expandable strings trip the 5.1 parser.
+        $escUri = [System.Security.SecurityElement]::Escape($mainUri)
+        $escVer = [System.Security.SecurityElement]::Escape($Version)
+        $escName = [System.Security.SecurityElement]::Escape($pkgName)
+        $escPub = [System.Security.SecurityElement]::Escape($Publisher)
+        $escArch = [System.Security.SecurityElement]::Escape($arch)
+        $installerXml = @"
+<?xml version="1.0" encoding="utf-8"?>
+<AppInstaller Uri="$escUri" Version="$escVer" xmlns="http://schemas.microsoft.com/appx/appinstaller/2021">
+  <MainPackage Name="$escName" Publisher="$escPub" Version="$escVer" ProcessorArchitecture="$escArch" Uri="$escUri" />
+  <UpdateSettings>
+    <OnLaunch HoursBetweenUpdateChecks="$HoursBetweenUpdateChecks" ShowPrompt="true" UpdateBlocksActivation="false" />
+    <AutomaticBackgroundTask />
+  </UpdateSettings>
+</AppInstaller>
+"@
+        # Here-strings start with a newline: strict XML parsers reject any
+        # content before the declaration, so trim (then validate + write
+        # BOM-free UTF-8 below).
+        $installerXml = $installerXml.TrimStart()
+        try { [xml]$installerXml | Out-Null }
+        catch { throw "Generated .appinstaller is not well-formed XML: $_" }
+        Write-Host "AppInstaller feed valid ($installerFileName -> $mainUri)"
+    }
+
+    if ($StoreUpload -and $DryRun) {
+        $dryBase = [System.IO.Path]::GetFileNameWithoutExtension($msixFileName)
+        Write-Host "DryRun: would bundle $dryBase.msixbundle and wrap .msixupload (needs makeappx)."
+    }
+
     if ($DryRun) {
         Write-Host "DryRun: skipping makeappx (and signing). Staging kept at: $appDir"
         $appDir = $null  # keep staging for inspection
@@ -179,7 +238,7 @@ try {
     if (-not (Test-Path -LiteralPath $OutputDir)) {
         New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
     }
-    $msix = Join-Path $OutputDir ("DevTemWinUi3_" + $Version + "_" + $arch + ".msix")
+    $msix = Join-Path $OutputDir $msixFileName
     Write-Host "==> makeappx pack"
     & $makeappx pack /d $appDir /p $msix /nv | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "makeappx failed (exit $LASTEXITCODE)." }
@@ -200,6 +259,45 @@ try {
     }
     else {
         Write-Host "WARNING: unsigned package (installable only after signing, even self-signed)." -ForegroundColor Yellow
+    }
+
+    if ($AppInstaller -and -not $DryRun) {
+        if (-not (Test-Path -LiteralPath $OutputDir)) {
+            New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
+        }
+        $installerPath = Join-Path $OutputDir $installerFileName
+        [System.IO.File]::WriteAllText($installerPath, $installerXml)
+        Write-Host "Wrote: $installerPath"
+    }
+
+    if ($StoreUpload -and -not $DryRun) {
+        $bundleBase = [System.IO.Path]::GetFileNameWithoutExtension($msixFileName)
+        $msixLeaf = [System.IO.Path]::GetFileName($msix)
+        $bundleDir = Join-Path $staging "bundle"
+        if (-not (Test-Path -LiteralPath $bundleDir)) {
+            New-Item -ItemType Directory -Path $bundleDir -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $msix -Destination (Join-Path $bundleDir $msixLeaf) -Force
+        $bundle = Join-Path $OutputDir ($bundleBase + ".msixbundle")
+        Write-Host "==> makeappx bundle"
+        & $makeappx bundle /d $bundleDir /p $bundle | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "makeappx bundle failed (exit $LASTEXITCODE)." }
+        Write-Host "Bundled: $bundle"
+        if (-not [string]::IsNullOrWhiteSpace($CertificatePath)) {
+            Write-Host "==> signtool sign (bundle)"
+            $bundleSignArgs = @("sign", "/fd", "SHA256", "/f", $CertificatePath, "/tr", $TimestampUrl, "/td", "SHA256")
+            if (-not [string]::IsNullOrWhiteSpace($CertificatePassword)) {
+                $bundleSignArgs += @("/p", $CertificatePassword)
+            }
+            $bundleSignArgs += $bundle
+            & $signtool @bundleSignArgs | Out-Null
+            if ($LASTEXITCODE -ne 0) { throw "signtool (bundle) failed (exit $LASTEXITCODE)." }
+            Write-Host "Signed: $bundle"
+        }
+        $upload = Join-Path $OutputDir ($bundleBase + ".msixupload")
+        if (Test-Path -LiteralPath $upload) { Remove-Item -LiteralPath $upload -Force }
+        Compress-Archive -LiteralPath $bundle -DestinationPath $upload
+        Write-Host "Store upload wrapped: $upload (bundle only - the Store signs it; add .appxsym before zipping if you ship symbols)"
     }
 }
 finally {

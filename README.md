@@ -49,7 +49,9 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 - WinUI 3 / Windows App SDK on .NET 10
 - Mica-based desktop shell with native title bar behavior
 - System tray support with single-instance activation
-- Auto-updates (Velopack installer + deltas by default; zero-dependency checker or none at scaffold time)
+- Auto-updates (Velopack installer + deltas by default; zero-dependency checker or none at scaffold time; native AppInstaller / Store updates for packaged MSIX)
+- First-run setup wizard (install location, shortcuts, launch options; portable only)
+- Packaged MSIX distribution with runtime-adaptive paths, autostart, and protocol (`--distribution msix`)
 - 3-language runtime localization (en-US, es-ES, fr-FR; English-only at scaffold time)
 - Logging through one facade (Serilog console + file by default; MEL or none at scaffold time)
 - Optional Sentry crash reporting (DSN-gated; SDK droppable at scaffold time)
@@ -60,6 +62,14 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
 the flags, and `docs/FEATURES.md` records what each scaffold picked.
+
+## What's new in 0.0.5-beta
+
+- Packaged MSIX distribution (`--distribution msix`) with native
+  AppInstaller / Store updates and a documented Store preset
+- First-run setup wizard (portable installs) + Update Center page
+  with download progress and release notes
+- Template package `0.3.0` on NuGet — full notes in [CHANGELOG.md](CHANGELOG.md)
 
 ## Run this repo locally
 
@@ -76,6 +86,8 @@ This repo is both a full sample app and the source of the project template. It d
 App shell
 ├── Home page
 ├── Settings page
+├── Update Center page
+├── First-run setup wizard (portable)
 ├── Tray + toast behavior
 ├── Update checks + restart prompt
 ├── Localization + theme persistence

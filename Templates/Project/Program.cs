@@ -116,7 +116,12 @@ public static class Program
         LoggingService.Initialize();
         CrashReportingService.Current.Initialize();
 
-        PendingProtocolUri = ProtocolService.ExtractProtocolUri(args);
+        // Unpackaged: the URI rides the command line. Packaged: it never
+        // reaches the command line — resolve it from the activation args
+        // (needed before the single-instance check so a redirected second
+        // launch still hands its URI to the first instance).
+        PendingProtocolUri = ProtocolService.ExtractProtocolUri(args)
+            ?? ProtocolService.GetPackagedProtocolUri();
 
         // Single-instance enforcement
         if (!TryEnforceSingleInstance())

@@ -22,6 +22,18 @@ public static class FirstRunDialogService
 
         if (firstRun.IsFirstRun)
         {
+            // Portable + setup wizard: route to the wizard page instead of
+            // the welcome dialog (packaged runs skip it — Windows owns
+            // location and shortcuts there; completed wizards never return).
+            if (ShouldShowSetupWizard())
+            {
+                try
+                {
+                    if (NavigationService.Current.NavigateTo("setupwizard"))
+                        return;
+                }
+                catch { }
+            }
             await ShowWelcomeAsync(window);
             firstRun.MarkAsShown();
         }
@@ -29,6 +41,24 @@ public static class FirstRunDialogService
         {
             await ShowWhatsNewAsync(window);
             firstRun.MarkAsShown();
+        }
+    }
+
+    internal static bool ShouldShowSetupWizard()
+    {
+        try
+        {
+            if (AppInfo.IsPackaged)
+                return false;
+            if (!AppFeatures.SetupWizard)
+                return false;
+            if (ViewModels.SetupWizardViewModel.IsCompleted)
+                return false;
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 

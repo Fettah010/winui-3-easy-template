@@ -98,7 +98,8 @@
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsChannelHeader}"
-                    Description="{loc:Loc Key=SettingsChannelDesc}">
+                    Description="{loc:Loc Key=SettingsChannelDesc}"
+                    Visibility="{x:Bind ViewModel.UpdateCheckCardVisibility, Mode=OneWay}">
                     <ctk:Segmented
                         x:Name="ChannelSegment"
                         SelectedIndex="{x:Bind ViewModel.SelectedChannelIndex, Mode=TwoWay}"
@@ -110,7 +111,8 @@
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsCheckHeader}"
-                    Description="{loc:Loc Key=SettingsCheckDesc}">
+                    Description="{loc:Loc Key=SettingsCheckDesc}"
+                    Visibility="{x:Bind ViewModel.UpdateCheckCardVisibility, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                         <!-- Busy states are VM-owned props (single writer), so a
                              binding is safe here — unlike the old code-behind. -->
@@ -121,6 +123,15 @@
                             Click="CheckUpdatesButton_Click"
                             Style="{ThemeResource AccentButtonStyle}"/>
                     </StackPanel>
+                </ctk:SettingsCard>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=SettingsUpdateCenterHeader}"
+                    Description="{loc:Loc Key=SettingsUpdateCenterDesc}">
+                    <Button
+                        x:Name="OpenUpdateCenterButton"
+                        Content="{loc:Loc Key=SettingsOpenUpdateCenter}"
+                        Click="OpenUpdateCenterButton_Click"/>
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard

@@ -71,7 +71,13 @@ public static class ServiceLocator
 #endif
 
             // ViewModels are transient: each page gets a fresh instance.
+            // UpdateCenterViewModel is unconditional: the page ships in
+            // every combo and the VM is null-tolerant without an engine.
             services.AddTransient<ViewModels.SettingsPageViewModel>();
+            services.AddTransient<ViewModels.UpdateCenterViewModel>();
+#if (setup)
+            services.AddTransient<ViewModels.SetupWizardViewModel>();
+#endif
 #if (health)
             services.AddTransient<ViewModels.DiagnosticsPageViewModel>();
 #endif

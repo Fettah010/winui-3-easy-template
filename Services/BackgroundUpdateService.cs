@@ -121,12 +121,20 @@ public sealed class BackgroundUpdateService
                 Title = loc.GetString("UpdateRestartTitle", version ?? string.Empty),
                 Content = loc.GetString("UpdateRestartBody"),
                 PrimaryButtonText = loc.GetString("UpdateRestartNow"),
+                SecondaryButtonText = loc.GetString("UpdateDetails"),
                 CloseButtonText = loc.GetString("UpdateRestartLater"),
                 DefaultButton = ContentDialogButton.Primary
             };
 
-            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            var choice = await dialog.ShowAsync();
+            if (choice == ContentDialogResult.Primary)
                 UpdateService.Current.ApplyPendingUpdateAndRestart();
+            else if (choice == ContentDialogResult.Secondary)
+            {
+                // Details opens the Update Center (which re-checks on
+                // arrival to show fresh state) instead of restarting now.
+                try { NavigationService.Current.NavigateTo("updates", "check"); } catch { }
+            }
         }
         catch (Exception ex)
         {

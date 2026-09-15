@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "Unpackaged WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none), optional SQLite, HTTP, diagnostics, crash reporting, and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, release tooling, and profile-aware documentation. Identity and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none — or native AppInstaller / Store updates for packaged MSIX), optional SQLite, HTTP, diagnostics, crash reporting, and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, optional first-run setup wizard (portable only), release tooling, and profile-aware documentation. Identity, distribution and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,
@@ -102,10 +102,44 @@
         {
           "choice": "none",
           "description": "No update code, scripts, or CI release job."
+        },
+        {
+          "choice": "appinstaller",
+          "description": "Native MSIX auto-updates via an .appinstaller feed for sideloaded packaged apps (requires --distribution msix)."
+        },
+        {
+          "choice": "store",
+          "description": "Microsoft Store updates for packaged apps; no updater code is scaffolded (requires --distribution msix)."
         }
       ],
       "replaces": "__UPDATES__",
-      "description": "Update mechanism: velopack (full), basic (checker only), or none (--updates basic)."
+      "description": "Update mechanism: velopack (full), basic (checker only), none — or appinstaller / store for packaged MSIX (--distribution msix)."
+    },
+    "distribution": {
+      "type": "parameter",
+      "datatype": "choice",
+      "displayName": "Distribution",
+      "defaultValue": "portable",
+      "choices": [
+        {
+          "choice": "portable",
+          "description": "Unpackaged app: own folder, file-replace updates, custom setup wizard (default)."
+        },
+        {
+          "choice": "msix",
+          "description": "Packaged MSIX with identity: Store submission or sideload with native updates. Only pairs with --updates appinstaller, store, or none."
+        }
+      ],
+      "replaces": "__DISTRIBUTION__",
+      "description": "Distribution format: portable (unpackaged) or msix (packaged, for Store or sideload)."
+    },
+    "setup": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "Setup wizard",
+      "defaultValue": "true",
+      "replaces": "__SETUP__",
+      "description": "Include the first-run setup wizard: install location, shortcuts, launch options (--setup false to drop; portable only, ignored for msix)."
     },
     "database": {
       "type": "parameter",
@@ -224,6 +258,47 @@
           "condition": "(updates == 'none')",
           "exclude": [
             "Services/BackgroundUpdateService.cs"
+          ]
+        },
+        {
+          "condition": "(updates == 'appinstaller')",
+          "exclude": [
+            "Services/BackgroundUpdateService.cs"
+          ]
+        },
+        {
+          "condition": "(updates == 'store')",
+          "exclude": [
+            "Services/BackgroundUpdateService.cs"
+          ]
+        },
+        {
+          "condition": "(updates != 'appinstaller')",
+          "exclude": [
+            "docs/feature-guides/updates-appinstaller.md"
+          ]
+        },
+        {
+          "condition": "(updates != 'store')",
+          "exclude": [
+            "docs/feature-guides/updates-store.md"
+          ]
+        },
+        {
+          "condition": "(distribution != 'msix')",
+          "exclude": [
+            "docs/feature-guides/distribution-msix.md"
+          ]
+        },
+        {
+          "condition": "(!setup)",
+          "exclude": [
+            "docs/feature-guides/setup-wizard.md",
+            "Pages/SetupWizardPage.xaml",
+            "Pages/SetupWizardPage.xaml.cs",
+            "ViewModels/SetupWizardViewModel.cs",
+            "Services/SetupWizardService.cs",
+            "Tests/ViewModels/SetupWizardViewModelTests.cs"
           ]
         },
         {

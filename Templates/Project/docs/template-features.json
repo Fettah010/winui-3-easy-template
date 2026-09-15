@@ -3,11 +3,18 @@
   "template": "devtem-winui",
   "features": {
     "tray": { "default": true, "dependsOn": [], "files": ["Services/SystemTrayService.cs", "Services/DesktopToastService.cs", "Tests/Services/DesktopToastServiceTests.cs"] },
-    "updates": { "default": "velopack", "dependsOn": [], "files": ["Services/BackgroundUpdateService.cs"], "values": {
+    "distribution": { "default": "portable", "dependsOn": [], "files": [], "values": {
+      "portable": { "files": [] },
+      "msix": { "files": ["docs/feature-guides/distribution-msix.md"] }
+    } },
+    "updates": { "default": "velopack", "dependsOn": ["distribution"], "files": ["Services/BackgroundUpdateService.cs"], "values": {
       "velopack": { "files": ["Services/UpdateService.cs", "Build/Features.Updates.Velopack.props", "Tests/Services/UpdateServiceTests.cs", "Tests/Services/BackgroundUpdateServiceTests.cs", ".github/workflows/release.yml", "Scripts/build-and-release.ps1", "Scripts/local-smoke-test.ps1", "Scripts/upload-github.ps1", "docs/feature-guides/updates-velopack.md"] },
       "basic": { "files": ["Services/BasicGithubUpdateService.cs", "Build/Features.Updates.Basic.props", "Tests/Services/BasicGithubUpdateServiceTests.cs", "docs/feature-guides/updates-basic.md"] },
-      "none": { "files": [] }
+      "none": { "files": [] },
+      "appinstaller": { "files": ["docs/feature-guides/updates-appinstaller.md"] },
+      "store": { "files": ["docs/feature-guides/updates-store.md"] }
     } },
+    "setup": { "default": true, "dependsOn": ["distribution"], "files": ["docs/feature-guides/setup-wizard.md", "Pages/SetupWizardPage.xaml", "Pages/SetupWizardPage.xaml.cs", "ViewModels/SetupWizardViewModel.cs", "Services/SetupWizardService.cs", "Tests/ViewModels/SetupWizardViewModelTests.cs"] },
     "database": { "default": true, "dependsOn": [], "files": ["Services/DatabaseService.cs", "Services/DatabaseInitializer.cs", "Build/Features.Database.props"] },
     "http": { "default": true, "dependsOn": [], "files": ["Services/ApiService.cs", "Build/Features.Http.props", "Tests/Services/ApiServiceTests.cs"] },
     "health": { "default": true, "dependsOn": [], "files": ["Pages/DiagnosticsPage.xaml", "Pages/DiagnosticsPage.xaml.cs", "ViewModels/DiagnosticsPageViewModel.cs", "Services/Native/CrashDialogNative.cs", "Tests/ViewModels/DiagnosticsPageViewModelTests.cs"] },
@@ -24,6 +31,10 @@
     "database and http are independent",
     "disabled feature files and package references must be absent",
     "feature flags are rendered into Services/AppFeatures.cs",
-    "updates carries a value (velopack, basic, none); per-value file lists live under features.updates.values"
+    "updates carries a value (velopack, basic, none, appinstaller, store); per-value file lists live under features.updates.values",
+    "distribution gates updates values (portable: velopack, basic, none; msix: appinstaller, store, none) — enforced by the MSBuild guard in Build/Features.Distribution.props",
+    "BackgroundUpdateService ships only for velopack/basic (excluded for none/appinstaller/store; external modes use the slim status surface instead)",
+    "UpdateCenter page + ViewModel ship in every combo (null-tolerant NoEngine status when updates=none)",
+    "setup wizard is portable-only; msix scaffolds warn and ignore it"
   ]
 }

@@ -14,7 +14,8 @@ dotnet new install DevTem.Templates
 ## `devtem-winui` — full desktop app
 
 Unpackaged WinUI 3 app: Mica window, system tray, auto-updates (Velopack
-by default; basic checker or none), optional SQLite and HTTP services,
+by default; basic checker or none; native AppInstaller / Store updates for
+packaged MSIX), first-run setup wizard, optional SQLite and HTTP services,
 3-language UI (EN/ES/FR; English-only available), persisted settings,
 flexible logging (Serilog by default) + optional Sentry crash reports,
 MSIX packaging script, release pipeline.
@@ -32,7 +33,9 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--repo` | GitHub `org/name` (feeds, links, CI) |
 | `--scheme` | Deep-link URI scheme (`acme://`) |
 | `--tray` / `--database` / `--http` / `--health` / `--crash` / `--localization` / `--tests` | Feature on/off (`false` drops it; all default on) |
-| `--updates` | Auto-updates: `velopack` (default), `basic` (checker), `none` |
+| `--updates` | Auto-updates: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX |
+| `--distribution` | Distribution format: `portable` (default) or `msix` (Store or sideload) |
+| `--setup` | First-run setup wizard (portable only; `false` drops it) |
 | `--logging` | Logging backend: `serilog` (default), `mel`, `none` |
 
 Names with spaces work (`-n "My App"` → `My_App` identifiers and files).
@@ -51,6 +54,7 @@ options:
 | Minimal | `--tray false --updates none --database false --http false --health false --logging none --crash false --localization false --tests false --attribution false` | None |
 | Desktop | `--updates none --database false --http false` | Tray and desktop notifications |
 | Production | no feature overrides | Tray, updates, SQLite, HTTP, attribution |
+| Store | `--distribution msix --updates store --setup false` | Packaged MSIX for Store submission |
 
 Apply a preset by copying its flags into the scaffold command, then change
 any individual flag as needed. Individual flags are authoritative; there is

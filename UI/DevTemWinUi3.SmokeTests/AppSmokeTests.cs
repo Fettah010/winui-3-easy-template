@@ -217,7 +217,39 @@ public sealed class AppSmokeTests
         ClickNavAndWaitForPage("NavAboutItem", "AboutTitleText");
         ClickNavAndWaitForPage("NavDiagnosticsItem", "DiagnosticsTitleText");
         ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
+        ClickNavAndWaitForPage("NavUpdatesItem", "UpdateCenterTitleText");
         ClickNavAndWaitForPage("NavHomeItem", "HomeTitleText");
+    }
+
+    [TestMethod]
+    public void SetupWizard_Complete_Path()
+    {
+        RequireWindow();
+        DismissFirstRunDialogIfPresent(RecheckTimeout);
+
+        // First-run only: on repeat runs the wizard is already completed
+        // (persisted don't-show-again) and this path is a no-op pass.
+        var next = WaitForElement("SetupWizardNextButton", RecheckTimeout);
+        if (next is null)
+        {
+            var title = WaitForElement("SetupWizardTitleText", RecheckTimeout);
+            if (title is null)
+                return;
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            var nextButton = WaitForElement("SetupWizardNextButton", NavigateTimeout);
+            if (nextButton is null)
+                break;
+            try { nextButton.Focus(); } catch { }
+            try { nextButton.Click(); } catch { }
+        }
+        var complete = WaitForElement("SetupWizardCompleteButton", NavigateTimeout);
+        Assert.IsNotNull(complete, "Wizard Complete button did not appear on the last step.");
+        try { complete.Focus(); } catch { }
+        try { complete.Click(); } catch { }
+        var home = WaitForElement("HomeTitleText", NavigateTimeout);
+        Assert.IsNotNull(home, "Home page did not appear after wizard Complete.");
     }
 
     [TestMethod]

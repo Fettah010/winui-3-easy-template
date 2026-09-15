@@ -7,13 +7,13 @@ using System.Text.Json;
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// File-backed key/value settings store for unpackaged apps.
-///
+/// File-backed key/value settings store.
+/// File location follows <see cref="AppPaths.DataFolder"/> (packaged runs
+/// use the package data folder, unpackaged runs use %LocalAppData%):
 /// ApplicationData.Current.LocalSettings does not reliably persist without
-/// package identity (no settings.dat is ever written), so every setting
-/// silently reverted to its default on next launch. Settings live in
-/// %LocalAppData%\DevTemWinUi3\settings.json instead: stable across runs,
-/// debuggable, and unit-testable.
+/// package identity (no settings.dat is ever written), so the file store
+/// is used for both distributions: stable across runs, debuggable,
+/// and unit-testable.
 ///
 /// Thread-safe. Writes are atomic (temp file + move). A corrupt file is
 /// backed up next to the original and replaced with defaults.
@@ -42,8 +42,7 @@ public sealed class LocalSettingsStore
     }
 
     internal static string DefaultPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        AppMetadata.AppDataFolder,
+        AppPaths.DataFolder,
         "settings.json");
 
     /// <summary>

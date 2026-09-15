@@ -1,13 +1,18 @@
 using System;
+using System.Threading.Tasks;
 
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Windows auto-start via the per-user <c>Run</c> registry key (unpackaged
-/// runs, including Velopack installs). MSIX-packaged runs cannot use it
-/// (virtualized store) — the Settings toggle disables itself there (see
-/// <c>SettingsPageViewModel.AutoStartAvailable</c>). Untested headless by
-/// house rule (registry); every path is never-throw guarded.
+/// Windows auto-start, both distributions. Unpackaged runs (including
+/// Velopack installs) use the per-user <c>Run</c> registry key.
+/// MSIX-packaged runs cannot (virtualized store) and go through the
+/// manifest <c>StartupTask</c> instead (<see cref="StartupTaskId"/> matches
+/// the manifest <c>TaskId</c>, derived from the safe name so renames flow).
+/// The sync <see cref="IsEnabled"/>/<see cref="SetEnabled"/> pair is the
+/// registry path; packaged runs use the async pair (WinRT calls must not
+/// be blocked on the UI thread). Untested headless by house rule
+/// (registry + WinRT); every path is never-throw guarded.
 /// </summary>
 public sealed class AutoStartService
 {
@@ -15,6 +20,10 @@ public sealed class AutoStartService
 
     private AutoStartService() { }
 
+    /// <summary>Manifest StartupTask id (<c>&lt;SafeName&gt;Startup</c>).</summary>
+    public static string StartupTaskId => AppMetadata.SafeName + "Startup";
+
+    /// <summary>Registry path (unpackaged). Never throws.</summary>
     public bool IsEnabled()
     {
         try
@@ -52,6 +61,51 @@ public sealed class AutoStartService
         catch (Exception ex)
         {
             AppLog.Error(ex, "Failed to set auto-start");
+        }
+    }
+
+    /// <summary>
+    /// Packaged equivalent of <see cref="IsEnabled"/> over the manifest
+    /// StartupTask. States DisabledByUser/DisabledByPolicy can only be
+    /// changed in Windows Settings (returns false, never throws).
+    /// </summary>
+    public async Task<bool> IsPackagedStartupEnabledAsync()
+    {
+        try
+        {
+            var task = await Windows.ApplicationModel.StartupTask.GetAsync(StartupTaskId);
+            return task.State == Windows.ApplicationModel.StartupTaskState.Enabled;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Packaged equivalent of <see cref="SetEnabled"/>. Enabling may show
+    /// the system consent prompt; returns the resulting state. Never throws.
+    /// </summary>
+    public async Task<bool> SetPackagedStartupEnabledAsync(bool enabled)
+    {
+        try
+        {
+            var task = await Windows.ApplicationModel.StartupTask.GetAsync(StartupTaskId);
+            if (enabled)
+            {
+                var state = await task.RequestEnableAsync();
+                var on = state == Windows.ApplicationModel.StartupTaskState.Enabled;
+                AppLog.Information("Packaged auto-start enable requested: {State}", state);
+                return on;
+            }
+            task.Disable();
+            AppLog.Information("Packaged auto-start disabled");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Failed to set packaged auto-start");
+            return false;
         }
     }
 }

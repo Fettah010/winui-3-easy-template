@@ -62,7 +62,7 @@ public static class LoggingService
     /// never ran). Never throws.
     /// </summary>
     public static string CurrentLogDirectory { get; private set; } =
-        Path.Combine(AppContext.BaseDirectory, LogDirectory);
+        Path.Combine(AppPaths.DataFolder, LogDirectory);
 
     public static void Initialize()
     {
@@ -70,7 +70,7 @@ public static class LoggingService
         // the debugger output so a broken pipeline is diagnosable.
         try { Serilog.Debugging.SelfLog.Enable(msg => Debug.WriteLine(msg)); } catch { }
 
-        var logPath = Path.Combine(AppContext.BaseDirectory, LogDirectory);
+        var logPath = Path.Combine(AppPaths.DataFolder, LogDirectory);
         try
         {
             Directory.CreateDirectory(logPath);

@@ -51,4 +51,27 @@ public sealed class AppInfo
             }
         }
     }
+
+    /// <summary>
+    /// Package family name for Store deep links
+    /// (<c>ms-windows-store://pdp/?PFN=…</c>). Null when unpackaged.
+    /// Never throws.
+    /// </summary>
+    public static string? PackageFamilyName
+    {
+        get
+        {
+            try
+            {
+                if (!IsPackaged)
+                    return null;
+                var name = Windows.ApplicationModel.Package.Current?.Id?.FamilyName;
+                return string.IsNullOrWhiteSpace(name) ? null : name;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
 }

@@ -6,8 +6,10 @@ corresponding feature is enabled.
 
 | Feature | Selected |
 | --- | --- |
+| Distribution | __DISTRIBUTION__ |
 | System tray | __TRAY__ |
 | Auto-updates | __UPDATES__ |
+| Setup wizard | __SETUP__ |
 | SQLite database | __DATABASE__ |
 | Typed HTTP client | __HTTP__ |
 | Diagnostics page | __HEALTH__ |

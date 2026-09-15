@@ -8,7 +8,8 @@ namespace DevTemWinUi3.Services;
 
 /// <summary>
 /// SQLite database service for local data persistence.
-/// Database file is stored next to the executable.
+/// Database file lives under <see cref="AppPaths.DataFolder"/> (writable
+/// for both distributions — the packaged install directory is read-only).
 /// </summary>
 public sealed class DatabaseService : IDisposable
 {
@@ -22,7 +23,7 @@ public sealed class DatabaseService : IDisposable
     }
 
     public string DatabasePath { get; } = Path.Combine(
-        AppContext.BaseDirectory, "Data", "app.db");
+        AppPaths.DataFolder, "Data", "app.db");
 
     /// <summary>
     /// Initializes the database connection and creates tables if needed.

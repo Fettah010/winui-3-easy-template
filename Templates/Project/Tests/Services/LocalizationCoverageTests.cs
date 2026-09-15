@@ -291,8 +291,7 @@ public class LocalizationCoverageTests
 
     [TestMethod]
     public void NewRestartPromptKeys_AreTranslated()
-    {
-        var loc = LocalizationService.Current;
+    {        var loc = LocalizationService.Current;
 
         loc.SetLanguage("en-US");
         Assert.AreEqual("Update v9.9 ready", loc.GetString("UpdateRestartTitle", "9.9"));
@@ -305,6 +304,36 @@ public class LocalizationCoverageTests
         loc.SetLanguage("fr-FR");
         Assert.AreEqual("Mise à jour v9.9 prête", loc.GetString("UpdateRestartTitle", "9.9"));
         Assert.AreEqual("Plus tard", loc.GetString("UpdateRestartLater"));
+    }
+
+    [TestMethod]
+    public void NewP3Keys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Updates", loc.GetString("NavUpdates"));
+        Assert.AreEqual("Update Center", loc.GetString("UpdateCenterTitle"));
+        Assert.AreEqual("Download", loc.GetString("UpdateCenterDownload"));
+        Assert.AreEqual("Release notes", loc.GetString("UpdateCenterNotesHeader"));
+        Assert.AreEqual("Open Update Center", loc.GetString("SettingsOpenUpdateCenter"));
+        Assert.AreEqual("View details", loc.GetString("UpdateDetails"));
+        Assert.AreEqual("Setup", loc.GetString("SetupWizardTitle"));
+        Assert.AreEqual("Finish setup", loc.GetString("SetupWizardComplete"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Actualizaciones", loc.GetString("NavUpdates"));
+        Assert.AreEqual("Centro de actualizaciones", loc.GetString("UpdateCenterTitle"));
+        Assert.AreEqual("Descargar", loc.GetString("UpdateCenterDownload"));
+        Assert.AreEqual("Ver detalles", loc.GetString("UpdateDetails"));
+        Assert.AreEqual("Terminar", loc.GetString("SetupWizardComplete"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Mises à jour", loc.GetString("NavUpdates"));
+        Assert.AreEqual("Centre de mise à jour", loc.GetString("UpdateCenterTitle"));
+        Assert.AreEqual("Télécharger", loc.GetString("UpdateCenterDownload"));
+        Assert.AreEqual("Voir les détails", loc.GetString("UpdateDetails"));
+        Assert.AreEqual("Terminer", loc.GetString("SetupWizardComplete"));
     }
 
     [TestMethod]

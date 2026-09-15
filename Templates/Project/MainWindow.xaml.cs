@@ -61,6 +61,10 @@ public sealed partial class MainWindow : Window
         CollapseFooterNavItem("diagnostics");
 #endif
         _nav.RegisterRoute("settings", typeof(SettingsPage));
+        _nav.RegisterRoute("updates", typeof(UpdateCenterPage));
+#if (setup)
+        _nav.RegisterRoute("setupwizard", typeof(SetupWizardPage));
+#endif
         _nav.SetFrame(ContentFrame);
         _nav.Navigated += OnNavigated;
 

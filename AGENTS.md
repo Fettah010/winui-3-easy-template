@@ -5,7 +5,7 @@ first before making changes.
 
 ## Session bootstrap (agents — do this before touching anything)
 
-1. Read `AGENTS.md` → `docs/STATE.md` → `docs/FLEXIBILITY-PLAN.md`, in order
+1. Read `AGENTS.md` → `docs/STATE.md` → `docs/WORKFLOW.md`, in order
    (`docs/DISCOVERY-PLAN.md` only for discovery/SEO work).
 2. `git status`, `git log --oneline -5`, newest tags.
 3. Confirm versions: csproj `<Version>`/`<InformationalVersion>` vs tags.
@@ -15,7 +15,7 @@ first before making changes.
    when you finish.
 
 Doc map: `AGENTS.md` conventions (stable) · `docs/STATE.md` current facts
-(mutable) · `docs/FLEXIBILITY-PLAN.md` active engineering plan ·
+(mutable) ·
 `docs/DISCOVERY-PLAN.md` discovery/SEO plan ·
 `docs/WORKFLOW.md` definition-of-done per change type (incl. release runbook) ·
 `docs/DECISIONS.md` why things are the way they are.
@@ -28,7 +28,9 @@ It is a small starter app (a Home page + a Settings page) that demonstrates:
 - WinUI 3 / Windows App SDK on **.NET 10** (`net10.0-windows10.0.19041.0`)
 - Unpackaged app (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`)
 - Auto-updates over **GitHub Releases** — **Velopack 1.2.0** by default
-  (`--updates basic` = zero-dependency checker, `--updates none` = dropped)
+  (`--updates basic` = zero-dependency checker, `--updates none` = dropped;
+  `--distribution msix` pairs with native `appinstaller` / `store` updates)
+- First-run setup wizard (portable only; `--setup false` drops it)
 - Logging through the `AppLog` facade — **Serilog** backend by default
   (debugger console + rolling file, 14 days; `--logging mel|none` at scaffold time)
 - **CommunityToolkit.Mvvm** for MVVM pattern (ObservableProperty, RelayCommand)
@@ -47,7 +49,15 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Services/WindowChromeService.cs` | Mica, title bar, theme-aware colors/icon, native min size, entrance animation (`Native/` holds the P/Invoke). |
 | `Services/WindowActivator.cs` | Single show-and-activate path (tray, toast, second instance). |
 | `Services/SystemTrayService.cs` | Minimize-to-tray icon/window/menu (P/Invoke in `Native/TrayNative.cs`, autostart in `AutoStartService`). |
-| `Services/FirstRunDialogService.cs` | Welcome / what's-new dialogs. |
+| `Services/FirstRunDialogService.cs` | Welcome / what's-new dialogs; first runs route to the setup wizard (portable + setup). |
+| `Services/SetupWizardService.cs` | Setup-wizard side effects: data dir, Desktop/Start shortcuts, launch-at-login (never-throw). |
+| `Services/AppPaths.cs` | Writable data root: `%LocalAppData%\<Name>` portable vs package `LocalFolder` (packaged). |
+| `Services/AppFeatures.cs` | Scaffold-time flags (distribution, setup, update mode); gates XAML-free UI visibility. |
+| `Build/Features.Distribution.props` | `DevTemDistribution`/`DevTemSetupWizard`/`DevTemUpdates` + invalid-combo MSBuild errors. |
+| `Pages/SetupWizardPage.*` | First-run wizard: PipsPager steps (welcome → location → shortcuts → launch → done). |
+| `Pages/UpdateCenterPage.*` | Update Center: check → download (progress) → install + release notes; slim status for external modes. |
+| `ViewModels/SetupWizardViewModel.*` | Wizard step math + persisted choices (headless-tested). |
+| `ViewModels/UpdateCenterViewModel.*` | Update-flow state for the Center page (null-tolerant, headless-tested). |
 | `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (restart prompt fully localized). |
 | `Services/DatabaseInitializer.cs` | Deferred database init (best-effort, idempotent). |
 | `Pages/HomePage.*` | Landing page. |
@@ -59,7 +69,7 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
-| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--database/--http/--health/--crash/--localization/--tests` flags + `--updates/--logging` choices). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
+| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--database/--http/--health/--crash/--localization/--tests` flags + `--updates/--logging` choices + `--distribution/--setup`). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
 | `Services/UpdateService.cs` | Velopack `UpdateManager` behind `IUpdateService` (holds the pending update; VMs/tests never touch Velopack types). Sibling: `BasicGithubUpdateService` (zero-dependency checker). |
 | `Services/Abstractions/` | `IUpdateService`/`UpdateCheckResult`/`IFilePickerService` seams (VM testability). |
 | `Services/FilePickerService.cs` | WinRT save/open pickers with window association for unpackaged apps. |
@@ -187,7 +197,7 @@ or run from the terminal when the `(Dev)` shortcut exists — point at it.
 
 ## Versioning
 
-Current version: **0.0.4-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.5-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

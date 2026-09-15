@@ -1,0 +1,26 @@
+<Project>
+  <!-- Distribution + setup-wizard seams (Distribution Plan P0). Always
+       scaffolded. Values arrive via __DISTRIBUTION__ / __SETUP__ /
+       __UPDATES__ tokens at scaffold time (conditioned file, no #if
+       regions); this repo copy pins the portable defaults. Imported
+       with an Exists guard. -->
+  <PropertyGroup>
+    <DevTemDistribution>__DISTRIBUTION__</DevTemDistribution>
+    <DevTemSetupWizard>__SETUP__</DevTemSetupWizard>
+    <DevTemUpdates>__UPDATES__</DevTemUpdates>
+  </PropertyGroup>
+
+  <!-- Invalid distribution/updates pairs fail the build fast with a
+       readable error (the template engine cannot constrain parameter
+       combinations — its constraints only cover the host environment).
+       P1 wires the real msix packaging; until then msix+valid pairs
+       build as portable (verified by the matrix). -->
+  <Target Name="DevTemValidateDistribution" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(DevTemDistribution)' == 'msix' and ('$(DevTemUpdates)' == 'velopack' or '$(DevTemUpdates)' == 'basic')"
+           Text="DevTem: --updates $(DevTemUpdates) needs an unpackaged app and cannot be combined with --distribution msix. Use --updates appinstaller, store, or none." />
+    <Error Condition="'$(DevTemDistribution)' == 'portable' and ('$(DevTemUpdates)' == 'appinstaller' or '$(DevTemUpdates)' == 'store')"
+           Text="DevTem: --updates $(DevTemUpdates) needs a packaged app and cannot be combined with --distribution portable. Use --updates velopack, basic, or none." />
+    <Warning Condition="'$(DevTemDistribution)' == 'msix' and '$(DevTemSetupWizard)' == 'True'"
+             Text="DevTem: --setup is ignored for --distribution msix (Windows owns install location and shortcuts; nothing to set up)." />
+  </Target>
+</Project>

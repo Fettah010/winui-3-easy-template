@@ -83,12 +83,16 @@ public static class ProtocolService
 
     /// <summary>
     /// Registers the scheme for the current exe when missing (path changes
-    /// after updates/installs). Safe to call on every startup. Never throws.
+    /// after updates/installs). Safe to call on every startup. Packaged runs
+    /// skip it (the manifest protocol extension owns the scheme there; HKCU
+    /// writes would land in the per-app virtualized store). Never throws.
     /// </summary>
     public static void EnsureRegistered()
     {
         try
         {
+            if (AppInfo.IsPackaged)
+                return;
             var exe = Environment.ProcessPath;
             if (string.IsNullOrWhiteSpace(exe))
                 return;
@@ -160,9 +164,30 @@ public static class ProtocolService
         }
     }
 
+    /// <summary>
+    /// Packaged protocol-launch URI. Packaged runs never see the URI on the
+    /// command line — it arrives as activation args, so both the first
+    /// process (App launch) and redirected second processes (single-instance
+    /// handoff in Program) resolve it here. Unpackaged runs return null
+    /// (the command line carries it). Never throws.
+    /// </summary>
+    public static string? GetPackagedProtocolUri()
+    {
+        try
+        {
+            if (!AppInfo.IsPackaged)
+                return null;
+            var activated = Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent()?.GetActivatedEventArgs();
+            if (activated?.Kind == Microsoft.Windows.AppLifecycle.ExtendedActivationKind.Protocol &&
+                activated.Data is Windows.ApplicationModel.Activation.ProtocolActivatedEventArgs protocol)
+                return protocol.Uri?.AbsoluteUri;
+        }
+        catch { }
+        return null;
+    }
+
     internal static string DefaultPendingPath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        AppMetadata.AppDataFolder,
+        AppPaths.DataFolder,
         "pending-protocol.txt");
 
     /// <summary>

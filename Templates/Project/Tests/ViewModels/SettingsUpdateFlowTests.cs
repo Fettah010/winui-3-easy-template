@@ -22,6 +22,8 @@ public class SettingsUpdateFlowTests
         public UpdateCheckResult Result { get; set; } = new(false, null);
         public Exception? CheckError;
         public int CheckCalls;
+        public int DownloadCalls;
+        public int ApplyCalls;
         public TaskCompletionSource? CheckGate;
 
         public void SetChannel(string channel) { }
@@ -37,10 +39,13 @@ public class SettingsUpdateFlowTests
             return Task.FromResult(Result);
         }
 
-        public Task DownloadPendingUpdateAsync(Action<int>? progress = null) =>
-            Task.CompletedTask;
+        public Task DownloadPendingUpdateAsync(Action<int>? progress = null)
+        {
+            DownloadCalls++;
+            return Task.CompletedTask;
+        }
 
-        public void ApplyPendingUpdateAndRestart() { }
+        public void ApplyPendingUpdateAndRestart() { ApplyCalls++; }
     }
 
     /// <summary>Picker fake: script the picked paths (null = cancel).</summary>
@@ -77,6 +82,8 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Check_NotInstalled_LeavesCardHidden()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var vm = new SettingsPageViewModel(new FakeUpdates { IsInstalled = false });
 
         await vm.CheckForUpdatesAsync();
@@ -88,6 +95,8 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Check_NoUpdate_ShowsStatusCard()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var vm = new SettingsPageViewModel(new FakeUpdates());
 
         await vm.CheckForUpdatesAsync();
@@ -101,6 +110,8 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Check_UpdateAvailable_ShowsInstall()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var vm = new SettingsPageViewModel(
             new FakeUpdates { Result = new UpdateCheckResult(true, "9.9") });
 
@@ -115,6 +126,8 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Check_Failure_ShowsError()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var vm = new SettingsPageViewModel(
             new FakeUpdates { CheckError = new InvalidOperationException("boom") });
 
@@ -128,6 +141,8 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Check_ConcurrentCalls_RunOnce()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var updates = new FakeUpdates { CheckGate = new TaskCompletionSource() };
         var vm = new SettingsPageViewModel(updates);
 
@@ -143,6 +158,8 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Check_Cancelled_ResetsButtonQuietly()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var updates = new FakeUpdates();
         var vm = new SettingsPageViewModel(updates);
         using var cts = new CancellationTokenSource();
@@ -158,12 +175,57 @@ public class SettingsUpdateFlowTests
     [TestMethod]
     public async Task Install_WithoutPendingUpdate_NoOp()
     {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
         var vm = new SettingsPageViewModel(new FakeUpdates { HasPendingUpdate = false });
 
         await vm.InstallPendingUpdateAsync();
 
         Assert.AreEqual(string.Empty, vm.UpdateStatusMessage);
         Assert.AreEqual(Visibility.Collapsed, vm.DownloadProgressVisibility);
+    }
+
+    [TestMethod]
+    public async Task External_RestingState_ShowsHandlerAndAction()
+    {
+        if (!AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("External flow is not scaffolded in engine update mode.");
+        var vm = new SettingsPageViewModel(new FakeUpdates());
+
+        Assert.AreEqual(Visibility.Collapsed, vm.UpdateCheckCardVisibility);
+        Assert.AreEqual(Visibility.Visible, vm.UpdateCardVisibility);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(vm.UpdateCardDescription));
+        Assert.AreEqual(Visibility.Visible, vm.InstallButtonVisibility);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(vm.InstallButtonText));
+        Assert.IsTrue(vm.IsInstallEnabled);
+    }
+
+    [TestMethod]
+    public async Task External_CheckRoutesToOwnerWithoutTouchingService()
+    {
+        if (!AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("External flow is not scaffolded in engine update mode.");
+        var updates = new FakeUpdates();
+        var vm = new SettingsPageViewModel(updates);
+
+        await vm.CheckForUpdatesAsync();
+
+        Assert.AreEqual(0, updates.CheckCalls);
+        Assert.IsTrue(vm.IsCheckUpdatesEnabled);
+    }
+
+    [TestMethod]
+    public async Task External_InstallRoutesToOwnerWithoutDownloading()
+    {
+        if (!AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("External flow is not scaffolded in engine update mode.");
+        var updates = new FakeUpdates { HasPendingUpdate = true };
+        var vm = new SettingsPageViewModel(updates);
+
+        await vm.InstallPendingUpdateAsync();
+
+        Assert.AreEqual(0, updates.DownloadCalls);
+        Assert.AreEqual(0, updates.ApplyCalls);
     }
 
     [TestMethod]

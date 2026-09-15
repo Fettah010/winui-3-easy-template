@@ -19,7 +19,10 @@ It is a small starter app (a Home page + a Settings page) that demonstrates:
 - WinUI 3 / Windows App SDK on **.NET 10** (`net10.0-windows10.0.19041.0`)
 - Unpackaged app (`WindowsPackageType=None`, `WindowsAppSDKSelfContained=true`)
 - Auto-updates over **GitHub Releases** — **Velopack 1.2.0** by default
-  (`--updates basic` = zero-dependency checker, `--updates none` = dropped)
+  (`--updates basic` = zero-dependency checker, `--updates none` = dropped;
+  `--distribution msix` pairs with `appinstaller` / `store` / `none`)
+- First-run setup wizard — install location, shortcuts, launch options
+  (portable only; `--setup false` drops it)
 - Logging through the `AppLog` facade — **Serilog** backend by default
   (debugger console + rolling file, 14 days; `--logging mel|none`)
 - **CommunityToolkit.Mvvm** for MVVM pattern (ObservableProperty, RelayCommand)
@@ -38,7 +41,15 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Services/WindowChromeService.cs` | Mica, title bar, theme-aware colors/icon, native min size, entrance animation (`Native/` holds the P/Invoke). |
 | `Services/WindowActivator.cs` | Single show-and-activate path (tray, toast, second instance). |
 | `Services/SystemTrayService.cs` | Minimize-to-tray icon/window/menu (P/Invoke in `Native/TrayNative.cs`, autostart in `AutoStartService`) (tray feature). |
-| `Services/FirstRunDialogService.cs` | Welcome / what's-new dialogs. |
+| `Services/FirstRunDialogService.cs` | Welcome / what's-new dialogs; first runs route to the setup wizard (setup feature). |
+| `Services/SetupWizardService.cs` | Setup-wizard side effects: data dir, Desktop/Start shortcuts, launch-at-login (setup feature). |
+| `Services/AppPaths.cs` | Writable data root: `%LocalAppData%\<Name>` portable vs package `LocalFolder` (packaged). |
+| `Services/AppFeatures.cs` | Scaffold-time flags (distribution, setup, update mode); gates XAML-free UI visibility. |
+| `Build/Features.Distribution.props` | `DevTemDistribution`/`DevTemSetupWizard`/`DevTemUpdates` + invalid-combo MSBuild errors. |
+| `Pages/SetupWizardPage.*` | First-run wizard: PipsPager steps (setup feature). |
+| `Pages/UpdateCenterPage.*` | Update Center: check → download → install + release notes (status surface when updates are external/none). |
+| `ViewModels/SetupWizardViewModel.*` | Wizard step math + persisted choices (setup feature). |
+| `ViewModels/UpdateCenterViewModel.*` | Update-flow state for the Center page (null-tolerant). |
 | `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (restart prompt fully localized) (updates feature). |
 | `Services/DatabaseInitializer.cs` | Deferred database init (database feature). |
 | `Pages/HomePage.*` | Landing page. |
@@ -172,7 +183,7 @@ desktop first instead of asking):
 
 ## Versioning
 
-Current version: **0.0.4-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.5-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

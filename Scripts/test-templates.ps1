@@ -1,7 +1,9 @@
 # Scaffold matrix for the dotnet-new templates: installs both templates from
 # this repo, scaffolds all-on / all-off / profiles / single-feature-offs /
-# per-update-backend / per-logging-backend, wires a page end-to-end inside
-# add-page.ps1, then builds (0 warnings, 0 errors) and tests each scaffold.
+# per-update-backend / per-logging-backend / per-distribution / setup-off /
+# plus two invalid combos (portable+store, msix+velopack) that must fail the
+# build with the MSBuild guard message, wires a page end-to-end inside add-page.ps1, then
+# builds (0 warnings, 0 errors) and tests each scaffold.
 # Fails the run on the first broken combo.
 #
 #   powershell -File Scripts/test-templates.ps1                 # full matrix
@@ -11,7 +13,7 @@
 # Same matrix runs in CI (.github/workflows/templates.yml).
 
 param(
-    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "updbasic", "logmel", "lognone", "nocrash", "noloc", "notests", "nohttp", "nodiag"),
+    [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "updbasic", "logmel", "lognone", "nocrash", "noloc", "notests", "nohttp", "nodiag", "nosetup", "msixapp", "msixstore", "msixnone", "badupd", "badupd2"),
     [switch]$KeepTemp
 )
 
@@ -26,21 +28,27 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("devtem-matrix-" + [Sys
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 
 $comboDefs = @{
-    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "none", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";     Display = "NoUpd App";  Company = "Nu"; Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "none"); Http = $true; Database = $true; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "updbasic" = @{ Name = "BasicUpdApp"; Safe = "BasicUpdApp"; Display = "BasicUpd App"; Company = "Bu"; Repo = "bu/app";      Scheme = "bu://";   Flags = @("--updates", "basic"); Http = $true; Database = $true; Tray = $true; Updates = "basic"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh"; Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "nodiag"  = @{ Name = "NoDiagApp";   Safe = "NoDiagApp";    Display = "NoDiag App"; Company = "Nd"; Repo = "nd/app";        Scheme = "nd://";   Flags = @("--health", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $false; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "nocrash" = @{ Name = "NoCrashApp";  Safe = "NoCrashApp";   Display = "NoCrash App"; Company = "Nc"; Repo = "nc/app";      Scheme = "nc://";   Flags = @("--crash", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $false; Localization = $true; Tests = $true }
-    "noloc"   = @{ Name = "NoLocApp";    Safe = "NoLocApp";     Display = "NoLoc App";  Company = "Nlo"; Repo = "nlo/app";     Scheme = "nlo://";  Flags = @("--localization", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $false; Tests = $true }
-    "notests" = @{ Name = "NoTestsApp";  Safe = "NoTestsApp";   Display = "NoTests App"; Company = "Nt"; Repo = "ntests/app";  Scheme = "ntests://"; Flags = @("--tests", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $false }
-    "logmel"  = @{ Name = "MelLogApp";   Safe = "MelLogApp";    Display = "MelLog App"; Company = "Ml"; Repo = "ml/app";        Scheme = "ml://";   Flags = @("--logging", "mel"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "mel"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "lognone" = @{ Name = "NoLogApp";    Safe = "NoLogApp";     Display = "NoLog App";  Company = "Nl"; Repo = "nl/app";        Scheme = "nl://";   Flags = @("--logging", "none"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "none"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "none", "--database", "false", "--http", "false", "--health", "false", "--logging", "none", "--crash", "false", "--localization", "false", "--tests", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = "none"; Logging = "none"; Health = $false; Attribution = $false; Crash = $false; Localization = $false; Tests = $false }
-    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "none", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
-    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true }
+    "allon"   = @{ Name = "AcmeDesk";    Safe = "AcmeDesk";    Display = "Acme Desk";  Company = "Acme"; Repo = "acme/desk-app"; Scheme = "acme://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "alloff"  = @{ Name = "123 Bare App"; Safe = "_Bare_App";   Display = "Bare App";   Company = "Bare"; Repo = "bare/app";      Scheme = "bare://"; Flags = @("--tray", "false", "--updates", "none", "--database", "false"); Http = $true; Database = $false; Tray = $false; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "notray"  = @{ Name = "NoTrayApp";   Safe = "NoTrayApp";    Display = "Noé Tray App"; Company = "Nt"; Repo = "nt/app";       Scheme = "nt://";   Flags = @("--tray", "false"); Http = $true; Database = $true; Tray = $false; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "noupd"   = @{ Name = "NoUpdApp";    Safe = "NoUpdApp";    Display = "NoUpd App";  Company = "Nu"; Repo = "nu/app";        Scheme = "nu://";   Flags = @("--updates", "none"); Http = $true; Database = $true; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "updbasic" = @{ Name = "BasicUpdApp"; Safe = "BasicUpdApp"; Display = "BasicUpd App"; Company = "Bu"; Repo = "bu/app";      Scheme = "bu://";   Flags = @("--updates", "basic"); Http = $true; Database = $true; Tray = $true; Updates = "basic"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "nohttp"  = @{ Name = "NoHttpApp";   Safe = "NoHttpApp";    Display = "NoHttp App"; Company = "Nh"; Repo = "nh/app";        Scheme = "nh://";   Flags = @("--http", "false"); Http = $false; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "nodiag"  = @{ Name = "NoDiagApp";   Safe = "NoDiagApp";    Display = "NoDiag App"; Company = "Nd"; Repo = "nd/app";        Scheme = "nd://";   Flags = @("--health", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $false; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "nocrash" = @{ Name = "NoCrashApp";  Safe = "NoCrashApp";   Display = "NoCrash App"; Company = "Nc"; Repo = "nc/app";      Scheme = "nc://";   Flags = @("--crash", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $false; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "noloc"   = @{ Name = "NoLocApp";    Safe = "NoLocApp";     Display = "NoLoc App";  Company = "Nlo"; Repo = "nlo/app";     Scheme = "nlo://";  Flags = @("--localization", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $false; Tests = $true; Distribution = "portable"; Setup = $true }
+    "notests" = @{ Name = "NoTestsApp";  Safe = "NoTestsApp";   Display = "NoTests App"; Company = "Nt"; Repo = "ntests/app";  Scheme = "ntests://"; Flags = @("--tests", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $false; Distribution = "portable"; Setup = $true }
+    "logmel"  = @{ Name = "MelLogApp";   Safe = "MelLogApp";    Display = "MelLog App"; Company = "Ml"; Repo = "ml/app";        Scheme = "ml://";   Flags = @("--logging", "mel"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "mel"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "lognone" = @{ Name = "NoLogApp";    Safe = "NoLogApp";     Display = "NoLog App"; Company = "Nl"; Repo = "nl/app";        Scheme = "nl://";   Flags = @("--logging", "none"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "none"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "minimal" = @{ Name = "MinimalProfile"; Safe = "MinimalProfile"; Display = "Minimal Profile"; Company = "Mp"; Repo = "mp/minimal"; Scheme = "minimal://"; Flags = @("--tray", "false", "--updates", "none", "--database", "false", "--http", "false", "--health", "false", "--logging", "none", "--crash", "false", "--localization", "false", "--tests", "false", "--attribution", "false"); Http = $false; Database = $false; Tray = $false; Updates = "none"; Logging = "none"; Health = $false; Attribution = $false; Crash = $false; Localization = $false; Tests = $false; Distribution = "portable"; Setup = $true }
+    "desktop" = @{ Name = "DesktopProfile"; Safe = "DesktopProfile"; Display = "Desktop Profile"; Company = "Dp"; Repo = "dp/desktop"; Scheme = "desktop://"; Flags = @("--updates", "none", "--database", "false", "--http", "false"); Http = $false; Database = $false; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "production" = @{ Name = "ProductionProfile"; Safe = "ProductionProfile"; Display = "Production Profile"; Company = "Pp"; Repo = "pp/production"; Scheme = "production://"; Flags = @(); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true }
+    "nosetup" = @{ Name = "NoSetupApp";  Safe = "NoSetupApp";   Display = "NoSetup App"; Company = "Ns"; Repo = "ns/app";       Scheme = "ns://";   Flags = @("--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $false }
+    "msixapp" = @{ Name = "AppInstallerApp"; Safe = "AppInstallerApp"; Display = "AppInstaller App"; Company = "Ai"; Repo = "ai/app"; Scheme = "ai://"; Flags = @("--distribution", "msix", "--updates", "appinstaller", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "appinstaller"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false }
+    "msixstore" = @{ Name = "StoreApp";  Safe = "StoreApp";     Display = "Store App"; Company = "St"; Repo = "st/app";        Scheme = "st://";   Flags = @("--distribution", "msix", "--updates", "store", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "store"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false }
+    "msixnone" = @{ Name = "MsixNoneApp"; Safe = "MsixNoneApp"; Display = "MsixNone App"; Company = "Mn"; Repo = "mn/app";      Scheme = "mn://";   Flags = @("--distribution", "msix", "--updates", "none", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "none"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false }
+    "badupd"  = @{ Name = "BadUpdApp";   Safe = "BadUpdApp";    Display = "BadUpd App"; Company = "Bu2"; Repo = "bu2/app";      Scheme = "bu2://";  Flags = @("--updates", "store"); Http = $true; Database = $true; Tray = $true; Updates = "store"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "portable"; Setup = $true; ExpectBuildFailure = $true; ExpectedError = "cannot be combined with --distribution portable" }
+    "badupd2" = @{ Name = "BadUpd2App";  Safe = "BadUpd2App";   Display = "BadUpd2 App"; Company = "Bu3"; Repo = "bu3/app";     Scheme = "bu3://";  Flags = @("--distribution", "msix", "--updates", "velopack", "--setup", "false"); Http = $true; Database = $true; Tray = $true; Updates = "velopack"; Logging = "serilog"; Health = $true; Attribution = $true; Crash = $true; Localization = $true; Tests = $true; Distribution = "msix"; Setup = $false; ExpectBuildFailure = $true; ExpectedError = "cannot be combined with --distribution msix" }
 }
 
 $failed = 0
@@ -80,6 +88,28 @@ function Assert-FeatureManifest([string]$outDir) {
             throw "feature manifest has no file list for updates value '$value'"
         }
     }
+    foreach ($value in @("appinstaller", "store")) {
+        if ($null -eq $manifest.features.updates.values.$value) {
+            throw "feature manifest is missing updates value '$value'"
+        }
+        if ($null -eq $manifest.features.updates.values.$value.files) {
+            throw "feature manifest has no file list for updates value '$value'"
+        }
+    }
+    if ($null -eq $manifest.features.distribution) {
+        throw "feature manifest is missing 'distribution'"
+    }
+    foreach ($value in @("portable", "msix")) {
+        if ($null -eq $manifest.features.distribution.values.$value) {
+            throw "feature manifest is missing distribution value '$value'"
+        }
+        if ($null -eq $manifest.features.distribution.values.$value.files) {
+            throw "feature manifest has no file list for distribution value '$value'"
+        }
+    }
+    if ($null -eq $manifest.features.setup) {
+        throw "feature manifest is missing 'setup'"
+    }
     if ($null -eq $manifest.features.logging) {
         throw "feature manifest is missing 'logging'"
     }
@@ -104,8 +134,10 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
     }
     $features = Get-Content -Raw (Join-Path $outDir "docs\FEATURES.md")
     foreach ($pair in @(
+        @("Distribution", $definition.Distribution),
         @("System tray", $definition.Tray),
         @("Auto-updates", $definition.Updates),
+        @("Setup wizard", $definition.Setup),
         @("SQLite database", $definition.Database),
         @("Typed HTTP client", $definition.Http),
         @("Diagnostics page", $definition.Health),
@@ -139,6 +171,22 @@ function Assert-ProfileDocumentation([string]$outDir, [hashtable]$definition) {
     $basicGuide = Join-Path $outDir "docs\feature-guides\updates-basic.md"
     if (($definition.Updates -eq "basic") -ne (Test-Path -LiteralPath $basicGuide)) {
         throw "updates-basic guide presence is incorrect for updates=$($definition.Updates)"
+    }
+    $appinstallerGuide = Join-Path $outDir "docs\feature-guides\updates-appinstaller.md"
+    if (($definition.Updates -eq "appinstaller") -ne (Test-Path -LiteralPath $appinstallerGuide)) {
+        throw "updates-appinstaller guide presence is incorrect for updates=$($definition.Updates)"
+    }
+    $storeGuide = Join-Path $outDir "docs\feature-guides\updates-store.md"
+    if (($definition.Updates -eq "store") -ne (Test-Path -LiteralPath $storeGuide)) {
+        throw "updates-store guide presence is incorrect for updates=$($definition.Updates)"
+    }
+    $msixGuide = Join-Path $outDir "docs\feature-guides\distribution-msix.md"
+    if (($definition.Distribution -eq "msix") -ne (Test-Path -LiteralPath $msixGuide)) {
+        throw "distribution-msix guide presence is incorrect for distribution=$($definition.Distribution)"
+    }
+    $setupGuide = Join-Path $outDir "docs\feature-guides\setup-wizard.md"
+    if (($definition.Setup) -ne (Test-Path -LiteralPath $setupGuide)) {
+        throw "setup-wizard guide presence is incorrect for setup=$($definition.Setup)"
     }
     $serilogGuide = Join-Path $outDir "docs\feature-guides\logging-serilog.md"
     if (($definition.Logging -eq "serilog") -ne (Test-Path -LiteralPath $serilogGuide)) {
@@ -222,19 +270,47 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     }
     $hasVelopack = $definition.Updates -eq "velopack"
     $hasBasic = $definition.Updates -eq "basic"
-    $hasBackground = $definition.Updates -ne "none"
+    # BackgroundUpdateService ships only for the file-replace engines
+    # (excluded for none/appinstaller/store — the P2 status surface replaces it).
+    $hasBackground = $hasVelopack -or $hasBasic
     foreach ($triple in @(
         @("Services\UpdateService.cs", $hasVelopack),
         @("Build\Features.Updates.Velopack.props", $hasVelopack),
         @("Services\BasicGithubUpdateService.cs", $hasBasic),
         @("Build\Features.Updates.Basic.props", $hasBasic),
         @("Services\BackgroundUpdateService.cs", $hasBackground),
+        @("Build\Features.Distribution.props", $true),
         @(".github\workflows\release.yml", $hasVelopack)
     )) {
         $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
         if ($triple[1] -ne $present) {
             throw "updates=$($definition.Updates): presence is incorrect for $($triple[0])"
         }
+    }
+    $distProps = [System.IO.File]::ReadAllText((Join-Path $outDir "Build\Features.Distribution.props"))
+    if ($distProps -notmatch [regex]::Escape("<DevTemDistribution>" + $definition.Distribution + "</DevTemDistribution>")) {
+        throw "distribution props value is not '$($definition.Distribution)'"
+    }
+    # P3: setup wizard files ship iff setup is on; UpdateCenter ships in
+    # every combo (null-tolerant NoEngine status when updates=none).
+    foreach ($triple in @(
+        @("Pages\SetupWizardPage.xaml", $definition.Setup),
+        @("Pages\SetupWizardPage.xaml.cs", $definition.Setup),
+        @("ViewModels\SetupWizardViewModel.cs", $definition.Setup),
+        @("Services\SetupWizardService.cs", $definition.Setup),
+        @("Pages\UpdateCenterPage.xaml", $true),
+        @("ViewModels\UpdateCenterViewModel.cs", $true)
+    )) {
+        $present = Test-Path -LiteralPath (Join-Path $outDir $triple[0])
+        if ($triple[1] -ne $present) {
+            throw "setup=$($definition.Setup): presence is incorrect for $($triple[0])"
+        }
+    }
+    if ($distProps -notmatch [regex]::Escape("<DevTemSetupWizard>" + [string]$definition.Setup + "</DevTemSetupWizard>")) {
+        throw "setup props value is not '$($definition.Setup)'"
+    }
+    if ($distProps -notmatch [regex]::Escape("<DevTemUpdates>" + $definition.Updates + "</DevTemUpdates>")) {
+        throw "updates props value is not '$($definition.Updates)'"
     }
     $isSerilog = $definition.Logging -eq "serilog"
     $isMel = $definition.Logging -eq "mel"
@@ -326,7 +402,7 @@ try {
     if (-not (Invoke-Step "install devtem-page" { & dotnet new install (Join-Path $repoRoot "Templates\Page") })) { throw "install failed" }
 
     foreach ($combo in $Combos) {
-        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/updbasic/logmel/lognone/nocrash/noloc/notests/nohttp/nodiag)" }
+        if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/updbasic/logmel/lognone/nocrash/noloc/notests/nohttp/nodiag/nosetup/msixapp/msixstore/msixnone/badupd/badupd2)" }
         $c = $comboDefs[$combo]
         $outDir = Join-Path $tempRoot "$combo\$($c.Name)"
 
@@ -396,6 +472,24 @@ try {
             $buildCode = $LASTEXITCODE
         }
         finally { Pop-Location }
+        # Invalid combos must fail the build with the MSBuild guard message
+        # (the template engine cannot constrain parameter combinations).
+        if ($c.ExpectBuildFailure) {
+            if ($buildCode -eq 0) {
+                Write-Host "FAILED: build $combo unexpectedly succeeded (guard did not fire)" -ForegroundColor Red
+                $failed++
+                continue
+            }
+            if ($buildLog -notmatch [regex]::Escape($c.ExpectedError)) {
+                Write-Host "FAILED: build $combo failed without the guard message" -ForegroundColor Red
+                Write-Host $buildLog
+                $failed++
+                continue
+            }
+            Write-Host "build ${combo}: failed as expected with the guard message" -ForegroundColor Green
+            Write-Host "PASSED: $combo" -ForegroundColor Green
+            continue
+        }
         if ($buildCode -ne 0) {
             Write-Host "FAILED: build $combo (exit $buildCode)" -ForegroundColor Red
             Write-Host $buildLog

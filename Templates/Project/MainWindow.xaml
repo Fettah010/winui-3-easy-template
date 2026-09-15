@@ -84,6 +84,11 @@
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem AutomationProperties.AutomationId="NavUpdatesItem" Content="{loc:Loc Key=NavUpdates}" Tag="updates">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Download"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>

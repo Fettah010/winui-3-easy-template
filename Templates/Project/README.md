@@ -50,27 +50,42 @@ dotnet new devtem-winui -n MyApp --updates none --database false --http false
 
 # Production: all optional services enabled (the default)
 dotnet new devtem-winui -n MyApp
+
+# Store: packaged MSIX for Microsoft Store submission
+dotnet new devtem-winui -n MyApp --distribution msix --updates store --setup false
 ```
 
 These are documented presets rather than a separate `--profile` parameter;
 explicit feature flags remain the authoritative customization surface.
 
-#### Auto-updates — updates choice (`velopack`/`basic`/`none`)
+#### Auto-updates — updates choice (`velopack`/`basic`/`none`/`appinstaller`/`store`)
 
 The app checks GitHub Releases on startup. When a new version is found, it
 downloads with a live progress bar and prompts the user to restart once the
 download finishes, then applies the update and restarts smoothly.
+The Update Center page (`NavUpdates`) carries the same flow with release
+notes; Settings links to it.
 
 - `velopack` (default): full installer + delta downloads + release pipeline.
 - `basic`: zero-dependency checker — downloads the release's Setup `.exe`
   and launches it. No SDK, no pipeline; attach the `.exe` yourself.
-- `none`: no update code at all.
+- `none`: no update engine — the Update Center reports the build has none.
+- `appinstaller` / `store` (`--distribution msix` only): native MSIX
+  updates — Windows owns the flow, Settings shows a status card instead
+  (Store listing or Windows Apps settings).
 
 ```powershell
 # Tag-based release
 git tag v0.0.1-beta
 git push origin v0.0.1-beta
 ```
+
+#### First-run setup wizard — setup flag (portable only)
+
+On first launch the app walks through install location, shortcuts, and
+launch options (`Pages/SetupWizardPage`). The choice is persisted, so the
+wizard never returns; `--setup false` drops it. Packaged (MSIX) scaffolds
+skip it — Windows owns location and shortcuts there.
 
 #### Notifications
 
@@ -180,6 +195,12 @@ Publishing is automated with **GitHub Actions**: the simplest flow is to push a
 version tag — the pipeline builds, packs deltas and releases it to GitHub
 Releases, and your users get the update in-app.
 
+Packaged scaffolds (`--distribution msix`) ship as one runtime-adaptive
+binary: pack it with `Scripts/build-msix.ps1` (Store `.msixupload` via
+`-StoreUpload`, sideload feed via `-AppInstaller`) and submit or host the
+output. First-run setup wizard is portable-only (Windows owns location
+and shortcuts for MSIX).
+
 ```powershell
 # 1. Bump the version, commit, then tag and push a release
 git tag v0.0.1-beta
@@ -208,8 +229,12 @@ Pages/
   HomePage.xaml            # Landing page
   AboutPage.xaml           # App info, version, links
   SettingsPage.xaml        # Theme, update channel, auto-check
+  UpdateCenterPage.xaml    # Check → download → install + release notes
+  SetupWizardPage.xaml     # First-run wizard (portable + setup only)
 Services/
   AppInfo.cs               # Version helpers
+  AppPaths.cs              # Writable data root (portable vs packaged)
+  AppFeatures.cs           # Scaffold-time flags (distribution, setup, updates)
   LoggingService.cs        # Serilog setup
   UpdateService.cs         # Velopack UpdateManager wrapper (--updates velopack)
   BasicGithubUpdateService.cs # GitHub-releases checker (--updates basic)

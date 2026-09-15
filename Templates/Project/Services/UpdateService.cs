@@ -146,8 +146,8 @@ public sealed class UpdateService : IUpdateService, IDisposable
 
     /// <summary>
     /// Checks the feed and stashes any update as the pending one (replacing
-    /// any previous pending update). The result carries only the version —
-    /// no Velopack types leak to consumers.
+    /// any previous pending update). The result carries only the version +
+    /// upstream notes — no Velopack types leak to consumers.
     /// </summary>
     public async Task<UpdateCheckResult> CheckAsync()
     {
@@ -155,7 +155,11 @@ public sealed class UpdateService : IUpdateService, IDisposable
         _pendingUpdate = update;
         if (update is null)
             return new UpdateCheckResult(false, null);
-        return new UpdateCheckResult(true, update.TargetFullRelease.Version?.ToString());
+        string? notes = null;
+        try { notes = update.TargetFullRelease.NotesMarkdown; } catch { }
+        if (string.IsNullOrWhiteSpace(notes))
+            notes = null;
+        return new UpdateCheckResult(true, update.TargetFullRelease.Version?.ToString(), notes);
     }
 
     /// <summary>

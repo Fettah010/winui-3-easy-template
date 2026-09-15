@@ -1,0 +1,144 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using DevTemWinUi3.Services;
+using DevTemWinUi3.ViewModels;
+using Microsoft.UI.Xaml;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace DevTemWinUi3.Tests.ViewModels;
+
+[TestClass]
+public class UpdateCenterViewModelTests
+{
+    private string _storePath = string.Empty;
+
+    private sealed class FakeUpdates : IUpdateService
+    {
+        public bool IsInstalled { get; set; } = true;
+        public bool HasPendingUpdate { get; set; }
+        public UpdateCheckResult Result { get; set; } = new(false, null);
+        public Exception? CheckError;
+        public int ProgressToReport = 100;
+        public int ApplyCalls;
+
+        public void SetChannel(string channel) { }
+
+        public Task<UpdateCheckResult> CheckAsync()
+        {
+            if (CheckError is not null)
+                throw CheckError;
+            HasPendingUpdate = Result.HasUpdate;
+            return Task.FromResult(Result);
+        }
+
+        public Task DownloadPendingUpdateAsync(Action<int>? progress = null)
+        {
+            progress?.Invoke(0);
+            progress?.Invoke(ProgressToReport);
+            return Task.CompletedTask;
+        }
+
+        public void ApplyPendingUpdateAndRestart() { ApplyCalls++; }
+    }
+
+    [TestInitialize]
+    public void Init()
+    {
+        _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+        LocalSettingsStore.SetTestPath(_storePath);
+        LocalizationService.Current.SetLanguage("en-US");
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+        LocalizationService.Current.SetLanguage("en-US");
+        LocalSettingsStore.SetTestPath(null);
+        try { File.Delete(_storePath); } catch { }
+    }
+
+    [TestMethod]
+    public void NoEngine_RestingState_ReportsMode()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("No-engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(null);
+
+        Assert.AreEqual("Automatic updates are not included in this build.", vm.StatusMessage);
+        Assert.IsFalse(vm.CanCheck);
+        Assert.IsFalse(vm.CanDownload);
+        Assert.IsFalse(vm.CanInstall);
+    }
+
+    [TestMethod]
+    public async Task Check_NoUpdate_ShowsIdle()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(new FakeUpdates());
+
+        await vm.CheckAsync();
+
+        Assert.AreEqual("You are running the latest version.", vm.StatusMessage);
+        Assert.IsFalse(vm.HasUpdate);
+        Assert.IsTrue(vm.CanCheck);
+    }
+
+    [TestMethod]
+    public async Task Check_UpdateAvailable_PublishesNotes()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(
+            new FakeUpdates { Result = new UpdateCheckResult(true, "9.9", "Highlights") });
+
+        await vm.CheckAsync();
+
+        Assert.IsTrue(vm.HasUpdate);
+        Assert.AreEqual("9.9", vm.PendingVersion);
+        Assert.AreEqual("Highlights", vm.ReleaseNotes);
+        Assert.AreEqual(Visibility.Visible, vm.NotesVisibility);
+        Assert.IsTrue(vm.CanDownload);
+    }
+
+    [TestMethod]
+    public async Task Download_Completes_EnablesInstall()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(
+            new FakeUpdates { Result = new UpdateCheckResult(true, "9.9") });
+
+        await vm.CheckAsync();
+        await vm.DownloadAsync();
+
+        Assert.IsTrue(vm.CanInstall);
+        Assert.AreEqual("Installing…", vm.StatusMessage);
+    }
+
+    [TestMethod]
+    public async Task Check_Failure_SurfacesError()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(
+            new FakeUpdates { CheckError = new InvalidOperationException("boom") });
+
+        await vm.CheckAsync();
+
+        Assert.Contains("Check failed", vm.StatusMessage);
+        Assert.IsTrue(vm.CanCheck);
+    }
+
+    [TestMethod]
+    public void External_RestingState_DisablesEngine()
+    {
+        if (!AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("External flow is not scaffolded in engine update mode.");
+        var vm = new UpdateCenterViewModel(new FakeUpdates());
+
+        Assert.IsFalse(vm.CanCheck);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(vm.StatusMessage));
+    }
+}

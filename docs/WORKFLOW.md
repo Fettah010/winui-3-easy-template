@@ -7,8 +7,8 @@ that applies. Time costs are local-machine figures.
 
 | Tier | Commands | Cost | When |
 | --- | --- | --- | --- |
-| Fast | `dotnet build DevTemWinUi3.csproj -c Debug -p:Platform=x64` (0 warn/0 err) + `dotnet test Tests/` (currently 196/196) | ~1 min | Every change, no exceptions |
-| Matrix | `powershell -File Scripts/test-templates.ps1` (15 combos build 0/0 + tests) | ~30 min | Any `Templates/**` change (incl. mirror edits) |
+| Fast | `dotnet build DevTemWinUi3.csproj -c Debug -p:Platform=x64` (0 warn/0 err) + `dotnet test Tests/` (currently 212 passed + 4 skipped) | ~1 min | Every change, no exceptions |
+| Matrix | `powershell -File Scripts/test-templates.ps1` (21 combos build 0/0 + tests) | ~30 min | Any `Templates/**` change (incl. mirror edits) |
 | Pack | `powershell -File Scripts/build-msix.ps1 -DryRun` (staging valid) | ~3 min | Manifest, csproj, Assets changes |
 | Live UI | `dotnet test UI/…` 4/4 + screenshot in the summary | ~1 min | Any XAML / navigation / theme / Settings change |
 | Workflow | `pwsh` parse + logic test with sample values (pass + reject) | ~1 min | Any `.github/workflows` change (CI only runs on tag/push) |
@@ -47,8 +47,8 @@ git push origin v0.0.5-beta
 git branch -f beta v0.0.5-beta
 git push origin beta --force
 # NuGet template package (separate tag → templates-publish.yml):
-git tag templates-v0.1.3
-git push origin templates-v0.1.3
+git tag templates-v0.3.0
+git push origin templates-v0.3.0
 ```
 
 Tag name determines channel (`v*-beta` → beta, plain `v*` → stable).

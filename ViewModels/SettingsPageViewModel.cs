@@ -51,6 +51,14 @@ public partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private Visibility _updateCardVisibility = Visibility.Collapsed;
 
+    /// <summary>
+    /// Engine-owned cards (channel + check-now). Collapsed when updates are
+    /// externally managed (Store / AppInstaller) — the status card carries
+    /// the handler text and action instead.
+    /// </summary>
+    [ObservableProperty]
+    private Visibility _updateCheckCardVisibility = Visibility.Visible;
+
     [ObservableProperty]
     private string _updateCardHeader = string.Empty;
 
@@ -76,11 +84,11 @@ public partial class SettingsPageViewModel : ObservableObject
     private string _installButtonText = string.Empty;
 
     /// <summary>
-    /// MSIX-packaged apps cannot use registry autostart (virtualized store):
-    /// the toggle binds IsEnabled to this and shows a note instead.
-    /// Unpackaged runs (including Velopack installs) manage HKCU Run directly.
+    /// Both distributions support the toggle: unpackaged runs manage
+    /// HKCU Run directly; packaged runs drive the manifest StartupTask
+    /// (Windows may show a consent prompt on enable).
     /// </summary>
-    public bool AutoStartAvailable => !AppInfo.IsPackaged;
+    public bool AutoStartAvailable => true;
 
     /// <summary>
     /// Guards change handlers while the constructor loads persisted values,
@@ -133,7 +141,13 @@ public partial class SettingsPageViewModel : ObservableObject
         try { MinimizeToTray = SettingsService.Current.MinimizeToTray; }
         catch { MinimizeToTray = true; }
 
-        try { AutoStart = AutoStartService.Current.IsEnabled(); }
+        try
+        {
+            if (AppInfo.IsPackaged)
+                _ = LoadPackagedAutoStartAsync();
+            else
+                AutoStart = AutoStartService.Current.IsEnabled();
+        }
         catch { }
     }
 
@@ -224,6 +238,26 @@ public partial class SettingsPageViewModel : ObservableObject
     public void RefreshUpdateLabels()
     {
         var loc = LocalizationService.Current;
+        if (AppFeatures.IsExternalUpdateMode)
+        {
+            // Store / AppInstaller own the flow: no channel, no check
+            // button — the status card carries the handler, the version,
+            // and the action (both entry points route to the owner).
+            UpdateCheckCardVisibility = Visibility.Collapsed;
+            UpdateCardVisibility = Visibility.Visible;
+            UpdateCardHeader = loc.GetString("SettingsUpdates");
+            UpdateCardDescription = AppFeatures.UpdateMode == "store"
+                ? loc.GetString("SettingsUpdatesExternalStore")
+                : loc.GetString("SettingsUpdatesExternalAppInstaller");
+            UpdateStatusMessage = AppInfo.Current.VersionDisplay;
+            InstallButtonText = AppFeatures.UpdateMode == "store"
+                ? loc.GetString("SettingsOpenStore")
+                : loc.GetString("SettingsOpenWindowsSettings");
+            InstallButtonVisibility = Visibility.Visible;
+            IsInstallEnabled = true;
+            return;
+        }
+        UpdateCheckCardVisibility = Visibility.Visible;
         if (!_checking)
             CheckUpdatesButtonText = loc.GetString("SettingsCheckNow");
         UpdateCardHeader = loc.GetString("SettingsCheckHeader");
@@ -241,6 +275,11 @@ public partial class SettingsPageViewModel : ObservableObject
     /// </summary>
     public async Task CheckForUpdatesAsync(CancellationToken ct = default)
     {
+        if (AppFeatures.IsExternalUpdateMode)
+        {
+            await OpenExternalUpdateSourceAsync();
+            return;
+        }
         if (_updates is null || _checking)
             return;
 
@@ -315,6 +354,11 @@ public partial class SettingsPageViewModel : ObservableObject
     /// </summary>
     public async Task InstallPendingUpdateAsync(CancellationToken ct = default)
     {
+        if (AppFeatures.IsExternalUpdateMode)
+        {
+            await OpenExternalUpdateSourceAsync();
+            return;
+        }
         if (_updates is null || _installing || !_updates.HasPendingUpdate)
             return;
 
@@ -366,6 +410,30 @@ public partial class SettingsPageViewModel : ObservableObject
         {
             _installing = false;
         }
+    }
+
+    /// <summary>
+    /// Opens the external update owner: the Store listing (store mode) or
+    /// Windows Apps settings where the AppInstaller feed can be managed
+    /// (appinstaller mode). No-op for engine modes. Never throws.
+    /// </summary>
+    public async Task OpenExternalUpdateSourceAsync()
+    {
+        try
+        {
+            string? uri = AppFeatures.UpdateMode switch
+            {
+                "store" => AppInfo.PackageFamilyName is string pfn
+                    ? "ms-windows-store://pdp/?PFN=" + Uri.EscapeDataString(pfn)
+                    : "ms-windows-store://home",
+                "appinstaller" => "ms-settings:appsfeatures",
+                _ => null,
+            };
+            if (uri is null)
+                return;
+            _ = await Windows.System.Launcher.LaunchUriAsync(new Uri(uri));
+        }
+        catch { }
     }
 
     private void ResetInstallState()
@@ -432,9 +500,11 @@ public partial class SettingsPageViewModel : ObservableObject
     partial void OnAutoStartChanged(bool value)
     {
         if (!_loaded) return;
-        // MSIX-packaged runs cannot use registry autostart (virtualized):
-        // the toggle is disabled there (see AutoStartAvailable).
-        if (!AutoStartAvailable) return;
+        if (AppInfo.IsPackaged)
+        {
+            _ = ApplyPackagedAutoStartAsync(value);
+            return;
+        }
         try
         {
             AutoStartService.Current.SetEnabled(value);
@@ -447,6 +517,35 @@ public partial class SettingsPageViewModel : ObservableObject
         catch
         {
             try { AutoStart = AutoStartService.Current.IsEnabled(); } catch { }
+        }
+    }
+
+    /// <summary>Loads the StartupTask state into the toggle. Never throws.</summary>
+    private async Task LoadPackagedAutoStartAsync()
+    {
+        try
+        {
+            AutoStart = await AutoStartService.Current.IsPackagedStartupEnabledAsync();
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Applies the toggle to the StartupTask, reverting on mismatch so the
+    /// UI never lies (e.g. DisabledByUser can only change in Settings).
+    /// Never throws.
+    /// </summary>
+    private async Task ApplyPackagedAutoStartAsync(bool value)
+    {
+        try
+        {
+            bool actual = await AutoStartService.Current.SetPackagedStartupEnabledAsync(value);
+            if (actual != value)
+                AutoStart = actual;
+        }
+        catch
+        {
+            await LoadPackagedAutoStartAsync();
         }
     }
 }

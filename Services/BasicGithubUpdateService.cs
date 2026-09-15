@@ -148,7 +148,7 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         if (best is null)
             return new UpdateCheckResult(false, null);
         AppLog.Information("Basic update available: {Version} ({Tag})", best.Version, best.Tag);
-        return new UpdateCheckResult(true, best.Version);
+        return new UpdateCheckResult(true, best.Version, best.Notes);
     }
 
     /// <summary>
@@ -231,7 +231,7 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
     private static readonly SearchValues<char> TagSuffixSeparators =
         SearchValues.Create(new[] { '-', '+' });
 
-    private sealed record PendingRelease(string Tag, string Version, string DownloadUrl, string FileName);
+    private sealed record PendingRelease(string Tag, string Version, string DownloadUrl, string FileName, string? Notes);
 
     private static (Version Numeric, bool Prerelease) CurrentVersionParts()
     {
@@ -279,7 +279,10 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         }
 
         string version = $"{numeric.Major}.{numeric.Minor}.{numeric.Build}";
-        return new PendingRelease(tag, version, downloadUrl, fileName);
+        string? notes = null;
+        if (TryGetString(element, "body", out string? body) && !string.IsNullOrWhiteSpace(body))
+            notes = body.Trim();
+        return new PendingRelease(tag, version, downloadUrl, fileName, notes);
     }
 
     /// <summary>Higher numeric wins; a stable release supersedes the same-number prerelease.</summary>

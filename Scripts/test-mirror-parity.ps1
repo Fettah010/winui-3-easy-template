@@ -70,22 +70,25 @@ $templateOnly = @(
 $conditioned = @(
     "AGENTS.md",
     "App.xaml.cs",
+    "Build\Features.Distribution.props",
     "DevTemWinUi3.csproj",
     "DevTemWinUi3.sln",
     "Directory.Build.props",
     "MainWindow.xaml",
     "MainWindow.xaml.cs",
-    "Program.cs",
-    "README.md",
     "Pages\AboutPage.xaml",
     "Pages\AboutPage.xaml.cs",
     "Pages\HomePage.xaml",
     "Pages\HomePage.xaml.cs",
     "Pages\SettingsPage.xaml",
     "Pages\SettingsPage.xaml.cs",
+    "Program.cs",
+    "README.md",
     "Scripts\init-template.ps1",
+    "Services\AppFeatures.cs",
     "Services\BackgroundUpdateService.cs",
     "Services\CrashReportingService.cs",
+    "Services\FirstRunDialogService.cs",
     "Services\LocalizationService.cs",
     "Services\LoggingService.cs",
     "Services\ServiceLocator.cs",
@@ -105,12 +108,13 @@ $conditioned = @(
 # intentionally change — a mismatch failure names the file.
 $requiredGuards = @{
     "AGENTS.md"                                = @()
-    "App.xaml.cs"                              = @("(database)", "(updates != 'none')")
+    "App.xaml.cs"                              = @("(database)", "(updates == 'velopack' || updates == 'basic')")
+    "Build\Features.Distribution.props"        = @()
     "__SafeName__.csproj"                      = @()
     "__SafeName__.sln"                         = @()
     "Directory.Build.props"                    = @()
     "MainWindow.xaml"                          = @()
-    "MainWindow.xaml.cs"                       = @("(tray)", "(health)", "(tray)", "(tray)", "(tray)", "(tray)", "(tray)", "(tray)")
+    "MainWindow.xaml.cs"                       = @("(tray)", "(health)", "(setup)", "(tray)", "(tray)", "(tray)", "(tray)", "(tray)", "(tray)")
     "Program.cs"                               = @("(updates == 'velopack')", "(health)", "(health)", "(updates == 'velopack')")
     "README.md"                                = @()
     "Pages\AboutPage.xaml"                     = @()
@@ -121,10 +125,12 @@ $requiredGuards = @{
     "Pages\SettingsPage.xaml.cs"               = @()
     "Scripts\init-template.ps1"                = @()
     "Services\BackgroundUpdateService.cs"      = @("(updates == 'velopack')", "(updates == 'basic')")
+    "Services\AppFeatures.cs"                    = @()
     "Services\LocalizationService.cs"          = @("(localization)", "(localization)")
     "Services\LoggingService.cs"               = @("(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(health)", "(logging == 'mel')", "(logging == 'none')", "(health)", "(logging == 'serilog')", "(logging == 'mel')", "(health)", "(logging == 'none')")
     "Services\CrashReportingService.cs"        = @("(crash)")
-    "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(health)", "(http)")
+    "Services\FirstRunDialogService.cs"        = @("(setup)", "(setup)")
+    "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(setup)", "(health)", "(http)")
     "Services\SystemTrayService.cs"            = @()
     "Tests\Services\ServiceLocatorTests.cs"    = @("(http)", "(database)", "(http)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(health)")
     "Tests\Services\DesktopToastServiceTests.cs" = @("(localization)")

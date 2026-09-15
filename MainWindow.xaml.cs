@@ -55,6 +55,8 @@ public sealed partial class MainWindow : Window
         _nav.RegisterRoute("about", typeof(AboutPage));
         _nav.RegisterRoute("diagnostics", typeof(DiagnosticsPage));
         _nav.RegisterRoute("settings", typeof(SettingsPage));
+        _nav.RegisterRoute("updates", typeof(UpdateCenterPage));
+        _nav.RegisterRoute("setupwizard", typeof(SetupWizardPage));
         _nav.SetFrame(ContentFrame);
         _nav.Navigated += OnNavigated;
 
