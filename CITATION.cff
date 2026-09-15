@@ -8,7 +8,7 @@ authors:
 repository-code: "https://github.com/Fettah010/winui-3-easy-template"
 url: "https://github.com/Fettah010/winui-3-easy-template"
 license: MIT
-version: "0.0.6-beta"
+version: "0.0.7-beta"
 date-released: "2026-09-15"
 keywords:
   - WinUI 3
@@ -17,4 +17,5 @@ keywords:
   - MVVM
   - Windows desktop
   - starter template
+
 

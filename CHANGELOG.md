@@ -5,6 +5,18 @@ release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
 
+
+## [0.0.7-beta] - 2026-09-15
+
+### Fixed
+
+- Store upload wrap failed on PowerShell 7 (`Compress-Archive`
+  rejects non-`.zip` destinations): zip to a temp name, then move it
+  over the `.msixupload`. Proved by the `msix` CI leg.
+- Smoke `App_Launches` failed on fresh machines (first run lands on
+  the setup wizard, not Home): shared `CompleteSetupWizardIfPresent`
+  helper, tolerated by the launch test. Proved by `ui-tests` CI.
+
 ## [0.0.6-beta] - 2026-09-15
 
 ### Added

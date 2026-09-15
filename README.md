@@ -63,6 +63,11 @@ Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
 the flags, and `docs/FEATURES.md` records what each scaffold picked.
 
+## What's new in 0.0.7-beta
+
+- Store upload wrap fixed on PowerShell 7 + smoke hardened for
+  first-run wizard — CI green — full notes in [CHANGELOG.md](CHANGELOG.md)
+
 ## What's new in 0.0.6-beta
 
 - Dual-track distribution: one binary serves GitHub (Velopack) and the
