@@ -63,6 +63,12 @@ Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
 the flags, and `docs/FEATURES.md` records what each scaffold picked.
 
+## What's new in 0.0.9-beta
+
+- Faster launches (no fixed animation waits, deferred tray/toast),
+  smoother updates + diagnostics, capped log growth, data-layer v1
+  (WAL, migrations) — full notes in [CHANGELOG.md](CHANGELOG.md)
+
 ## What's new in 0.0.8-beta
 
 - Faster launches with a pending update: visible restart prompt

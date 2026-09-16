@@ -7,6 +7,30 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.9-beta] - 2026-09-16
+
+### Added
+
+- Performance & scalability plan P0-P3 (`docs/PERFORMANCE-SCALABILITY-PLAN.md`):
+  launch without fixed waits (completion-driven splash/chrome transitions,
+  reduced-motion + fast-launch gates), settings cache with debounced
+  coalesced writes, non-blocking Velopack init, deferred tray/toast/icon
+  work past the first frame.
+- Steady-state caps: Release log level `Information`, 256 MB log-directory
+  quota, O(1) event buffer, throttled download progress, debounced
+  diagnostics filter with off-thread capped tail reads, bounded
+  cancellable toasts.
+- Data layer v1: WAL + busy-timeout, retryable init, `schema_version`
+  migration runner, diagnostics DB path fix, `IRepository<T>` sample.
+- Growth seams: modular DI (`AddData/AddUpdates/AddPresence/AddCore/AddHttp`),
+  in-repo HTTP retry handler + cancellation + typed `ApiResult<T>`,
+  per-page navigation timings on the diagnostics page, startup-budget
+  guardrails, publish-weight tracking (`Scripts/measure-publish-weight.ps1`,
+  baseline 268.2 MB).
+- Tests: +52 headless tests (267 passed + 4 skipped); mirror parity green;
+  FlaUI smoke 5 passed + 1 skipped; scaffold matrix green.
+
 ## [0.0.8-beta] - 2026-09-15
 
 ### Fixed

@@ -57,8 +57,8 @@ public sealed class FirstRunService
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• Faster launches: updates prompt instead of stalling
-• Update Center refresh with version details
+• Faster launches: no waiting on animations or background init
+• Smoother updates + diagnostics, capped log growth
 • Same features, cleaner and faster internals";
     }
 }
