@@ -5,12 +5,12 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** all green. `v0.0.9-beta` + `templates-v0.3.3` shipped; every CI leg success.
-- **Version:** app `0.0.9-beta`; template package `0.3.3`.
-- **Tags:** `v0.0.9-beta` (release.yml success, assets live); `templates-v0.3.3` (templates-publish success → NuGet 0.3.3 indexed).
-- **Branches:** `main` pushed; `beta` tracks `v0.0.9-beta` (verified).
+- **Goal:** all green. `v0.0.10-beta` + `templates-v0.3.4` shipped; every CI leg success (incl. a smoke-fix follow-up).
+- **Version:** app `0.0.10-beta`; template package `0.3.4`.
+- **Tags:** `v0.0.10-beta` (release.yml success, assets live); `templates-v0.3.4` (templates-publish success → NuGet 0.3.4 indexed).
+- **Branches:** `main` pushed (incl. `8d880ab` smoke Invoke fix); `beta` tracks `v0.0.10-beta` (verified).
 - **Tree:** clean (pending this STATE refresh).
-- **CI health (last known):** Release success, templates-publish success, templates matrix success, msix SUCCESS, ui-tests SUCCESS. Local: build 0/0, tests 267+4, parity OK (159), smoke 5+1, publish baseline 268.2 MB.
-- **Next:** packaged proof on a kit machine (WACK still manual). Open: `DISCOVERY-PLAN.md` A3/A4+B/C/D, roadmap triage (85 boxes).
+- **CI health (last known):** Release success, templates-publish success, templates matrix success (17m), msix SUCCESS, ui-tests SUCCESS (after Invoke fix). Local: build 0/0, tests 267+1, parity OK (155), smoke 6+1, full 21-combo matrix green.
+- **Next:** packaged proof on a kit machine (WACK still manual).
 
 (End of file - total 14 lines)
