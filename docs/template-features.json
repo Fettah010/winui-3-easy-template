@@ -34,7 +34,7 @@
     "updates carries a value (velopack, basic, none, appinstaller, store); per-value file lists live under features.updates.values",
     "distribution gates updates values (portable: velopack, basic, none; msix: appinstaller, store, none) — enforced by the MSBuild guard in Build/Features.Distribution.props",
     "BackgroundUpdateService ships only for velopack/basic (excluded for none/appinstaller/store; external modes use the slim status surface instead)",
-    "UpdateCenter page + ViewModel ship in every combo (null-tolerant NoEngine status when updates=none)",
+    "UpdateCenter popup + ViewModel ship in every combo (Controls/UpdatePopup.xaml(.cs), Services/UpdateDialogService.cs, ViewModels/UpdateCenterViewModel.cs; null-tolerant NoEngine status when updates=none)",
     "setup wizard is portable-only; msix scaffolds warn and ignore it"
   ]
 }

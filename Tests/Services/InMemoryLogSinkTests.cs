@@ -50,6 +50,19 @@ public class InMemoryLogSinkTests
     }
 
     [TestMethod]
+    public void Clear_DropsEverything()
+    {
+        var sink = new InMemoryLogSink(4);
+        sink.Emit(TestEvents.Make("one"));
+        sink.Emit(TestEvents.Make("two"));
+        sink.Clear();
+        Assert.AreEqual(0, sink.Count);
+        Assert.IsEmpty(sink.SnapshotNewestFirst());
+        sink.Emit(TestEvents.Make("three"));
+        Assert.AreEqual(1, sink.Count);
+    }
+
+    [TestMethod]
     public void Constructor_NonPositiveCapacity_FallsBackToDefault()
     {
         var sink = new InMemoryLogSink(0);

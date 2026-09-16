@@ -20,6 +20,7 @@ public sealed class SettingsService
     private const string KeyChannelMigratedFor = "ChannelMigratedFor";
     private const string KeyFastLaunch = "FastLaunch";
     private const string KeyDownloadOnMetered = "DownloadOnMetered";
+    private const string KeyAutoInstallUpdates = "AutoInstallUpdates";
 
     public static SettingsService Current { get; } = new();
 
@@ -167,6 +168,19 @@ public sealed class SettingsService
     }
 
     /// <summary>
+    /// Whether background updates download and prepare automatically.
+    /// On (default): a detected update downloads silently, then the app
+    /// asks for restart. Off: detection only opens the update popup and
+    /// nothing downloads until Install is pressed. Never blocks launch
+    /// either way (Velopack auto-apply stays off; see Program).
+    /// </summary>
+    public bool AutoInstallUpdates
+    {
+        get => Store.Get(KeyAutoInstallUpdates, true);
+        set => Store.Set(KeyAutoInstallUpdates, value);
+    }
+
+    /// <summary>
     /// Whether background update downloads may run on metered networks.
     /// Off by default (checks still run; only the download is skipped).
     /// </summary>
@@ -197,6 +211,7 @@ public sealed class SettingsService
             Store.Remove(KeyCrashReports);
             Store.Remove(KeyFastLaunch);
             Store.Remove(KeyDownloadOnMetered);
+            Store.Remove(KeyAutoInstallUpdates);
             Store.Remove(KeyLastCheckTime);
             Store.Remove(KeyPendingVersion);
         }

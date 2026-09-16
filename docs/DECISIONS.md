@@ -315,3 +315,28 @@ in git history; this file saves the next agent the archaeology.
   engine-native `#if (...)` guards — never bare preprocessor text,
   not even in comments. Tests assert self-consistently
   (`IsDebugBuild ? Debug : Information`) for the same reason.
+- **2026-09-16 — Update Center page retired; the popup is the surface.**
+  One animated overlay (`Controls/UpdatePopup` + `UpdateDialogService`
+  over `UpdateCenterViewModel`) replaces the page, the Settings inline
+  flow, and the restart ContentDialog. Entry points (Settings button,
+  tray, Home action, background) all funnel through it; the route, nav
+  item, page files, and `SettingsUpdateFlowTests` are deleted in both
+  trees. The VM's null-tolerance stays (updates=none scaffolds).
+- **2026-09-16 — Open-first is structural, ask-mode is a setting.**
+  Velopack auto-apply stays off (docs confirm pending updates otherwise
+  apply at launch — the reported "click, nothing opens" symptom), all
+  update work runs past the first frame, and `AutoInstallUpdates`
+  (default on) selects silent-download-then-ask-restart vs ask-before-
+  download. "Later" keeps the download staged and re-prompts next
+  launch; nothing ever applies at startup.
+- **2026-09-16 — Diagnostics Clear clears; views follow the tail.**
+  Clear wipes the event buffer + filters (disk logs untouched), the
+  live list glides to new arrivals while unpaused, and the file tail
+  reloads every ~3 s (stale "same thing" view fixed). A concurrent-emit
+  race in the O(1) trimmer (stale-read double-trim, caught by its own
+  test) is fixed with a single-trimmer lock.
+- **2026-09-16 — Plan files deleted, READMEs de-SEOed.**
+  All `*-PLAN.md` roadmap files leave both trees (history stays in git);
+  `AGENTS.md` bootstrap/map entries updated. README keyword-stuffing
+  (the "why are the keywords so specific" FAQ + stuffed intro) removed;
+  READMEs describe the app now.

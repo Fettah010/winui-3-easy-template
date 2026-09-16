@@ -22,6 +22,7 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
     private readonly DispatcherTimer _liveTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private ScrollViewer? _liveScroll;
     private bool _liveScrollHooked;
+    private int _tickCount;
 
     public DiagnosticsPage()
     {
@@ -69,10 +70,59 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
         try
         {
             HookLiveScroll();
-            if (ViewModel.SelectedViewIndex != DiagnosticsPageViewModel.ViewLive)
+            if (ViewModel.SelectedViewIndex == DiagnosticsPageViewModel.ViewLive)
+            {
+                int before = ViewModel.LiveEvents.Count;
+                ViewModel.RefreshLive();
+                RenderLiveState();
+                // Stick-to-bottom: while unpaused, glide to the newest
+                // events as they arrive (animated, not a jump). Paused
+                // (scrolled up) never moves.
+                if (!ViewModel.IsLivePaused && ViewModel.LiveEvents.Count > before)
+                    SmoothScrollToBottom(_liveScroll);
                 return;
-            ViewModel.RefreshLive();
-            RenderLiveState();
+            }
+            // File view refreshed itself on selection only, so it went
+            // stale while the app kept logging ("shows the same thing"):
+            // reload the tail every ~3 s and glide when stuck to bottom.
+            _tickCount++;
+            if (_tickCount % 3 == 0)
+            {
+                bool stuck = IsStuckToBottom(FileScrollViewer);
+                ViewModel.ReloadFileTail();
+                RenderLogState();
+                if (stuck)
+                    SmoothScrollToBottom(FileScrollViewer);
+            }
+        }
+        catch { }
+    }
+
+    private static bool IsStuckToBottom(ScrollViewer? scroll)
+    {
+        try
+        {
+            if (scroll is null)
+                return true;
+            if (scroll.ScrollableHeight <= 0)
+                return true;
+            return scroll.VerticalOffset >= scroll.ScrollableHeight - 32;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private static void SmoothScrollToBottom(ScrollViewer? scroll)
+    {
+        try
+        {
+            if (scroll is null)
+                return;
+            if (scroll.ScrollableHeight <= 0)
+                return;
+            scroll.ChangeView(null, scroll.ScrollableHeight, null, false);
         }
         catch { }
     }
@@ -407,7 +457,15 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
 
     private void ClearButton_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel.ClearSearchCommand.Execute(null);
+        ViewModel.ClearLogsCommand.Execute(null);
+        RenderLogState();
+        try
+        {
+            var loc = LocalizationService.Current;
+            NotificationService.Current.Success(
+                loc.GetString("DiagnosticsTitle"), loc.GetString("DiagnosticsCleared"));
+        }
+        catch { }
     }
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)

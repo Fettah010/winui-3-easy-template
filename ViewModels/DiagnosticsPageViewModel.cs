@@ -375,6 +375,44 @@ public partial class DiagnosticsPageViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Reloads the file tail synchronously (bounded by the early-exit cap
+    /// in <see cref="DiagnosticsService.ReadLogTail"/>). Used by the
+    /// page's periodic file auto-refresh. Never throws.
+    /// </summary>
+    internal void ReloadFileTail()
+    {
+        try
+        {
+            LoadTail();
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Clears the live event buffer and every filter, then refreshes the
+    /// current view — the Clear button actually clears now (previously it
+    /// only reset the search boxes). File logs on disk are untouched.
+    /// Never throws.
+    /// </summary>
+    [RelayCommand]
+    public void ClearLogs()
+    {
+        try
+        {
+            try { LoggingService.EventBuffer.Clear(); } catch { }
+            ClearSearch();
+            try
+            {
+                if (SelectedViewIndex == ViewLive)
+                    RefreshLive();
+                else
+                    LoadTail();
+            }
+            catch { }
+        }
+        catch { }
+    }
+    /// <summary>
     /// Text exported by Save/Bundle: file tail in file mode, formatted live
     /// events in live mode. Never throws, never null.
     /// </summary>

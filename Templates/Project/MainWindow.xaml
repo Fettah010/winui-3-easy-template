@@ -5,8 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:loc="using:DevTemWinUi3.Controls"
-    mc:Ignorable="d"
+             xmlns:loc="using:DevTemWinUi3.Controls"
+             xmlns:ctrl="using:DevTemWinUi3.Controls"
+             mc:Ignorable="d"
     Title="DevTem-WinUI 3">
 
     <Grid x:Name="RootGrid" Opacity="0">
@@ -84,11 +85,6 @@
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem AutomationProperties.AutomationId="NavUpdatesItem" Content="{loc:Loc Key=NavUpdates}" Tag="updates">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Download"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <NavigationView.FooterMenuItems>
@@ -117,5 +113,12 @@
             VerticalAlignment="Bottom"
             Margin="0,0,0,16"
             Spacing="8"/>
+
+        <!-- Update popup overlay: full-window, above everything. Owned by
+             UpdateDialogService (shown from Settings, tray, background). -->
+        <ctrl:UpdatePopup
+            x:Name="UpdatePopupControl"
+            Grid.Row="0"
+            Grid.RowSpan="2"/>
     </Grid>
 </Window>

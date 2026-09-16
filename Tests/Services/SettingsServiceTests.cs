@@ -83,4 +83,14 @@ public class SettingsServiceTests
         SettingsService.Current.ResetToDefaults();
         Assert.IsFalse(SettingsService.Current.DownloadOnMetered);
     }
+
+    [TestMethod]
+    public void AutoInstallUpdates_DefaultOn_AndRoundTrips()
+    {
+        Assert.IsTrue(SettingsService.Current.AutoInstallUpdates);
+        SettingsService.Current.AutoInstallUpdates = false;
+        Assert.IsFalse(SettingsService.Current.AutoInstallUpdates);
+        SettingsService.Current.ResetToDefaults();
+        Assert.IsTrue(SettingsService.Current.AutoInstallUpdates);
+    }
 }

@@ -114,24 +114,27 @@
                     Description="{loc:Loc Key=SettingsCheckDesc}"
                     Visibility="{x:Bind ViewModel.UpdateCheckCardVisibility, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                        <!-- Busy states are VM-owned props (single writer), so a
-                             binding is safe here — unlike the old code-behind. -->
+                        <!-- The animated update popup owns the whole flow
+                             (checking animation, progress, restart); this
+                             button only opens it, so it is always enabled. -->
                         <Button
                             x:Name="CheckUpdatesButton"
-                            Content="{x:Bind ViewModel.CheckUpdatesButtonText, Mode=OneWay}"
-                            IsEnabled="{x:Bind ViewModel.IsCheckUpdatesEnabled, Mode=OneWay}"
+                            AutomationProperties.AutomationId="CheckUpdatesButton"
+                            Content="{loc:Loc Key=SettingsCheckNow}"
                             Click="CheckUpdatesButton_Click"
                             Style="{ThemeResource AccentButtonStyle}"/>
                     </StackPanel>
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
-                    Header="{loc:Loc Key=SettingsUpdateCenterHeader}"
-                    Description="{loc:Loc Key=SettingsUpdateCenterDesc}">
-                    <Button
-                        x:Name="OpenUpdateCenterButton"
-                        Content="{loc:Loc Key=SettingsOpenUpdateCenter}"
-                        Click="OpenUpdateCenterButton_Click"/>
+                    Header="{loc:Loc Key=SettingsAutoInstall}"
+                    Description="{loc:Loc Key=SettingsAutoInstallDesc}"
+                    Visibility="{x:Bind ViewModel.UpdateCheckCardVisibility, Mode=OneWay}">
+                    <ToggleSwitch
+                        x:Name="AutoInstallToggle"
+                        AutomationProperties.AutomationId="AutoInstallToggle"
+                        IsOn="{x:Bind ViewModel.AutoInstallUpdates, Mode=TwoWay}"
+                        HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
 
                 <ctk:SettingsCard
@@ -149,16 +152,6 @@
                     Description="{x:Bind ViewModel.UpdateCardDescription, Mode=OneWay}"
                     Visibility="{x:Bind ViewModel.UpdateCardVisibility, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                        <ProgressBar
-                            x:Name="DownloadProgressBar"
-                            Width="140"
-                            Minimum="0"
-                            Maximum="100"
-                            Value="{x:Bind ViewModel.DownloadProgress, Mode=OneWay}"
-                            ShowPaused="False"
-                            ShowError="False"
-                            Visibility="{x:Bind ViewModel.DownloadProgressVisibility, Mode=OneWay}"
-                            VerticalAlignment="Center"/>
                         <TextBlock
                             x:Name="UpdateStatusText"
                             Text="{x:Bind ViewModel.UpdateStatusMessage, Mode=OneWay}"

@@ -47,6 +47,13 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+    /// <summary>
+    /// A check is actively running (the popup shows its animated checking
+    /// state: linear indeterminate bar + animated dots, never a ring).
+    /// </summary>
+    [ObservableProperty]
+    private bool _isChecking;
+
     [ObservableProperty]
     private bool _hasUpdate;
 
@@ -70,9 +77,15 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     /// <summary>
     /// Whether a check completed this session (success or no-update).
     /// The page checks on first arrival so it never sits stale; failures
-    /// leave it false so the next visit retries.
+    /// leave it false so the next visit retries; the button always can too.
     /// </summary>
     public bool HasCheckedThisSession { get; private set; }
+
+    /// <summary>
+    /// Whether the last check failed (the popup shows its error state
+    /// with Retry). Cleared on every new check. Headless-readable.
+    /// </summary>
+    public bool LastCheckFailed { get; private set; }
 
     public UpdateCenterViewModel(IUpdateService? updates = null)
     {
@@ -140,6 +153,8 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
         var loc = LocalizationService.Current;
         _busy = true;
         IsBusy = true;
+        IsChecking = true;
+        LastCheckFailed = false;
         CanCheck = false;
         try
         {
@@ -147,6 +162,43 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
             StatusMessage = loc.GetString("SettingsChecking");
             var result = await _updates.CheckAsync();
             ct.ThrowIfCancellationRequested();
+            StampLastChecked(loc);
+            PublishResult(result);
+            if (result.HasUpdate)
+                AppLog.Information("UpdateCenter: v{Version} available", PendingVersion);
+        }
+        catch (OperationCanceledException)
+        {
+            RefreshLabels();
+        }
+        catch (Exception ex)
+        {
+            LastCheckFailed = true;
+            StatusMessage = $"{loc.GetString("SettingsCheckFailed")}: {ex.Message}";
+            AppLog.Error(ex, "UpdateCenter check failed");
+        }
+        finally
+        {
+            _busy = false;
+            IsBusy = false;
+            IsChecking = false;
+            if (!AppFeatures.IsExternallyManaged && _updates is not null)
+                CanCheck = true;
+        }
+    }
+
+    /// <summary>
+    /// Publishes a check result to the bound state (version, notes,
+    /// buttons) without running a check. Used by the background service,
+    /// which already checked: the popup opens straight on the result.
+    /// Headless-testable. Never throws.
+    /// </summary>
+    public void PublishResult(UpdateCheckResult result)
+    {
+        try
+        {
+            LastCheckFailed = false;
+            var loc = LocalizationService.Current;
             StampLastChecked(loc);
             if (!result.HasUpdate)
             {
@@ -178,24 +230,8 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
             CanDownload = true;
             CanInstall = false;
             HasCheckedThisSession = true;
-            AppLog.Information("UpdateCenter: v{Version} available", PendingVersion);
         }
-        catch (OperationCanceledException)
-        {
-            RefreshLabels();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"{loc.GetString("SettingsCheckFailed")}: {ex.Message}";
-            AppLog.Error(ex, "UpdateCenter check failed");
-        }
-        finally
-        {
-            _busy = false;
-            IsBusy = false;
-            if (!AppFeatures.IsExternallyManaged && _updates is not null)
-                CanCheck = true;
-        }
+        catch { }
     }
 
     /// <summary>Downloads the pending update with live progress.</summary>

@@ -225,7 +225,7 @@
                     CornerRadius="8"
                     Padding="12"
                     Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
-                    <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <ScrollViewer x:Name="FileScrollViewer" MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                         <Grid>
                             <TextBlock
                                 x:Name="LogText"

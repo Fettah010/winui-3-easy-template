@@ -66,13 +66,13 @@ explicit feature flags remain the authoritative customization surface.
 The app checks GitHub Releases on startup. When a new version is found, it
 downloads with a live progress bar and prompts the user to restart once the
 download finishes, then applies the update and restarts smoothly.
-The Update Center page (`NavUpdates`) carries the same flow with release
-notes; Settings links to it.
+The animated update popup (`Controls/UpdatePopup`) carries the same flow
+with release notes; Settings links to it.
 
 - `velopack` (default): full installer + delta downloads + release pipeline.
 - `basic`: zero-dependency checker — downloads the release's Setup `.exe`
   and launches it. No SDK, no pipeline; attach the `.exe` yourself.
-- `none`: no update engine — the Update Center reports the build has none.
+- `none`: no update engine — the update popup reports the build has none.
 - `appinstaller` / `store` (`--distribution msix` only): native MSIX
   updates — Windows owns the flow, Settings shows a status card instead
   (Store listing or Windows Apps settings).

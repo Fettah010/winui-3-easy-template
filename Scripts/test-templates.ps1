@@ -298,8 +298,8 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     if ($distProps -notmatch [regex]::Escape("<DevTemDistribution>" + $definition.Distribution + "</DevTemDistribution>")) {
         throw "distribution props value is not '$($definition.Distribution)'"
     }
-    # P3: setup wizard files ship iff setup is on; UpdateCenter ships in
-    # every combo (null-tolerant NoEngine status when updates=none).
+    # P3: setup wizard files ship iff setup is on; the update popup
+    # ships in every combo (null-tolerant NoEngine status when updates=none).
     # Store automation: submit workflow + scripts ship with msix; the
     # listing/publish/bump scripts ship everywhere (docs + release tools).
     $isMsix = $definition.Distribution -eq "msix"
@@ -308,7 +308,9 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
         @("Pages\SetupWizardPage.xaml.cs", $definition.Setup),
         @("ViewModels\SetupWizardViewModel.cs", $definition.Setup),
         @("Services\SetupWizardService.cs", $definition.Setup),
-        @("Pages\UpdateCenterPage.xaml", $true),
+        @("Controls\UpdatePopup.xaml", $true),
+        @("Controls\UpdatePopup.xaml.cs", $true),
+        @("Services\UpdateDialogService.cs", $true),
         @("ViewModels\UpdateCenterViewModel.cs", $true),
         @(".github\workflows\store-submit.yml", $isMsix),
         @("Scripts\submit-store.ps1", $true),

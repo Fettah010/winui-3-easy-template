@@ -56,7 +56,6 @@ public sealed partial class MainWindow : Window
         CollapseFooterNavItem("diagnostics");
 #endif
         _nav.RegisterRoute("settings", typeof(SettingsPage));
-        _nav.RegisterRoute("updates", typeof(UpdateCenterPage));
 #if (setup)
         _nav.RegisterRoute("setupwizard", typeof(SetupWizardPage));
 #endif
@@ -129,6 +128,9 @@ public sealed partial class MainWindow : Window
                 try { DispatcherQueue.TryEnqueue(() => WindowActivator.ShowAndActivate(this)); } catch { }
             };
 #endif
+
+            // The single update surface (animated popup, not a page).
+            UpdateDialogService.Initialize(this, UpdatePopupControl);
 
             // Show first-run or what's-new dialog after window is shown
             _ = FirstRunDialogService.ShowIfNeededAsync(this);
@@ -329,6 +331,12 @@ public sealed partial class MainWindow : Window
     {
         WindowActivator.ShowAndActivate(this);
         _nav.NavigateTo(request.Target, request.ToParameter());
+        // The tray "check updates" entry opens the update popup over the
+        // target page (the Update Center page is retired).
+        if (request.AutoCheckUpdates)
+        {
+            try { _ = UpdateDialogService.ShowCheckAsync(); } catch { }
+        }
     }
 
     private void BringToFront()

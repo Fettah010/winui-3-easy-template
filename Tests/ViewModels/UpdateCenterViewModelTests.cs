@@ -20,19 +20,22 @@ public class UpdateCenterViewModelTests
         public string? PendingRestartVersion => null;
         public UpdateCheckResult Result { get; set; } = new(false, null);
         public Exception? CheckError;
+        public TaskCompletionSource? CheckGate;
         public int ProgressToReport = 100;
         public int ApplyCalls;
         public int CheckCalls;
 
         public void SetChannel(string channel) { }
 
-        public Task<UpdateCheckResult> CheckAsync()
+        public async Task<UpdateCheckResult> CheckAsync()
         {
             CheckCalls++;
+            if (CheckGate is not null)
+                await CheckGate.Task;
             if (CheckError is not null)
                 throw CheckError;
             HasPendingUpdate = Result.HasUpdate;
-            return Task.FromResult(Result);
+            return Result;
         }
 
         public Task DownloadPendingUpdateAsync(Action<int>? progress = null)
@@ -201,5 +204,69 @@ public class UpdateCenterViewModelTests
 
         Assert.AreEqual(expected, SettingsPageViewModel.ExternalHandlerText(loc));
         Assert.AreEqual(expected, UpdateCenterViewModel.ExternalHandlerText(loc));
+    }
+
+    [TestMethod]
+    public void PublishResult_Update_SeedsPopupState()
+    {
+        // The ask-mode background path seeds the popup without re-checking.
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(new FakeUpdates());
+        vm.PublishResult(new UpdateCheckResult(true, "9.9", "Highlights"));
+
+        Assert.IsTrue(vm.HasUpdate);
+        Assert.AreEqual("9.9", vm.PendingVersion);
+        Assert.AreEqual("Highlights", vm.ReleaseNotes);
+        Assert.IsTrue(vm.HasCheckedThisSession);
+        Assert.IsFalse(vm.LastCheckFailed);
+        Assert.IsTrue(vm.CanDownload);
+    }
+
+    [TestMethod]
+    public void PublishResult_NoUpdate_SeedsIdleState()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(new FakeUpdates());
+        vm.PublishResult(new UpdateCheckResult(false, null));
+
+        Assert.IsFalse(vm.HasUpdate);
+        Assert.IsTrue(vm.HasCheckedThisSession);
+        Assert.IsFalse(vm.LastCheckFailed);
+        Assert.Contains("latest version", vm.StatusMessage);
+    }
+
+    [TestMethod]
+    public async Task CheckAsync_Failure_SetsLastCheckFailed()
+    {
+        // The popup error state (Retry) keys off this flag.
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(
+            new FakeUpdates { CheckError = new InvalidOperationException("boom") });
+
+        Assert.IsFalse(vm.IsChecking);
+        await vm.CheckAsync();
+
+        Assert.IsTrue(vm.LastCheckFailed);
+        Assert.IsFalse(vm.IsChecking);
+    }
+
+    [TestMethod]
+    public async Task CheckAsync_Running_SetsIsChecking()
+    {
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var gate = new TaskCompletionSource();
+        var updates = new FakeUpdates { CheckGate = gate };
+        var vm = new UpdateCenterViewModel(updates);
+
+        var check = vm.CheckAsync();
+        Assert.IsTrue(vm.IsChecking);
+        gate.SetResult();
+        await check;
+
+        Assert.IsFalse(vm.IsChecking);
     }
 }

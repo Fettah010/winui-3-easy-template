@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Conditions;
@@ -220,8 +221,64 @@ public sealed class AppSmokeTests
         ClickNavAndWaitForPage("NavAboutItem", "AboutTitleText");
         ClickNavAndWaitForPage("NavDiagnosticsItem", "DiagnosticsTitleText");
         ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
-        ClickNavAndWaitForPage("NavUpdatesItem", "UpdateCenterTitleText");
         ClickNavAndWaitForPage("NavHomeItem", "HomeTitleText");
+    }
+
+    [TestMethod]
+    public void UpdatePopup_Opens_From_Settings()
+    {
+        // The Update Center page is retired: the animated popup is the
+        // single update surface (Settings check button opens it). The
+        // card Border itself is not a UIA element, so the test keys off
+        // the title text + action buttons.
+        RequireWindow();
+        DismissFirstRunDialogIfPresent(RecheckTimeout);
+        ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
+
+        const int attempts = 3;
+        for (int i = 1; i <= attempts; i++)
+        {
+            ForegroundWindow();
+            var check = RequireElement("CheckUpdatesButton", "Check-for-updates button");
+            try { check.Focus(); } catch { }
+            try { check.Click(); } catch { }
+            var popup = WaitForElement("UpdatePopupTitle", NavigateTimeout);
+            if (popup is not null)
+            {
+                // Close it again so later tests start from a clean window.
+                // Buttons appear per state (checking hides them), so poll
+                // for a clickable one instead of assuming the first hit.
+                bool closed = false;
+                var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+                while (!closed && DateTime.UtcNow < deadline)
+                {
+                    var candidate = WaitForElement("UpdatePopupPrimary", TimeSpan.FromSeconds(1))
+                        ?? WaitForElement("UpdatePopupSecondary", TimeSpan.FromSeconds(1));
+                    if (candidate is null)
+                    {
+                        Task.Delay(500).Wait();
+                        continue;
+                    }
+                    try
+                    {
+                        if (!candidate.IsEnabled)
+                        {
+                            Task.Delay(500).Wait();
+                            continue;
+                        }
+                        candidate.Click();
+                        closed = true;
+                    }
+                    catch
+                    {
+                        Task.Delay(500).Wait();
+                    }
+                }
+                Assert.IsTrue(closed, "Update popup showed no clickable button.");
+                return;
+            }
+        }
+        Assert.Fail($"Update popup did not appear after clicking check ({attempts} attempts).");
     }
 
     [TestMethod]

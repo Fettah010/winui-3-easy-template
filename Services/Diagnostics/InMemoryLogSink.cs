@@ -19,6 +19,7 @@ public sealed class InMemoryLogSink
 
     private readonly ConcurrentQueue<LogEntry> _events = new();
     private readonly int _capacity;
+    private readonly object _trimGate = new();
     private int _count;
 
     public InMemoryLogSink(int capacity = DefaultCapacity)
@@ -29,8 +30,8 @@ public sealed class InMemoryLogSink
     /// <summary>
     /// Buffered event count. O(1): an <see cref="Interlocked"/> counter,
     /// not the queue snapshot the old <c>ConcurrentQueue.Count</c> took
-    /// on every emit (P1-1). May lag the true length by a hair under
-    /// contention; never throws.
+    /// on every emit (P1-1). Exact at quiescence; may transiently lag by
+    /// one mid-emit under contention. Never throws.
     /// </summary>
     public int Count => Math.Max(0, Volatile.Read(ref _count));
 
@@ -40,19 +41,42 @@ public sealed class InMemoryLogSink
         {
             if (entry is null)
                 return;
-            _events.Enqueue(entry);
-            Interlocked.Increment(ref _count);
-            while (Volatile.Read(ref _count) > _capacity)
+            // One trimmer at a time: a stale-read-then-trim race used to
+            // dequeue twice for one excess item (count drifted under
+            // capacity). The lock spans nanosecond integer/queue ops only.
+            lock (_trimGate)
             {
-                if (_events.TryDequeue(out _))
-                    Interlocked.Decrement(ref _count);
-                else
-                    break;
+                _events.Enqueue(entry);
+                int count = Interlocked.Increment(ref _count);
+                while (count > _capacity)
+                {
+                    if (_events.TryDequeue(out _))
+                        count = Interlocked.Decrement(ref _count);
+                    else
+                        break;
+                }
             }
         }
         catch { }
     }
 
+    /// <summary>
+    /// Drops every buffered event (the diagnostics Clear action).
+    /// Takes the trim gate so a concurrent emit can neither slip in
+    /// uncounted nor resurrect the count. Never throws.
+    /// </summary>
+    public void Clear()
+    {
+        try
+        {
+            lock (_trimGate)
+            {
+                while (_events.TryDequeue(out _)) { }
+                Interlocked.Exchange(ref _count, 0);
+            }
+        }
+        catch { }
+    }
     /// <summary>Snapshot, newest first. Empty on any error.</summary>
     public IReadOnlyList<LogEntry> SnapshotNewestFirst()
     {

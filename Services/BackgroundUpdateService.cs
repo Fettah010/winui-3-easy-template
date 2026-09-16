@@ -114,7 +114,8 @@ public sealed class BackgroundUpdateService
 
         // A previous session's prepared update waits on disk (auto-apply
         // is off so launch never stalls): offer it visibly instead of a
-        // fresh check. Any choice ends this tick (no double prompt).
+        // fresh check. Any choice ends this tick (no double prompt). The
+        // window is always up by now — this runs past the first frame.
         string? prepared = null;
         try { prepared = svc.PendingRestartVersion; } catch { }
         if (!string.IsNullOrWhiteSpace(prepared))
@@ -124,7 +125,7 @@ public sealed class BackgroundUpdateService
                 prepared);
             if (mainWindow is null)
                 return;
-            mainWindow.DispatcherQueue.TryEnqueue(() => PromptRestart(prepared, mainWindow));
+            await UpdateDialogService.ShowReadyAsync(prepared, null).ConfigureAwait(false);
             return;
         }
 
@@ -153,6 +154,21 @@ public sealed class BackgroundUpdateService
                 return;
             }
 
+            // Ask-mode: detection opens the popup and nothing downloads
+            // until Install is pressed (SettingsService.AutoInstallUpdates).
+            bool autoInstall = true;
+            try { autoInstall = SettingsService.Current.AutoInstallUpdates; } catch { }
+            if (!autoInstall)
+            {
+                AppLog.Information(
+                    "Auto-update: v{Version} available, asking (auto-install off)",
+                    result.Version);
+                if (mainWindow is null)
+                    return;
+                await UpdateDialogService.ShowAvailableAsync(result).ConfigureAwait(false);
+                return;
+            }
+
             // P1-4: the check is cheap; the download is not. On metered
             // networks it waits for an unmetered connection unless the
             // user explicitly allows metered downloads.
@@ -173,7 +189,8 @@ public sealed class BackgroundUpdateService
 
             if (mainWindow is null)
                 return;
-            mainWindow.DispatcherQueue.TryEnqueue(() => PromptRestart(result.Version, mainWindow));
+            await UpdateDialogService.ShowReadyAsync(result.Version, result.ReleaseNotes)
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -210,38 +227,4 @@ public sealed class BackgroundUpdateService
         }
     }
 
-    private async void PromptRestart(string? version, Window? window)
-    {
-        try
-        {
-            if (window?.Content is null)
-                return;
-
-            var loc = LocalizationService.Current;
-            var dialog = new ContentDialog
-            {
-                XamlRoot = window.Content.XamlRoot,
-                Title = loc.GetString("UpdateRestartTitle", version ?? string.Empty),
-                Content = loc.GetString("UpdateRestartBody"),
-                PrimaryButtonText = loc.GetString("UpdateRestartNow"),
-                SecondaryButtonText = loc.GetString("UpdateDetails"),
-                CloseButtonText = loc.GetString("UpdateRestartLater"),
-                DefaultButton = ContentDialogButton.Primary
-            };
-
-            var choice = await dialog.ShowAsync();
-            if (choice == ContentDialogResult.Primary)
-                UpdateService.Current.ApplyPendingUpdateAndRestart();
-            else if (choice == ContentDialogResult.Secondary)
-            {
-                // Details opens the Update Center (which re-checks on
-                // arrival to show fresh state) instead of restarting now.
-                try { NavigationService.Current.NavigateTo("updates", "check"); } catch { }
-            }
-        }
-        catch (Exception ex)
-        {
-            AppLog.Error(ex, "Restart prompt failed");
-        }
-    }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,21 +12,7 @@ public partial class SettingsPageViewModel : ObservableObject
     private readonly IUpdateService? _updates;
     private readonly IFilePickerService _pickers;
 
-    /// <summary>
-    /// UI thread captured at construction (the page resolves this VM on the
-    /// UI thread): progress callbacks arrive on background threads and must
-    /// be marshalled in. Null in unit tests — updates apply directly.
-    /// </summary>
-    private readonly SynchronizationContext? _uiThread = SynchronizationContext.Current;
-
-    /// <summary>
-    /// Coalesces the download-progress burst before UI marshalling (P1-2);
-    /// reset per install. Shared shape with the Update Center path.
-    /// </summary>
-    private readonly ProgressThrottler _progressThrottler = new();
-
-    private bool _checking;
-    private bool _installing;
+    private bool _loaded;
 
     [ObservableProperty]
     private int _selectedThemeIndex;
@@ -38,6 +23,14 @@ public partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private bool _autoCheckOnStartup;
 
+    /// <summary>
+    /// Whether detected updates download and prepare automatically
+    /// (the popup only asks for restart). Off = the popup asks before
+    /// anything downloads. Bound to the auto-install toggle.
+    /// </summary>
+    [ObservableProperty]
+    private bool _autoInstallUpdates;
+
     [ObservableProperty]
     private bool _minimizeToTray;
 
@@ -47,15 +40,14 @@ public partial class SettingsPageViewModel : ObservableObject
     [ObservableProperty]
     private string _appVersion = string.Empty;
 
-    /// <summary>Update-flow state, bound by <c>SettingsPage.xaml</c>.</summary>
+    /// <summary>
+    /// Update cards, bound by <c>SettingsPage.xaml</c>. The interactive
+    /// flow lives in the update popup (<see cref="Services.UpdateDialogService"/>):
+    /// Settings only shows resting state (version) plus the external-mode
+    /// status card with its owner action.
+    /// </summary>
     [ObservableProperty]
-    private bool _isCheckUpdatesEnabled = true;
-
-    [ObservableProperty]
-    private string _checkUpdatesButtonText = string.Empty;
-
-    [ObservableProperty]
-    private Visibility _updateCardVisibility = Visibility.Collapsed;
+    private Visibility _updateCardVisibility = Visibility.Visible;
 
     /// <summary>
     /// Engine-owned cards (channel + check-now). Collapsed when updates are
@@ -75,12 +67,6 @@ public partial class SettingsPageViewModel : ObservableObject
     private string _updateStatusMessage = string.Empty;
 
     [ObservableProperty]
-    private Visibility _downloadProgressVisibility = Visibility.Collapsed;
-
-    [ObservableProperty]
-    private int _downloadProgress;
-
-    [ObservableProperty]
     private Visibility _installButtonVisibility = Visibility.Collapsed;
 
     [ObservableProperty]
@@ -95,12 +81,6 @@ public partial class SettingsPageViewModel : ObservableObject
     /// (Windows may show a consent prompt on enable).
     /// </summary>
     public bool AutoStartAvailable => true;
-
-    /// <summary>
-    /// Guards change handlers while the constructor loads persisted values,
-    /// so loading never writes back or triggers side effects.
-    /// </summary>
-    private bool _loaded;
 
     public SettingsPageViewModel(IUpdateService? updates = null, IFilePickerService? pickers = null)
     {
@@ -143,6 +123,9 @@ public partial class SettingsPageViewModel : ObservableObject
 
         try { AutoCheckOnStartup = SettingsService.Current.AutoCheck; }
         catch { AutoCheckOnStartup = true; }
+
+        try { AutoInstallUpdates = SettingsService.Current.AutoInstallUpdates; }
+        catch { AutoInstallUpdates = true; }
 
         try { MinimizeToTray = SettingsService.Current.MinimizeToTray; }
         catch { MinimizeToTray = true; }
@@ -236,10 +219,10 @@ public partial class SettingsPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Re-reads the resting (non-busy) update labels from the current
-    /// language. Called once at construction and by the page on every
-    /// language change — busy states are owned by the running operation and
-    /// must never be overwritten here.
+    /// Re-reads the resting update labels from the current language.
+    /// Called once at construction and by the page on every language
+    /// change. The interactive flow lives in the update popup — Settings
+    /// only shows resting state (installed version).
     /// </summary>
     public void RefreshUpdateLabels()
     {
@@ -263,165 +246,11 @@ public partial class SettingsPageViewModel : ObservableObject
             return;
         }
         UpdateCheckCardVisibility = Visibility.Visible;
-        if (!_checking)
-            CheckUpdatesButtonText = loc.GetString("SettingsCheckNow");
+        UpdateCardVisibility = Visibility.Visible;
         UpdateCardHeader = loc.GetString("SettingsCheckHeader");
-        if (UpdateCardVisibility == Visibility.Collapsed)
-            UpdateCardDescription = loc.GetString("SettingsStatusIdle");
-        if (InstallButtonVisibility == Visibility.Visible && IsInstallEnabled)
-            InstallButtonText = loc.GetString("SettingsInstall");
-    }
-
-    /// <summary>
-    /// Runs the update check and publishes the outcome to the bound status
-    /// card. Safe to call from any thread; re-entrant calls while a check
-    /// is running return immediately. Cancellation (page left) resets the
-    /// button quietly — never an error toast.
-    /// </summary>
-    public async Task CheckForUpdatesAsync(CancellationToken ct = default)
-    {
-        if (AppFeatures.IsExternallyManaged)
-        {
-            await OpenExternalUpdateSourceAsync();
-            return;
-        }
-        if (_updates is null || _checking)
-            return;
-
-        var loc = LocalizationService.Current;
-
-        if (!_updates.IsInstalled)
-        {
-            // Unpackaged run: explain via the animated in-app toast (modern
-            // WinUI style) instead of the inline status card.
-            AppLog.Information("Update check: app is not installed, showing toast");
-            NotificationService.Current.Info(loc.GetString("NotifUpdates"), loc.GetString("SettingsNotInstalled"));
-            return;
-        }
-
-        _checking = true;
-        IsCheckUpdatesEnabled = false;
-        CheckUpdatesButtonText = loc.GetString("SettingsChecking");
-
-        try
-        {
-            ct.ThrowIfCancellationRequested();
-            var result = await _updates.CheckAsync();
-            ct.ThrowIfCancellationRequested();
-
-            UpdateCardVisibility = Visibility.Visible;
-            UpdateCardHeader = loc.GetString("SettingsCheckHeader");
-            UpdateCardDescription = loc.GetString("SettingsCheckHeader");
-            DownloadProgressVisibility = Visibility.Collapsed;
-            DownloadProgress = 0;
-
-            if (!result.HasUpdate)
-            {
-                UpdateStatusMessage = loc.GetString("SettingsNoUpdate");
-                InstallButtonVisibility = Visibility.Collapsed;
-                NotificationService.Current.Success(loc.GetString("NotifUpdates"), loc.GetString("SettingsNoUpdate"));
-            }
-            else
-            {
-                string version = result.Version ?? string.Empty;
-                UpdateStatusMessage = loc.GetString("UpdateAvailableVersion", version);
-                InstallButtonVisibility = Visibility.Visible;
-                IsInstallEnabled = true;
-                InstallButtonText = loc.GetString("SettingsInstall");
-                NotificationService.Current.Info(
-                    loc.GetString("NotifUpdates"),
-                    loc.GetString("UpdateAvailablePrompt", version));
-            }
-        }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
-        {
-            UpdateCardVisibility = Visibility.Visible;
-            UpdateCardHeader = loc.GetString("SettingsCheckHeader");
-            UpdateCardDescription = loc.GetString("SettingsCheckHeader");
-            UpdateStatusMessage = $"{loc.GetString("SettingsCheckFailed")}: {ex.Message}";
-            InstallButtonVisibility = Visibility.Collapsed;
-            NotificationService.Current.Error(loc.GetString("SettingsCheckFailed"), ex.Message);
-        }
-        finally
-        {
-            _checking = false;
-            IsCheckUpdatesEnabled = true;
-            CheckUpdatesButtonText = loc.GetString("SettingsCheckNow");
-        }
-    }
-
-    /// <summary>
-    /// Downloads the pending update with determinate progress, then applies
-    /// it (restart). No-op when nothing is pending or an install is already
-    /// running. Progress arrives on a background thread and is marshalled
-    /// to the UI thread captured at construction.
-    /// </summary>
-    public async Task InstallPendingUpdateAsync(CancellationToken ct = default)
-    {
-        if (AppFeatures.IsExternallyManaged)
-        {
-            await OpenExternalUpdateSourceAsync();
-            return;
-        }
-        if (_updates is null || _installing || !_updates.HasPendingUpdate)
-            return;
-
-        var loc = LocalizationService.Current;
-        _installing = true;
-        IsInstallEnabled = false;
-        InstallButtonText = loc.GetString("SettingsDownloading");
-        IsCheckUpdatesEnabled = false;
-
-        // Smooth determinate progress while the delta/full package
-        // downloads; the callback runs on a background thread. P1-2: the
-        // throttler coalesces the burst (percent delta or 100 ms) so the
-        // dispatcher is not flooded.
-        DownloadProgressVisibility = Visibility.Visible;
-        DownloadProgress = 0;
-        UpdateStatusMessage = loc.GetString("SettingsDownloadingProgress", 0);
-        _progressThrottler.Reset();
-
-        try
-        {
-            await _updates.DownloadPendingUpdateAsync(percent =>
-            {
-                if (!_progressThrottler.ShouldReport(percent, DateTimeOffset.UtcNow))
-                    return;
-                SetOnUiThread(() =>
-                {
-                    DownloadProgress = percent;
-                    UpdateStatusMessage = loc.GetString("SettingsDownloadingProgress", percent);
-                });
-            });
-            ct.ThrowIfCancellationRequested();
-
-            UpdateStatusMessage = loc.GetString("SettingsInstalling");
-            DownloadProgressVisibility = Visibility.Collapsed;
-            InstallButtonVisibility = Visibility.Collapsed;
-            NotificationService.Current.Success(
-                loc.GetString("NotifUpdates"), loc.GetString("UpdateDownloadedRestart"));
-
-            await Task.Delay(300, ct);
-            _updates.ApplyPendingUpdateAndRestart();
-        }
-        catch (OperationCanceledException)
-        {
-            ResetInstallState();
-        }
-        catch (Exception ex)
-        {
-            UpdateStatusMessage = loc.GetString("InstallFailedDetail", ex.Message);
-            DownloadProgressVisibility = Visibility.Collapsed;
-            IsInstallEnabled = true;
-            InstallButtonText = loc.GetString("SettingsInstall");
-            IsCheckUpdatesEnabled = true;
-            NotificationService.Current.Error(loc.GetString("SettingsCheckFailed"), ex.Message);
-        }
-        finally
-        {
-            _installing = false;
-        }
+        UpdateCardDescription = loc.GetString("SettingsCheckDesc");
+        UpdateStatusMessage = AppInfo.Current.VersionDisplay;
+        InstallButtonVisibility = Visibility.Collapsed;
     }
 
     /// <summary>
@@ -463,28 +292,6 @@ public partial class SettingsPageViewModel : ObservableObject
         return loc.GetString("SettingsUpdatesExternalAppInstaller");
     }
 
-    private void ResetInstallState()
-    {
-        var loc = LocalizationService.Current;
-        DownloadProgressVisibility = Visibility.Collapsed;
-        DownloadProgress = 0;
-        IsInstallEnabled = true;
-        InstallButtonText = loc.GetString("SettingsInstall");
-        IsCheckUpdatesEnabled = true;
-    }
-
-    private void SetOnUiThread(Action update)
-    {
-        try
-        {
-            if (_uiThread is null)
-                update();
-            else
-                _uiThread.Post(_ => update(), null);
-        }
-        catch { }
-    }
-
     partial void OnSelectedThemeIndexChanged(int value)
     {
         // Guard against programmatic resets (e.g. ComboBox display refresh):
@@ -515,6 +322,12 @@ public partial class SettingsPageViewModel : ObservableObject
     {
         if (!_loaded) return;
         try { SettingsService.Current.AutoCheck = value; } catch { }
+    }
+
+    partial void OnAutoInstallUpdatesChanged(bool value)
+    {
+        if (!_loaded) return;
+        try { SettingsService.Current.AutoInstallUpdates = value; } catch { }
     }
 
     partial void OnMinimizeToTrayChanged(bool value)

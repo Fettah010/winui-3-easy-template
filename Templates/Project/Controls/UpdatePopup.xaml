@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="DevTemWinUi3.Controls.UpdatePopup"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Update popup: full-window overlay + centered card. The dialog
+         service drives it imperatively (states live in code-behind, fed by
+         UpdateCenterViewModel); the entrance is a native-feel fade + scale.
+         All interactive elements carry AutomationIds for the smoke tests. -->
+    <Grid
+        x:Name="OverlayGrid"
+        AutomationProperties.AutomationId="UpdatePopupOverlay"
+        Background="{ThemeResource SmokeFillColorDefaultBrush}"
+        Visibility="Collapsed"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
+        <Border
+            x:Name="Card"
+            AutomationProperties.AutomationId="UpdatePopupCard"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="24"
+            Width="440"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Opacity="0">
+            <Border.RenderTransform>
+                <ScaleTransform x:Name="CardScale" ScaleX="0.96" ScaleY="0.96"/>
+            </Border.RenderTransform>
+            <StackPanel Spacing="12">
+                <TextBlock
+                    x:Name="TitleText"
+                    AutomationProperties.AutomationId="UpdatePopupTitle"
+                    Style="{ThemeResource SubtitleTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    TextWrapping="Wrap"/>
+                <TextBlock
+                    x:Name="StatusText"
+                    AutomationProperties.AutomationId="UpdatePopupStatus"
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap"/>
+                <ProgressBar
+                    x:Name="Bar"
+                    AutomationProperties.AutomationId="UpdatePopupProgress"
+                    Minimum="0"
+                    Maximum="100"
+                    Height="6"
+                    Visibility="Collapsed"/>
+                <TextBlock
+                    x:Name="NotesText"
+                    AutomationProperties.AutomationId="UpdatePopupNotes"
+                    Style="{ThemeResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap"
+                    MaxHeight="160"
+                    Visibility="Collapsed"
+                    IsTextSelectionEnabled="True"/>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0">
+                    <Button
+                        x:Name="SecondaryButton"
+                        AutomationProperties.AutomationId="UpdatePopupSecondary"
+                        Click="SecondaryButton_Click"/>
+                    <Button
+                        x:Name="PrimaryButton"
+                        AutomationProperties.AutomationId="UpdatePopupPrimary"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        Click="PrimaryButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

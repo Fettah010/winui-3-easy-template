@@ -299,6 +299,24 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
+    public void ClearLogs_EmptiesBuffer_AndRefreshesView()
+    {
+        // The Clear button actually clears (buffer + filters + view).
+        string tag = UniqueSource("Clr");
+        LoggingService.EventBuffer.Emit(TestEvents.Make("clear me", tag));
+        var vm = new DiagnosticsPageViewModel();
+        vm.SelectedViewIndex = DiagnosticsPageViewModel.ViewLive;
+        vm.LiveSourceFilter = tag;
+        Assert.IsNotEmpty(vm.LiveEvents);
+
+        vm.ClearLogsCommand.Execute(null);
+
+        Assert.IsEmpty(vm.LiveEvents);
+        Assert.AreEqual(string.Empty, vm.LiveSourceFilter);
+        Assert.AreEqual(0, LoggingService.EventBuffer.Count);
+    }
+
+    [TestMethod]
     public void ShortLevel_MapsKnownLevels()
     {
         Assert.AreEqual("INF", DiagnosticsPageViewModel.ShortLevel("Information"));

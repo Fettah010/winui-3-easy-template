@@ -62,4 +62,22 @@ public class BackgroundUpdateServiceTests
         // is pinned (true/false both acceptable headless).
         _ = BackgroundUpdateService.IsMeteredConnection();
     }
+
+    [TestMethod]
+    public async Task CheckForUpdates_AskModeOff_Unpackaged_ReturnsQuietly()
+    {
+        // Ask-mode (auto-install off) must also short-circuit quietly for
+        // unpackaged runs: no dialog service is initialized headless, and
+        // the guard runs before any popup path.
+        bool previous = SettingsService.Current.AutoInstallUpdates;
+        try
+        {
+            SettingsService.Current.AutoInstallUpdates = false;
+            await BackgroundUpdateService.Current.CheckForUpdatesAsync(null);
+        }
+        finally
+        {
+            try { SettingsService.Current.AutoInstallUpdates = previous; } catch { }
+        }
+    }
 }

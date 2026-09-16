@@ -383,6 +383,43 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void NewUpdatePopupKeys_AreTranslated()
+    {
+        // The animated popup + auto-install toggle + real Clear (no page).
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("Install updates automatically", loc.GetString("SettingsAutoInstall"));
+        Assert.AreEqual("Install now", loc.GetString("UpdateInstallNow"));
+        Assert.AreEqual("Later", loc.GetString("UpdateLater"));
+        Assert.AreEqual("Close", loc.GetString("UpdateClose"));
+        Assert.AreEqual("Retry", loc.GetString("UpdateRetry"));
+        Assert.AreEqual("Cancel", loc.GetString("UpdateCancel"));
+        Assert.AreEqual("Updates", loc.GetString("UpdatePopupTitle"));
+        Assert.AreEqual("Log view cleared", loc.GetString("DiagnosticsCleared"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("Instalar actualizaciones automáticamente", loc.GetString("SettingsAutoInstall"));
+        Assert.AreEqual("Instalar ahora", loc.GetString("UpdateInstallNow"));
+        Assert.AreEqual("Más tarde", loc.GetString("UpdateLater"));
+        Assert.AreEqual("Cerrar", loc.GetString("UpdateClose"));
+        Assert.AreEqual("Reintentar", loc.GetString("UpdateRetry"));
+        Assert.AreEqual("Cancelar", loc.GetString("UpdateCancel"));
+        Assert.AreEqual("Actualizaciones", loc.GetString("UpdatePopupTitle"));
+        Assert.AreEqual("Vista de registro borrada", loc.GetString("DiagnosticsCleared"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("Installer les mises à jour automatiquement", loc.GetString("SettingsAutoInstall"));
+        Assert.AreEqual("Installer", loc.GetString("UpdateInstallNow"));
+        Assert.AreEqual("Plus tard", loc.GetString("UpdateLater"));
+        Assert.AreEqual("Fermer", loc.GetString("UpdateClose"));
+        Assert.AreEqual("Réessayer", loc.GetString("UpdateRetry"));
+        Assert.AreEqual("Annuler", loc.GetString("UpdateCancel"));
+        Assert.AreEqual("Mises à jour", loc.GetString("UpdatePopupTitle"));
+        Assert.AreEqual("Journal effacé", loc.GetString("DiagnosticsCleared"));
+    }
+
+    [TestMethod]
     public void Dictionaries_ContainNoHardcodedVersions()
     {        var versionLike = new System.Text.RegularExpressions.Regex(@"\bv\d+\.\d+");
         var offenders = new System.Collections.Generic.List<string>();

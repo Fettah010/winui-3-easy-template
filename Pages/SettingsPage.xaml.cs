@@ -82,6 +82,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
         AutomationProperties.SetName(LanguageComboBox, loc.GetString("SettingsLanguage"));
         AutomationProperties.SetName(ChannelSegment, loc.GetString("SettingsChannelHeader"));
         AutomationProperties.SetName(AutoCheckToggle, loc.GetString("SettingsAutoCheckHeader"));
+        AutomationProperties.SetName(AutoInstallToggle, loc.GetString("SettingsAutoInstall"));
         AutomationProperties.SetName(MinimizeToTrayToggle, loc.GetString("SettingsMinimizeToTray"));
         AutomationProperties.SetName(AutoStartToggle, loc.GetString("SettingsAutoStart"));
     }
@@ -141,12 +142,9 @@ public sealed partial class SettingsPage : Page, INavigationAware
             return;
         _autoCheckArmed = false;
 
-        // Smart wait: run the check on the first actually-rendered frame so the
-        // user first sees Settings open smoothly (from Home or tray restore),
-        // then a short beat so the eye registers the page before the button
-        // flips to "Checking…". Falls back after a timeout; cancelled on leave.
-        // The check itself lives in the ViewModel (testable); this is pure
-        // view timing.
+        // Smart wait: open the popup on the first actually-rendered frame
+        // so the user first sees Settings open smoothly (from Home or tray
+        // restore). Falls back after a timeout; cancelled on leave.
         _autoCheckCts?.Cancel();
         _autoCheckCts = new CancellationTokenSource();
         var ct = _autoCheckCts.Token;
@@ -155,9 +153,8 @@ public sealed partial class SettingsPage : Page, INavigationAware
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeout.Token);
             await WaitForFirstRenderAsync(linked.Token);
-            await Task.Delay(150, ct);
             if (!ct.IsCancellationRequested)
-                await ViewModel.CheckForUpdatesAsync(ct);
+                await UpdateDialogService.ShowCheckAsync();
         }
         catch (OperationCanceledException) { }
         catch { }
@@ -184,19 +181,18 @@ public sealed partial class SettingsPage : Page, INavigationAware
         return tcs.Task;
     }
 
-    private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+    private void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
         // A manual click wins over any armed auto-check still waiting.
         _autoCheckArmed = false;
-        await ViewModel.CheckForUpdatesAsync();
+        _ = UpdateDialogService.ShowCheckAsync();
     }
 
-    private async void InstallUpdateButton_Click(object sender, RoutedEventArgs e) =>
-        await ViewModel.InstallPendingUpdateAsync();
-
-    private void OpenUpdateCenterButton_Click(object sender, RoutedEventArgs e)
+    private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        try { NavigationService.Current.NavigateTo("updates"); } catch { }
+        // Engine mode hides this button; the external-mode action routes
+        // to the update owner (Store / Windows Apps settings).
+        _ = ViewModel.OpenExternalUpdateSourceAsync();
     }
 
     private async void ImportSettingsButton_Click(object sender, RoutedEventArgs e)
