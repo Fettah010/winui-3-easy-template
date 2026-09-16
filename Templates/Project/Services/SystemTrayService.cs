@@ -20,7 +20,8 @@ public sealed class SystemTrayService : IDisposable
     private const int ID_TRAY_EXIT = 1004;
 
     private IntPtr _windowHandle;
-    private IntPtr _iconHandle;
+    private IntPtr _lightIconHandle;
+    private IntPtr _darkIconHandle;
     private NOTIFYICONDATAW _notifyIconData;
     private WndProcDelegate? _wndProcDelegate;
     private GCHandle _wndProcHandle;
@@ -59,6 +60,11 @@ public sealed class SystemTrayService : IDisposable
             _wndProcHandle = GCHandle.Alloc(_wndProcDelegate);
 
             CreateMessageWindow();
+
+            // P0-4: load both theme icons once here (deferred past the
+            // first frame by the caller); theme flips swap handles with
+            // zero disk I/O afterwards.
+            EnsureIconHandles();
 
             // Only show the icon when the user opted in. Creating it
             // unconditionally is why the app "went to tray" with the
@@ -142,7 +148,7 @@ public sealed class SystemTrayService : IDisposable
     /// <summary>
     /// Swaps the tray icon to the light/dark variant. No-op when the icon is
     /// currently hidden (the correct variant is picked on next <see cref="EnsureTrayIcon"/>).
-    /// Falls back to <c>app.ico</c> when variants are absent.
+    /// Performs no disk I/O: both handles are cached at <see cref="Initialize"/>.
     /// </summary>
     public void RefreshThemeIcon(bool isDark)
     {
@@ -151,15 +157,65 @@ public sealed class SystemTrayService : IDisposable
             _isDarkIcon = isDark;
             if (!_iconVisible)
                 return;
-            var iconPath = AppIconService.ResolveIconPath(AppContext.BaseDirectory, isDark);
+            EnsureIconHandles();
             RemoveTrayIcon();
-            CreateTrayIcon(iconPath);
+            CreateTrayIcon();
             _iconVisible = true;
         }
         catch (Exception ex)
         {
             AppLog.Error(ex, "Failed to refresh tray theme icon");
         }
+    }
+
+    /// <summary>
+    /// Loads both theme icon handles once (idempotent). Disk I/O happens
+    /// here and only here; every later flip swaps cached handles.
+    /// </summary>
+    private void EnsureIconHandles()
+    {
+        try
+        {
+            if (_lightIconHandle == IntPtr.Zero)
+                _lightIconHandle = LoadThemeIcon(false);
+            if (_darkIconHandle == IntPtr.Zero)
+                _darkIconHandle = LoadThemeIcon(true);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Failed to cache tray icons");
+        }
+    }
+
+    private static IntPtr LoadThemeIcon(bool isDark)
+    {
+        try
+        {
+            var iconPath = AppIconService.ResolveIconPath(AppContext.BaseDirectory, isDark);
+            if (!File.Exists(iconPath))
+            {
+                AppLog.Warning("Tray icon not found at {Path}", iconPath);
+                return IntPtr.Zero;
+            }
+            var handle = LoadImageW(IntPtr.Zero, iconPath, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+            if (handle == IntPtr.Zero)
+                AppLog.Warning("Failed to load tray icon");
+            return handle;
+        }
+        catch
+        {
+            return IntPtr.Zero;
+        }
+    }
+
+    /// <summary>Active cached handle for the current theme (either variant).</summary>
+    private IntPtr CurrentIconHandle()
+    {
+        var preferred = _isDarkIcon ? _darkIconHandle : _lightIconHandle;
+        if (preferred != IntPtr.Zero)
+            return preferred;
+        var fallback = _isDarkIcon ? _lightIconHandle : _darkIconHandle;
+        return fallback;
     }
 
     /// <summary>
@@ -209,23 +265,16 @@ public sealed class SystemTrayService : IDisposable
         _windowHandle = IntPtr.Zero;
     }
 
-    private void CreateTrayIcon(string? iconPath = null)
+    private void CreateTrayIcon()
     {
         if (_windowHandle == IntPtr.Zero || _iconVisible)
             return;
 
-        iconPath ??= AppIconService.ResolveIconPath(AppContext.BaseDirectory, _isDarkIcon);
-
-        if (!File.Exists(iconPath))
+        EnsureIconHandles();
+        var handle = CurrentIconHandle();
+        if (handle == IntPtr.Zero)
         {
-            AppLog.Warning("Tray icon not found at {Path}", iconPath);
-            return;
-        }
-
-        _iconHandle = LoadImageW(IntPtr.Zero, iconPath, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
-        if (_iconHandle == IntPtr.Zero)
-        {
-            AppLog.Warning("Failed to load tray icon");
+            AppLog.Warning("Tray icon not found (no cached handle)");
             return;
         }
 
@@ -236,7 +285,7 @@ public sealed class SystemTrayService : IDisposable
             uID = 1,
             uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP,
             uCallbackMessage = WM_TRAYICON,
-            hIcon = _iconHandle,
+            hIcon = handle,
             szTip = AppMetadata.TrayTooltip,
             uTimeoutOrVersion = NOTIFYICON_VERSION_4,
         };
@@ -261,12 +310,8 @@ public sealed class SystemTrayService : IDisposable
             _notifyIconData = new NOTIFYICONDATAW();
         }
 
-        if (_iconHandle != IntPtr.Zero)
-        {
-            DestroyIcon(_iconHandle);
-            _iconHandle = IntPtr.Zero;
-        }
-
+        // Cached theme handles stay alive across remove/add cycles (theme
+        // flips); they are destroyed once in Dispose.
         _iconVisible = false;
     }
 
@@ -383,6 +428,17 @@ public sealed class SystemTrayService : IDisposable
 
         RemoveTrayIcon();
         DestroyMessageWindow();
+
+        if (_lightIconHandle != IntPtr.Zero)
+        {
+            DestroyIcon(_lightIconHandle);
+            _lightIconHandle = IntPtr.Zero;
+        }
+        if (_darkIconHandle != IntPtr.Zero)
+        {
+            DestroyIcon(_darkIconHandle);
+            _darkIconHandle = IntPtr.Zero;
+        }
 
         if (_wndProcHandle.IsAllocated)
             _wndProcHandle.Free();

@@ -14,11 +14,15 @@ public static class FirstRunDialogService
     /// <summary>
     /// Shows the welcome dialog on first run or the what's-new dialog after
     /// an update, then records the version as shown. No-op otherwise.
+    /// P0-1: no fixed settle delay — the caller (MainWindow) already defers
+    /// this past the first frame, so waiting again only taxes launch.
     /// </summary>
     public static async Task ShowIfNeededAsync(Window window)
     {
         var firstRun = FirstRunService.Current;
-        await Task.Delay(500);
+        // Yield once so a caller that runs inline in window construction
+        // still lets the first frame render before the modal appears.
+        await Task.Yield();
 
         if (firstRun.IsFirstRun)
         {

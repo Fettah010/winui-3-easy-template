@@ -29,14 +29,9 @@ public sealed partial class MainWindow : Window
             ThemeService.Current.ApplyTo(themedRoot);
 
         // Window dressing (Mica, title bar, icon, min size, colors).
+        // P0-4: no icon disk I/O here — the initial theme icon resolves in
+        // InitializeDeferredServices, past the first frame.
         WindowChromeService.Current.Initialize(this, AppTitleBar);
-#if (tray)
-        if (Content is FrameworkElement themedRootForIcon)
-        {
-            bool initialDark = themedRootForIcon.ActualTheme == ElementTheme.Dark;
-            try { SystemTrayService.Current.RefreshThemeIcon(initialDark); } catch { }
-        }
-#endif
 
         // The built-in Settings item keeps the OS label, so set it
         // explicitly; declared nav items bind in XAML.
@@ -88,27 +83,60 @@ public sealed partial class MainWindow : Window
 #endif
             };
 
-#if (tray)
-        // Initialize system tray
-        SystemTrayService.Current.Initialize(this);
-        SystemTrayService.Current.NavigationRequested += OnTrayNavigationRequested;
-#endif
-
-        // Initialize notification services (in-app cards + OS toasts)
-        NotificationService.Current.Initialize(NotificationHost);
-#if (tray)
-        DesktopToastService.Current.Initialize();
-        DesktopToastService.Current.ActivationRequested += (_, _) =>
+        // P0-4: everything below is deferred past the first frame so the
+        // ctor only builds chrome + navigation. The low-priority enqueue
+        // runs after first render; a refusal falls back to inline init.
+        bool deferred = false;
+        try { deferred = DispatcherQueue.TryEnqueue(
+            Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            () => InitializeDeferredServices()); } catch { }
+        if (!deferred)
         {
-            try { DispatcherQueue.TryEnqueue(() => WindowActivator.ShowAndActivate(this)); } catch { }
-        };
-#endif
-
-        // Show first-run or what's-new dialog after window is shown
-        _ = FirstRunDialogService.ShowIfNeededAsync(this);
+            try { InitializeDeferredServices(); } catch { }
+        }
 
         // Listen for second-instance activation signals (single-instance enforcement)
         Program.StartActivationListener(this.DispatcherQueue, BringToFront);
+    }
+
+    /// <summary>
+    /// Post-first-frame init: tray icon/window, notifications, OS toasts,
+    /// and the first-run/what's-new flow. Runs on the UI thread via a
+    /// low-priority dispatcher item (see ctor). Never throws.
+    /// </summary>
+    private void InitializeDeferredServices()
+    {
+        try
+        {
+#if (tray)
+            if (Content is FrameworkElement themedRootForIcon)
+            {
+                bool initialDark = themedRootForIcon.ActualTheme == ElementTheme.Dark;
+                try { SystemTrayService.Current.RefreshThemeIcon(initialDark); } catch { }
+            }
+
+            // Initialize system tray
+            SystemTrayService.Current.Initialize(this);
+            SystemTrayService.Current.NavigationRequested += OnTrayNavigationRequested;
+#endif
+
+            // Initialize notification services (in-app cards + OS toasts)
+            NotificationService.Current.Initialize(NotificationHost);
+#if (tray)
+            DesktopToastService.Current.Initialize();
+            DesktopToastService.Current.ActivationRequested += (_, _) =>
+            {
+                try { DispatcherQueue.TryEnqueue(() => WindowActivator.ShowAndActivate(this)); } catch { }
+            };
+#endif
+
+            // Show first-run or what's-new dialog after window is shown
+            _ = FirstRunDialogService.ShowIfNeededAsync(this);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Deferred window services init failed");
+        }
     }
 
     private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
@@ -166,6 +194,9 @@ public sealed partial class MainWindow : Window
 #endif
 
         SaveWindowState();
+
+        // Flush any coalesced settings write (P0-2) before teardown.
+        try { LocalSettingsStore.FlushShared(); } catch { }
 
         // Flush any queued crash reports on the way out.
         CrashReportingService.Current.Shutdown();

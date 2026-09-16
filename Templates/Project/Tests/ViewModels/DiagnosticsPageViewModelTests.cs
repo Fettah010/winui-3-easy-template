@@ -50,10 +50,11 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
-    public void Refresh_SelectsSeedFile_WithFullTail()
+    public async Task Refresh_SelectsSeedFile_WithFullTail()
     {
         var vm = new DiagnosticsPageViewModel();
         vm.SelectedLogFile = Path.GetFileName(_logFile);
+        await vm.WaitForTailAsync();
 
         Assert.IsTrue(vm.HasLogs);
         Assert.Contains("hello world", vm.LogText);
@@ -63,12 +64,15 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
-    public void SearchText_FiltersLines_CaseInsensitive()
+    public async Task SearchText_FiltersLines_CaseInsensitive()
     {
         var vm = new DiagnosticsPageViewModel();
         vm.SelectedLogFile = Path.GetFileName(_logFile);
+        await vm.WaitForTailAsync();
+        vm.FilterDebounceDelay = TimeSpan.Zero;
 
         vm.SearchText = "BOOM";
+        await vm.WaitForFilterAsync();
 
         Assert.Contains("boom failed", vm.LogText);
         Assert.DoesNotContain("hello world", vm.LogText);
@@ -77,10 +81,11 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
-    public void LevelFilter_ShowsOnlyMatchingLines()
+    public async Task LevelFilter_ShowsOnlyMatchingLines()
     {
         var vm = new DiagnosticsPageViewModel();
         vm.SelectedLogFile = Path.GetFileName(_logFile);
+        await vm.WaitForTailAsync();
 
         vm.SelectedLevelIndex = DiagnosticsPageViewModel.LevelError;
 
@@ -90,14 +95,18 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
-    public void ClearSearch_RestoresFullTail()
+    public async Task ClearSearch_RestoresFullTail()
     {
         var vm = new DiagnosticsPageViewModel();
         vm.SelectedLogFile = Path.GetFileName(_logFile);
+        await vm.WaitForTailAsync();
+        vm.FilterDebounceDelay = TimeSpan.Zero;
         vm.SearchText = "boom";
+        await vm.WaitForFilterAsync();
         vm.SelectedLevelIndex = DiagnosticsPageViewModel.LevelError;
 
         vm.ClearSearchCommand.Execute(null);
+        await vm.WaitForFilterAsync();
 
         Assert.AreEqual(string.Empty, vm.SearchText);
         Assert.AreEqual(DiagnosticsPageViewModel.LevelAll, vm.SelectedLevelIndex);
@@ -105,13 +114,15 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
-    public void Refresh_KeepsSelection_WhenFileStillThere()
+    public async Task Refresh_KeepsSelection_WhenFileStillThere()
     {
         var vm = new DiagnosticsPageViewModel();
         vm.SelectedLogFile = Path.GetFileName(_logFile);
+        await vm.WaitForTailAsync();
         string selected = vm.SelectedLogFile!;
 
         vm.RefreshCommand.Execute(null);
+        await vm.WaitForTailAsync();
 
         Assert.AreEqual(selected, vm.SelectedLogFile);
         Assert.Contains("hello world", vm.LogText);
@@ -214,7 +225,7 @@ public class DiagnosticsPageViewModelTests
     }
 
     [TestMethod]
-    public void LiveFilter_Regex_MatchesPattern_AndFlagsInvalid()
+    public async Task LiveFilter_Regex_MatchesPattern_AndFlagsInvalid()
     {
         string tag = UniqueSource("Re");
         LoggingService.EventBuffer.Emit(TestEvents.Make("boom happened", tag));
@@ -224,11 +235,14 @@ public class DiagnosticsPageViewModelTests
         vm.SelectedViewIndex = DiagnosticsPageViewModel.ViewLive;
         vm.LiveSourceFilter = tag;
         vm.UseRegex = true;
+        vm.FilterDebounceDelay = TimeSpan.Zero;
         vm.SearchText = "boom|crash";
+        await vm.WaitForFilterAsync();
 
         Assert.HasCount(1, vm.LiveEvents);
 
         vm.SearchText = "[invalid";
+        await vm.WaitForFilterAsync();
 
         Assert.IsTrue(vm.HasLiveFilterError);
         Assert.IsEmpty(vm.LiveEvents);
@@ -267,6 +281,21 @@ public class DiagnosticsPageViewModelTests
         string text = vm.GetFilteredExportText();
         Assert.Contains("[INF]", text);
         Assert.Contains("export me", text);
+    }
+
+    [TestMethod]
+    public async Task SearchText_KeystrokeStorm_CoalescesToOneRecompute()
+    {
+        // P1-2: 10 keys with no pause collapse into a single recompute.
+        var vm = new DiagnosticsPageViewModel();
+        vm.FilterDebounceDelay = TimeSpan.FromMilliseconds(100);
+        int before = vm.DebouncedFilterRuns;
+
+        for (int i = 0; i < 10; i++)
+            vm.SearchText = "storm-" + i;
+        await vm.WaitForFilterAsync();
+
+        Assert.AreEqual(before + 1, vm.DebouncedFilterRuns);
     }
 
     [TestMethod]

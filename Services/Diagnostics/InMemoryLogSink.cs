@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace DevTemWinUi3.Services.Diagnostics;
 
@@ -18,13 +19,20 @@ public sealed class InMemoryLogSink
 
     private readonly ConcurrentQueue<LogEntry> _events = new();
     private readonly int _capacity;
+    private int _count;
 
     public InMemoryLogSink(int capacity = DefaultCapacity)
     {
         _capacity = capacity <= 0 ? DefaultCapacity : capacity;
     }
 
-    public int Count => _events.Count;
+    /// <summary>
+    /// Buffered event count. O(1): an <see cref="Interlocked"/> counter,
+    /// not the queue snapshot the old <c>ConcurrentQueue.Count</c> took
+    /// on every emit (P1-1). May lag the true length by a hair under
+    /// contention; never throws.
+    /// </summary>
+    public int Count => Math.Max(0, Volatile.Read(ref _count));
 
     public void Emit(LogEntry entry)
     {
@@ -33,7 +41,14 @@ public sealed class InMemoryLogSink
             if (entry is null)
                 return;
             _events.Enqueue(entry);
-            while (_events.Count > _capacity && _events.TryDequeue(out _)) { }
+            Interlocked.Increment(ref _count);
+            while (Volatile.Read(ref _count) > _capacity)
+            {
+                if (_events.TryDequeue(out _))
+                    Interlocked.Decrement(ref _count);
+                else
+                    break;
+            }
         }
         catch { }
     }

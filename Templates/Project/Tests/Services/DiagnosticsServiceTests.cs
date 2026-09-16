@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using DevTemWinUi3.Services;
@@ -162,6 +163,34 @@ public class DiagnosticsServiceTests
     {
         Assert.IsEmpty(DiagnosticsService.GetBufferedEvents(0));
         Assert.IsEmpty(DiagnosticsService.GetBufferedEvents(-1));
+    }
+
+    [TestMethod]
+    public void ReadLogTail_LargeFile_ReturnsBoundedTail()
+    {
+        // P1-2: multi-MB files take the early-exit window: the last line
+        // is present and the result stays far below the file size.
+        var dir = DiagnosticsService.LogDirectoryPath;
+        try { Directory.CreateDirectory(dir); } catch { }
+        var file = Path.Combine(dir, "applog-20990401.log");
+        try
+        {
+            using (var writer = new StreamWriter(file))
+            {
+                for (int i = 0; i < 60000; i++)
+                    writer.WriteLine("filler-line-" + i.ToString("D6", CultureInfo.InvariantCulture) + "-0123456789abcdef");
+                writer.WriteLine("FINAL-MARKER-LINE");
+            }
+            Assert.IsGreaterThan(1024 * 1024, new FileInfo(file).Length);
+            string tail = DiagnosticsService.ReadLogTail(file, 5);
+            Assert.Contains("FINAL-MARKER-LINE", tail);
+            Assert.IsLessThan(16 * 1024, tail.Length,
+                $"Tail should be bounded, was {tail.Length} chars");
+        }
+        finally
+        {
+            try { File.Delete(file); } catch { }
+        }
     }
 
     [TestMethod]

@@ -36,7 +36,8 @@ public sealed class UpdateService : IUpdateService, IDisposable
 
     public static UpdateService Current { get; } = new();
 
-    private readonly SemaphoreSlim _managerLock = new(1, 1);
+    private readonly object _gate = new();
+    private readonly SemaphoreSlim _initGate = new(1, 1);
     private UpdateManager? _manager;
     private string _channel = ChannelResolver.Stable;
 
@@ -48,8 +49,50 @@ public sealed class UpdateService : IUpdateService, IDisposable
     }
 
     /// <summary>
+    /// Whether the Velopack manager has been created. False before the
+    /// first <see cref="EnsureInitializedAsync"/> (or check/download):
+    /// every synchronous property below degrades to a safe default until
+    /// then instead of blocking the dispatcher (P0-3).
+    /// </summary>
+    public bool IsInitialized
+    {
+        get
+        {
+            try
+            {
+                lock (_gate)
+                {
+                    return _manager is not null;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Creates the Velopack manager off the calling thread (never blocks
+    /// it): construction + disk probes run on the thread pool behind an
+    /// async gate with double-checked init. Null when creation fails
+    /// (callers degrade to no-update). Never throws.
+    /// </summary>
+    public async Task EnsureInitializedAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _ = await GetManagerAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+        }
+    }
+
+    /// <summary>
     /// Whether the app was installed through the Velopack installer.
     /// Running straight from the build output or debugger, updates are unavailable.
+    /// Never blocks: false until <see cref="EnsureInitializedAsync"/> runs.
     /// </summary>
     public bool IsInstalled
     {
@@ -57,7 +100,10 @@ public sealed class UpdateService : IUpdateService, IDisposable
         {
             try
             {
-                return Manager.IsInstalled;
+                var manager = TryGetManager();
+                if (manager is null)
+                    return false;
+                return manager.IsInstalled;
             }
             catch
             {
@@ -72,7 +118,10 @@ public sealed class UpdateService : IUpdateService, IDisposable
         {
             try
             {
-                return Manager.CurrentVersion?.ToString() ?? AppInfo.Current.Version;
+                var manager = TryGetManager();
+                if (manager is not null)
+                    return manager.CurrentVersion?.ToString() ?? AppInfo.Current.Version;
+                return AppInfo.Current.Version;
             }
             catch
             {
@@ -81,40 +130,81 @@ public sealed class UpdateService : IUpdateService, IDisposable
         }
     }
 
-    private UpdateManager Manager
+    /// <summary>Fast-path read of an already-created manager. Never creates one.</summary>
+    private UpdateManager? TryGetManager()
     {
-        get
+        lock (_gate)
         {
-            _managerLock.Wait();
-            try
+            return _manager;
+        }
+    }
+
+    private async Task<UpdateManager?> GetManagerAsync(CancellationToken cancellationToken)
+    {
+        lock (_gate)
+        {
+            if (_manager is not null)
+                return _manager;
+        }
+
+        await _initGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            lock (_gate)
             {
                 if (_manager is not null)
                     return _manager;
+            }
 
-                var options = new UpdateOptions();
-                if (_channel is not "stable")
-                    options.ExplicitChannel = _channel;
+            string channel;
+            lock (_gate)
+            {
+                channel = _channel;
+            }
 
-                var token = ResolveToken();
-                AppLog.Information(
-                    "Update source: {RepoUrl} (channel {Channel}, token {HasToken})",
-                    GitHubRepoUrl, _channel, !string.IsNullOrWhiteSpace(token));
-
-                // accessToken is optional for public repos (unauthenticated
-                // GitHub is rate-limited to 60 requests/hour/IP). Set your PAT
-                // via GITHUB_TOKEN to avoid the limit.
-                var source = new GithubSource(
-                    GitHubRepoUrl,
-                    string.IsNullOrWhiteSpace(token) ? null : token,
-                    prerelease: false);
-
-                _manager = new UpdateManager(source, options, null);
+            var created = await Task.Run(
+                () => CreateManager(channel), cancellationToken).ConfigureAwait(false);
+            if (created is null)
+                return null;
+            lock (_gate)
+            {
+                _manager ??= created;
                 return _manager;
             }
-            finally
-            {
-                _managerLock.Release();
-            }
+        }
+        finally
+        {
+            try { _initGate.Release(); } catch { }
+        }
+    }
+
+    private static UpdateManager? CreateManager(string channel)
+    {
+        try
+        {
+            var options = new UpdateOptions();
+            if (channel is not "stable")
+                options.ExplicitChannel = channel;
+
+            var token = ResolveToken();
+            AppLog.Information(
+                "Update source: {RepoUrl} (channel {Channel}, token {HasToken})",
+                GitHubRepoUrl, channel, !string.IsNullOrWhiteSpace(token));
+
+            // accessToken is optional for public repos (unauthenticated
+            // GitHub is rate-limited to 60 requests/hour/IP). Set your PAT
+            // via GITHUB_TOKEN to avoid the limit.
+            var source = new GithubSource(
+                GitHubRepoUrl,
+                string.IsNullOrWhiteSpace(token) ? null : token,
+                prerelease: false);
+
+            return new UpdateManager(source, options, null);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Update manager creation failed");
+            return null;
         }
     }
 
@@ -124,19 +214,15 @@ public sealed class UpdateService : IUpdateService, IDisposable
     public void SetChannel(string channel)
     {
         channel = ChannelResolver.Normalize(channel);
-        if (_channel == channel)
-            return;
-
-        _managerLock.Wait();
-        try
+        lock (_gate)
         {
+            if (_channel == channel)
+                return;
             AppLog.Information("Update channel set to {Channel}", channel);
             _channel = channel;
-            _manager = null; // rebuilt lazily with the new channel
-        }
-        finally
-        {
-            _managerLock.Release();
+            // Dropped (not disposed: UpdateManager is not disposable);
+            // rebuilt lazily with the new channel.
+            _manager = null;
         }
     }
 
@@ -148,7 +234,13 @@ public sealed class UpdateService : IUpdateService, IDisposable
         {
             if (_pendingUpdate is not null)
                 return true;
-            try { return Manager.UpdatePendingRestart is not null; }
+            try
+            {
+                var manager = TryGetManager();
+                if (manager is null)
+                    return false;
+                return manager.UpdatePendingRestart is not null;
+            }
             catch { return false; }
         }
     }
@@ -161,7 +253,13 @@ public sealed class UpdateService : IUpdateService, IDisposable
     {
         get
         {
-            try { return Manager.UpdatePendingRestart?.Version?.ToString(); }
+            try
+            {
+                var manager = TryGetManager();
+                if (manager is null)
+                    return null;
+                return manager.UpdatePendingRestart?.Version?.ToString();
+            }
             catch { return null; }
         }
     }
@@ -169,11 +267,15 @@ public sealed class UpdateService : IUpdateService, IDisposable
     /// <summary>
     /// Checks the feed and stashes any update as the pending one (replacing
     /// any previous pending update). The result carries only the version +
-    /// upstream notes — no Velopack types leak to consumers.
+    /// upstream notes — no Velopack types leak to consumers. Initializes
+    /// the manager first (off-thread); null manager degrades to no-update.
     /// </summary>
     public async Task<UpdateCheckResult> CheckAsync()
     {
-        var update = await Manager.CheckForUpdatesAsync();
+        var manager = await GetManagerAsync(CancellationToken.None).ConfigureAwait(false);
+        if (manager is null)
+            return new UpdateCheckResult(false, null);
+        var update = await manager.CheckForUpdatesAsync().ConfigureAwait(false);
         _pendingUpdate = update;
         if (update is null)
             return new UpdateCheckResult(false, null);
@@ -188,12 +290,15 @@ public sealed class UpdateService : IUpdateService, IDisposable
     /// Downloads the pending update (from the last <see cref="CheckAsync"/>).
     /// No-op when nothing is pending.
     /// </summary>
-    public Task DownloadPendingUpdateAsync(Action<int>? progress = null)
+    public async Task DownloadPendingUpdateAsync(Action<int>? progress = null)
     {
         var pending = _pendingUpdate;
         if (pending is null)
-            return Task.CompletedTask;
-        return Manager.DownloadUpdatesAsync(pending, progress, CancellationToken.None);
+            return;
+        var manager = await GetManagerAsync(CancellationToken.None).ConfigureAwait(false);
+        if (manager is null)
+            return;
+        await manager.DownloadUpdatesAsync(pending, progress, CancellationToken.None).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -209,19 +314,34 @@ public sealed class UpdateService : IUpdateService, IDisposable
             : (Velopack.VelopackAsset) _pendingUpdate;
         if (pending is null)
             return;
-        Manager.ApplyUpdatesAndRestart(pending);
+        var manager = TryGetManager();
+        if (manager is null)
+            return;
+        manager.ApplyUpdatesAndRestart(pending);
         Environment.Exit(0);
     }
 
     private Velopack.VelopackAsset? TryGetDiskPending()
     {
-        try { return Manager.UpdatePendingRestart; }
+        try
+        {
+            var manager = TryGetManager();
+            if (manager is null)
+                return null;
+            return manager.UpdatePendingRestart;
+        }
         catch { return null; }
     }
 
     public void Dispose()
     {
-        _managerLock.Dispose();
+        lock (_gate)
+        {
+            // UpdateManager is not disposable; dropping the reference is
+            // the whole teardown.
+            _manager = null;
+        }
+        _initGate.Dispose();
         GC.SuppressFinalize(this);
     }
 }

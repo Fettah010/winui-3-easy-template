@@ -18,6 +18,8 @@ public sealed class SettingsService
     private const string KeyVerboseLogging = "VerboseLogging";
     private const string KeyCrashReports = "CrashReportsEnabled";
     private const string KeyChannelMigratedFor = "ChannelMigratedFor";
+    private const string KeyFastLaunch = "FastLaunch";
+    private const string KeyDownloadOnMetered = "DownloadOnMetered";
 
     public static SettingsService Current { get; } = new();
 
@@ -153,8 +155,31 @@ public sealed class SettingsService
     }
 
     /// <summary>
+    /// Opt-in fast launch (performance plan P0-1): entrance/transition
+    /// animations collapse to ~1 ms. Off by default; the visual language
+    /// is unchanged otherwise. <c>DEVTEM_FAST_LAUNCH=1</c> overrides this
+    /// without persisting.
+    /// </summary>
+    public bool FastLaunch
+    {
+        get => Store.Get(KeyFastLaunch, false);
+        set => Store.Set(KeyFastLaunch, value);
+    }
+
+    /// <summary>
+    /// Whether background update downloads may run on metered networks.
+    /// Off by default (checks still run; only the download is skipped).
+    /// </summary>
+    public bool DownloadOnMetered
+    {
+        get => Store.Get(KeyDownloadOnMetered, false);
+        set => Store.Set(KeyDownloadOnMetered, value);
+    }
+
+    /// <summary>
     /// Removes every user preference (theme, channel, tray, auto-check,
-    /// verbose logging, crash-report consent, pending-update state) so the
+    /// verbose logging, crash-report consent, fast launch, metered
+    /// downloads, pending-update state) so the
     /// next read returns defaults. The per-version channel-migration marker
     /// is kept: it is bookkeeping, not a preference. Language lives in
     /// <see cref="LocalizationService"/> and is reset separately
@@ -170,6 +195,8 @@ public sealed class SettingsService
             Store.Remove(KeyAutoCheck);
             Store.Remove(KeyVerboseLogging);
             Store.Remove(KeyCrashReports);
+            Store.Remove(KeyFastLaunch);
+            Store.Remove(KeyDownloadOnMetered);
             Store.Remove(KeyLastCheckTime);
             Store.Remove(KeyPendingVersion);
         }

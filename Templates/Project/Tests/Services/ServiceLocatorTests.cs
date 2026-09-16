@@ -104,4 +104,53 @@ public class ServiceLocatorTests
         Assert.IsNotNull(diag);
 #endif
     }
+
+    [TestMethod]
+    public void Shutdown_ResetsContainer_AndReinitializeWorks()
+    {
+        // P2-1 ownership rule: Shutdown tears down the provider (container-
+        // owned services go with it); process instances behind Current
+        // survive and re-register on the next Initialize.
+        ServiceLocator.Initialize();
+        Assert.IsNotNull(ServiceLocator.GetService<NavigationService>());
+        ServiceLocator.Shutdown();
+        try
+        {
+            _ = ServiceLocator.Services;
+            Assert.Fail("Services should throw after Shutdown.");
+        }
+        catch (InvalidOperationException) { }
+        ServiceLocator.Initialize();
+        Assert.AreSame(NavigationService.Current,
+            ServiceLocator.GetRequiredService<NavigationService>());
+    }
+
+    [TestMethod]
+    public void Modules_ResolveOneInstancePerService()
+    {
+        // P2-1: every module registration resolves (adding a service
+        // touches exactly one Add* module plus this list).
+        ServiceLocator.Initialize();
+#if (database)
+        Assert.AreSame(DatabaseService.Current,
+            ServiceLocator.GetRequiredService<DatabaseService>());
+#else
+        Assert.AreSame(NavigationService.Current,
+            ServiceLocator.GetRequiredService<NavigationService>());
+#endif
+#if (updates == 'velopack')
+        Assert.AreSame(UpdateService.Current,
+            ServiceLocator.GetRequiredService<IUpdateService>());
+#endif
+#if (updates == 'basic')
+        Assert.AreSame(BasicGithubUpdateService.Current,
+            ServiceLocator.GetRequiredService<IUpdateService>());
+#endif
+#if (tray)
+        Assert.AreSame(SystemTrayService.Current,
+            ServiceLocator.GetRequiredService<SystemTrayService>());
+#else
+        Assert.IsNotNull(ServiceLocator.GetService<IFilePickerService>());
+#endif
+    }
 }

@@ -11,6 +11,10 @@ public sealed partial class HomePage : Page, INavigationAware
     public HomePage()
     {
         this.InitializeComponent();
+        // P2-3 caching policy: lightweight pages stay cached (no XAML
+        // re-parse per nav); heavy pages (Diagnostics log tails) stay
+        // transient — the default. See docs/DECISIONS.md.
+        this.NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
     }
 
     public void OnNavigatedTo(object? parameter)

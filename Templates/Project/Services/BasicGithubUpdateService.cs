@@ -68,6 +68,16 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
     /// </summary>
     public string? PendingRestartVersion => null;
 
+    /// <summary>
+    /// Always true: the basic backend needs no initialization (symmetry
+    /// with <see cref="UpdateService.IsInitialized"/> for shared callers).
+    /// </summary>
+    public bool IsInitialized => true;
+
+    /// <summary>No-op: nothing to initialize (see <see cref="IsInitialized"/>).</summary>
+    public Task EnsureInitializedAsync(CancellationToken cancellationToken = default) =>
+        Task.CompletedTask;
+
     private HttpClient Http
     {
         get

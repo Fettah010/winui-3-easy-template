@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -132,6 +133,30 @@ public partial class DiagnosticsPageViewModel : ObservableObject
 
     private string _fullLogText = string.Empty;
     private int _liveTotalAtPause;
+    private CancellationTokenSource? _filterCts;
+    private Task _tailTask = Task.CompletedTask;
+    private Task _filterTask = Task.CompletedTask;
+
+    /// <summary>
+    /// Keystroke-debounce window for the shared search box (P1-2). Tests
+    /// shrink it; production keeps 200 ms.
+    /// </summary>
+    internal TimeSpan FilterDebounceDelay { get; set; } = TimeSpan.FromMilliseconds(200);
+
+    /// <summary>Debounced filter executions (tests pin the coalescing).</summary>
+    internal int DebouncedFilterRuns { get; private set; }
+
+    /// <summary>
+    /// Latest tail-load task (tests await it instead of sleeping).
+    /// Never null, never throws.
+    /// </summary>
+    internal Task WaitForTailAsync() => _tailTask;
+
+    /// <summary>
+    /// Latest debounced-filter task (tests await it instead of sleeping).
+    /// Never null, never throws.
+    /// </summary>
+    internal Task WaitForFilterAsync() => _filterTask;
 
     public DiagnosticsPageViewModel(IFilePickerService? pickers = null)
     {
@@ -143,13 +168,13 @@ public partial class DiagnosticsPageViewModel : ObservableObject
         Refresh();
     }
 
-    partial void OnSelectedLogFileChanged(string? value) => LoadTail();
+    partial void OnSelectedLogFileChanged(string? value) => _tailTask = LoadTailAsync();
 
     partial void OnSearchTextChanged(string value)
     {
-        ApplyFilter();
-        if (SelectedViewIndex == ViewLive && !IsLivePaused)
-            ApplyLiveFilter();
+        // P1-2: per-keystroke full scans + hundreds of ListView
+        // re-realizations become one recompute per pause in typing.
+        _filterTask = DebounceFilterAsync();
     }
 
     partial void OnSelectedLevelIndexChanged(int value) => ApplyFilter();
@@ -472,6 +497,82 @@ public partial class DiagnosticsPageViewModel : ObservableObject
             _fullLogText = string.Empty;
             ApplyFilter();
         }
+    }
+
+    /// <summary>
+    /// Tail load off the UI thread (P1-2): the file read — now capped with
+    /// early-exit in <see cref="DiagnosticsService.ReadLogTail"/> — runs on
+    /// the pool, only the filter applies on the caller thread. Never throws.
+    /// </summary>
+    private async Task LoadTailAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(SelectedLogFile))
+            {
+                _fullLogText = string.Empty;
+                ApplyFilter();
+                return;
+            }
+            string? selected = SelectedLogFile;
+            string text = await Task.Run(() =>
+            {
+                try
+                {
+                    var full = DiagnosticsService.GetLogFiles()
+                        .FirstOrDefault(p => Path.GetFileName(p) == selected);
+                    return full is null ? string.Empty : DiagnosticsService.ReadLogTail(full);
+                }
+                catch
+                {
+                    return string.Empty;
+                }
+            });
+            // A newer selection may have started loading meanwhile; the
+            // last writer wins, which matches the visible selection order
+            // closely enough for a diagnostics view (never throws).
+            _fullLogText = text;
+            ApplyFilter();
+        }
+        catch
+        {
+            _fullLogText = string.Empty;
+            try { ApplyFilter(); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// Debounced filter recompute for the shared search box (P1-2): rapid
+    /// keystrokes collapse into one <see cref="ApplyFilter"/> (+ live
+    /// filter) per pause. Never throws.
+    /// </summary>
+    private async Task DebounceFilterAsync()
+    {
+        CancellationTokenSource? cts = null;
+        try
+        {
+            try { _filterCts?.Cancel(); } catch { }
+            try { _filterCts?.Dispose(); } catch { }
+            cts = new CancellationTokenSource();
+            _filterCts = cts;
+            await Task.Delay(FilterDebounceDelay, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch
+        {
+            return;
+        }
+        try
+        {
+            DebouncedFilterRuns++;
+            ApplyFilter();
+            if (SelectedViewIndex == ViewLive && !IsLivePaused)
+                ApplyLiveFilter();
+        }
+        catch { }
     }
 
     /// <summary>

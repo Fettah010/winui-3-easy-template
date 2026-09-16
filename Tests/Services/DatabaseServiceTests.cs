@@ -1,5 +1,8 @@
+using System;
+using System.IO;
 using System.Threading.Tasks;
 using DevTemWinUi3.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DevTemWinUi3.Tests.Services;
@@ -56,5 +59,79 @@ public class DatabaseServiceTests
         await db.ExecuteAsync("INSERT OR REPLACE INTO Settings (Key, Value) VALUES ('k', 'v')");
         var result = await db.ExecuteScalarAsync<string>("SELECT Value FROM Settings WHERE Key = 'k'");
         Assert.AreEqual("v", result);
+    }
+
+    [TestMethod]
+    public async Task Migrations_ApplyInOrder_AndAreIdempotent()
+    {
+        // P1-3: fresh DBs land on the current schema version; re-running
+        // applies nothing (kill-during-init safety).
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".db");
+        try
+        {
+            var db = new DatabaseService(path);
+            await db.InitializeAsync();
+            Assert.IsTrue(db.IsInitialized);
+            Assert.AreEqual(DatabaseService.CurrentSchemaVersion,
+                await ReadVersionAsync(path));
+
+            var again = new DatabaseService(path);
+            await again.InitializeAsync();
+            Assert.IsTrue(again.IsInitialized);
+            Assert.AreEqual(DatabaseService.CurrentSchemaVersion,
+                await ReadVersionAsync(path));
+        }
+        finally
+        {
+            TryDelete(path);
+        }
+    }
+
+    [TestMethod]
+    public async Task FailedFirstInit_Retries_AndRecovers()
+    {
+        // P1-3: a failed first init no longer latches success — the next
+        // call after the cause is gone succeeds.
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(path); // a directory where the file goes: open fails
+        try
+        {
+            var broken = new DatabaseService(path);
+            await broken.InitializeAsync();
+            Assert.IsFalse(broken.IsInitialized);
+
+            Directory.Delete(path);
+            var recovered = new DatabaseService(path);
+            await recovered.InitializeAsync();
+            Assert.IsTrue(recovered.IsInitialized);
+            Assert.IsTrue(File.Exists(path));
+        }
+        finally
+        {
+            TryDelete(path);
+        }
+    }
+
+    private static async Task<int> ReadVersionAsync(string path)
+    {
+        await using var connection = new SqliteConnection($"Data Source={path}");
+        await connection.OpenAsync();
+        return await DatabaseService.ReadSchemaVersionAsync(connection);
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+            else if (Directory.Exists(path))
+                Directory.Delete(path, true);
+            foreach (var extra in new[] { path + "-wal", path + "-shm", path + "-journal" })
+            {
+                try { if (File.Exists(extra)) File.Delete(extra); } catch { }
+            }
+        }
+        catch { }
     }
 }

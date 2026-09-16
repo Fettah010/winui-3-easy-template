@@ -43,9 +43,24 @@ public static class DiagnosticsService
         {
             try
             {
-                var primary = Path.Combine(AppContext.BaseDirectory, LoggingService.LogDirectory);
-                if (Directory.Exists(primary))
-                    return primary;
+                // Source of truth is the logging backend's resolved
+                // directory (packaged vs portable aware). The legacy
+                // BaseDirectory probe stays as a fallback for trees that
+                // wrote logs next to the binary.
+                string current;
+                try
+                {
+                    current = LoggingService.CurrentLogDirectory;
+                }
+                catch
+                {
+                    current = string.Empty;
+                }
+                if (!string.IsNullOrWhiteSpace(current) && Directory.Exists(current))
+                    return current;
+                var legacy = Path.Combine(AppContext.BaseDirectory, LoggingService.LogDirectory);
+                if (Directory.Exists(legacy))
+                    return legacy;
                 return Path.Combine(Path.GetTempPath(), AppMetadata.AppDataFolder, LoggingService.LogDirectory);
             }
             catch
@@ -112,15 +127,16 @@ public static class DiagnosticsService
     }
 
     /// <summary>
-    /// SQLite file size in bytes, -1 when there is no database. Resolved by
-    /// convention (not via <c>DatabaseService</c>, which template scaffolds
-    /// may exclude) and guarded per file. Never throws.
+    /// SQLite file size in bytes, -1 when there is no database. Resolved
+    /// from the real data root (<see cref="AppPaths.DataFolder"/>, P1-3) —
+    /// not <c>AppContext.BaseDirectory</c>, which disagrees with it on
+    /// packaged runs. Never throws.
     /// </summary>
     private static long GetDatabaseFileSize()
     {
         try
         {
-            var path = Path.Combine(AppContext.BaseDirectory, "Data", "app.db");
+            var path = Path.Combine(AppPaths.DataFolder, "Data", "app.db");
             return File.Exists(path) ? new FileInfo(path).Length : -1;
         }
         catch
@@ -233,9 +249,13 @@ public static class DiagnosticsService
     /// outside the log directory. Empty string on any error. Opens with
     /// <see cref="FileShare.ReadWrite"/> so the Serilog writer lock never
     /// blanks the view, and keeps only the tail in memory.
+    /// P1-2: files over <see cref="TailSeekThresholdBytes"/> are read from
+    /// a bounded window near the end (early-exit) instead of scanned whole.
     /// </summary>
     public static string ReadLogTail(string path, int maxLines = DefaultTailLines)
     {
+        const long TailSeekThresholdBytes = 1024L * 1024;
+        const long TailWindowBytes = 256L * 1024;
         try
         {
             if (string.IsNullOrWhiteSpace(path) || maxLines <= 0)
@@ -249,10 +269,29 @@ public static class DiagnosticsService
                 return string.Empty;
             var tail = new Queue<string>(Math.Min(maxLines, 1024));
             using var stream = new FileStream(full, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            long offset = 0;
+            try
+            {
+                if (stream.Length > TailSeekThresholdBytes)
+                    offset = Math.Max(0, stream.Length - TailWindowBytes);
+                stream.Seek(offset, SeekOrigin.Begin);
+            }
+            catch
+            {
+                try { stream.Seek(0, SeekOrigin.Begin); } catch { }
+                offset = 0;
+            }
             using var reader = new StreamReader(stream);
             string? line;
+            bool skippedPartial = false;
             while ((line = reader.ReadLine()) is not null)
             {
+                // A mid-file seek starts mid-line: drop the fragment.
+                if (offset > 0 && !skippedPartial)
+                {
+                    skippedPartial = true;
+                    continue;
+                }
                 if (tail.Count == maxLines)
                     tail.Dequeue();
                 tail.Enqueue(line);

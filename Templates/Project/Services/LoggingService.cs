@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using DevTemWinUi3.Services.Diagnostics;
 using Microsoft.Extensions.Logging;
 #if (logging == 'serilog')
@@ -16,12 +17,13 @@ namespace DevTemWinUi3.Services;
 
 /// <summary>
 /// Central logging setup for the app. The backend is a scaffold-time
-/// choice (<c>__LOGGING__</c>): serilog (debugger console + rolling files),
-/// mel (debugger + optional Event Log, no files), or none (no-op, with the
-/// in-memory buffer only when health is on). App code logs through the
-/// backend-agnostic <see cref="AppLog"/> facade; the public surface here
-/// stays backend-neutral (<see cref="LogLevel"/>, not Serilog types) so
-/// the diagnostics page and tests compile for every backend.
+/// choice (<c>__LOGGING__</c>): serilog (debugger console + rolling files,
+/// 14 days + 256 MB directory cap), mel (debugger + optional Event Log,
+/// no files), or none (no-op, with the in-memory buffer only when health
+/// is on). App code logs through the backend-agnostic <see cref="AppLog"/>
+/// facade; the public surface here stays backend-neutral
+/// (<see cref="LogLevel"/>, not Serilog types) so the diagnostics page
+/// and tests compile for every backend.
 /// </summary>
 public static class LoggingService
 {
@@ -56,7 +58,11 @@ public static class LoggingService
     private const string OutputTemplate =
         "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{Level:u3}] {Message:lj}{NewLine}{Exception}";
 
-    private static readonly LoggingLevelSwitch _levelSwitch = new(LogEventLevel.Debug);
+    private static readonly LoggingLevelSwitch _levelSwitch = new(DefaultSerilogLevel);
+
+    /// <summary>Compile-time default: Debug in Debug builds, Information in Release (P1-1).</summary>
+    internal static LogEventLevel DefaultSerilogLevel =>
+        IsDebugBuild ? LogEventLevel.Debug : LogEventLevel.Information;
 #endif
 #if (logging == 'mel')
     private static ILoggerFactory? _factory;
@@ -70,11 +76,38 @@ public static class LoggingService
     /// <summary>Live event buffer (newest ~1 000 events). Never null.</summary>
     public static InMemoryLogSink EventBuffer { get; } = new InMemoryLogSink();
 
+    /// Whether this is a Debug build (P1-1 level defaults). Detected at
+    /// runtime via <c>DebuggableAttribute</c>: a compile-time DEBUG
+    /// conditional would be evaluated at scaffold time (freezing the wrong
+    /// level into scaffolds), so all backends share this runtime check.
+    /// Never throws.
+    internal static bool IsDebugBuild
+    {
+        get
+        {
+            try
+            {
+                var attribute = typeof(LoggingService).Assembly
+                    .GetCustomAttribute<System.Diagnostics.DebuggableAttribute>();
+                return attribute is not null && attribute.IsJITOptimizerDisabled;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    /// <summary>Compile-time default mirroring the backend default level.</summary>
+    internal static LogLevel DefaultMinimumLevel =>
+        IsDebugBuild ? LogLevel.Debug : LogLevel.Information;
+
     /// <summary>
     /// Effective minimum level (the diagnostics page displays it).
-    /// Defaults to Debug before <see cref="Initialize"/> runs.
+    /// Defaults to Debug in Debug builds and Information in Release
+    /// before <see cref="Initialize"/> runs.
     /// </summary>
-    public static LogLevel MinimumLevel { get; private set; } = LogLevel.Debug;
+    public static LogLevel MinimumLevel { get; private set; } = DefaultMinimumLevel;
 
     /// <summary>
     /// Resolved log directory (set by <see cref="Initialize"/>; defaults to
@@ -84,6 +117,59 @@ public static class LoggingService
     /// </summary>
     public static string CurrentLogDirectory { get; private set; } =
         Path.Combine(AppPaths.DataFolder, LogDirectory);
+
+    /// <summary>
+    /// Byte cap for the log directory (P1-1): count retention alone lets a
+    /// verbose 10x-service app grow %LocalAppData% without bound. Oldest
+    /// files go first; enforced at init. Backend-neutral (the quota call
+    /// lives in the serilog init; other backends keep no files). Never throws.
+    /// </summary>
+    public const long LogDirectorySizeCapBytes = 256L * 1024 * 1024;
+
+    /// <summary>
+    /// Deletes oldest <c>applog-*.log</c> files while the directory exceeds
+    /// <paramref name="capBytes"/>. Pure enough for headless tests (real
+    /// directory, fake files). Never throws.
+    /// </summary>
+    internal static void EnforceDirectoryQuota(string directory, long capBytes)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(directory) || capBytes <= 0)
+                return;
+            var dir = new DirectoryInfo(directory);
+            if (!dir.Exists)
+                return;
+            var files = dir.GetFiles("applog-*.log");
+            long total = 0;
+            foreach (var file in files)
+            {
+                try { total += file.Length; } catch { }
+            }
+            if (total <= capBytes)
+                return;
+            Array.Sort(files, static (left, right) =>
+            {
+                int byTime = left.LastWriteTimeUtc.CompareTo(right.LastWriteTimeUtc);
+                if (byTime != 0)
+                    return byTime;
+                return string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase);
+            });
+            foreach (var file in files)
+            {
+                if (total <= capBytes)
+                    break;
+                try
+                {
+                    long length = file.Length;
+                    file.Delete();
+                    total -= length;
+                }
+                catch { }
+            }
+        }
+        catch { }
+    }
 
     public static void Initialize()
     {
@@ -155,12 +241,13 @@ public static class LoggingService
         // Route the AppLog facade (Microsoft.Extensions.Logging) into this
         // pipeline. Call sites stay untouched across backends.
         try { AppLog.Initialize(new SerilogLoggerFactory(log, dispose: false)); } catch { }
+        try { EnforceDirectoryQuota(logPath, LogDirectorySizeCapBytes); } catch { }
         AppLog.Information("Logging initialized. Log path: {LogPath}", logPath);
 #endif
 #if (logging == 'mel')
         bool verbose = false;
         try { verbose = SettingsService.Current.VerboseLogging; } catch { }
-        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        MinimumLevel = verbose ? LogLevel.Trace : DefaultMinimumLevel;
         CurrentLogDirectory = Path.Combine(AppPaths.DataFolder, LogDirectory);
 
         lock (_factoryLock)
@@ -174,7 +261,7 @@ public static class LoggingService
 #if (logging == 'none')
         bool verbose = false;
         try { verbose = SettingsService.Current.VerboseLogging; } catch { }
-        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        MinimumLevel = verbose ? LogLevel.Trace : DefaultMinimumLevel;
         CurrentLogDirectory = Path.Combine(AppPaths.DataFolder, LogDirectory);
 
         var factory = LoggerFactory.Create(static builder =>
@@ -189,7 +276,8 @@ public static class LoggingService
     }
 
     /// <summary>
-    /// Switches between Debug (default) and Trace minimum levels at
+    /// Switches between the compile-time default (Debug in Debug builds,
+    /// Information in Release) and Trace minimum levels at
     /// runtime (verbose toggle). Never throws.
     /// </summary>
     public static void SetVerbose(bool verbose)
@@ -204,8 +292,8 @@ public static class LoggingService
 #if (logging == 'serilog')
     private static void ApplyLevel(bool verbose)
     {
-        _levelSwitch.MinimumLevel = verbose ? LogEventLevel.Verbose : LogEventLevel.Debug;
-        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        _levelSwitch.MinimumLevel = verbose ? LogEventLevel.Verbose : DefaultSerilogLevel;
+        MinimumLevel = verbose ? LogLevel.Trace : DefaultMinimumLevel;
     }
 #endif
 #if (logging == 'mel')
@@ -223,7 +311,7 @@ public static class LoggingService
 
     private static void ApplyLevel(bool verbose)
     {
-        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        MinimumLevel = verbose ? LogLevel.Trace : DefaultMinimumLevel;
         lock (_factoryLock)
         {
             _factory?.Dispose();
@@ -235,7 +323,7 @@ public static class LoggingService
 #if (logging == 'none')
     private static void ApplyLevel(bool verbose)
     {
-        MinimumLevel = verbose ? LogLevel.Trace : LogLevel.Debug;
+        MinimumLevel = verbose ? LogLevel.Trace : DefaultMinimumLevel;
     }
 #endif
 }

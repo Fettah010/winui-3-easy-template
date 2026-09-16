@@ -76,7 +76,9 @@ public sealed class NavigationService
 
             (_frame.Content as INavigationAware)?.OnNavigatedFrom();
 
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             var success = _frame.Navigate(pageType, parameter);
+            watch.Stop();
             if (success)
             {
                 _currentTag = tag;
@@ -84,7 +86,9 @@ public sealed class NavigationService
                 (_frame.Content as INavigationAware)?.OnNavigatedTo(parameter);
                 try
                 {
-                    Diagnostics.AppMetrics.RecordNavigation(tag);
+                    // P2-3: count + time every navigation (last-value per
+                    // page feeds the diagnostics nav-timing display).
+                    Diagnostics.AppMetrics.RecordNavigation(tag, watch.Elapsed.TotalMilliseconds);
                     CrashReportingService.AddBreadcrumb("Navigate: " + tag, "navigation");
                 }
                 catch { }

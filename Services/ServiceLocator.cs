@@ -28,6 +28,13 @@ public static class ServiceLocator
 
     /// <summary>
     /// Initializes the DI container. Call once at startup (in App.xaml.cs or Program.cs).
+    /// Composition root with feature modules (performance plan P2-1): each
+    /// <c>Add*</c> method owns one area, so a new service touches exactly
+    /// one module. Ownership rule (see <c>docs/DECISIONS.md</c>):
+    /// process-lifetime instances are owned by their <c>Current</c>
+    /// accessor (the container only references them); type-registered
+    /// services are container-owned and disposed with <see cref="Shutdown"/>.
+    /// No generic host by design (see the class doc).
     /// </summary>
     public static void Initialize()
     {
@@ -42,37 +49,67 @@ public static class ServiceLocator
             // infrastructure registrations below this marker unchanged.
             // </devtem:services>
 
-            // Singleton services (process-lifetime objects expose Current;
-            // the container owns the registration so there is one composition
-            // root instead of scattered news).
-            services.AddSingleton<DatabaseService>(DatabaseService.Current);
-            services.AddSingleton<WindowStateService>(WindowStateService.Current);
-            services.AddSingleton<FirstRunService>(FirstRunService.Current);
-            services.AddSingleton<LocalizationService>(LocalizationService.Current);
-            services.AddSingleton<AppInfo>(AppInfo.Current);
-            services.AddSingleton<ThemeService>(ThemeService.Current);
-            services.AddSingleton<UpdateService>(UpdateService.Current);
-            services.AddSingleton<IUpdateService>(UpdateService.Current);
-            services.AddSingleton<IFilePickerService, FilePickerService>();
-            services.AddSingleton<SystemTrayService>(SystemTrayService.Current);
-            services.AddSingleton<NavigationService>(NavigationService.Current);
-            services.AddSingleton<DesktopToastService>(DesktopToastService.Current);
-
-            // ViewModels are transient: each page gets a fresh instance.
-            services.AddTransient<ViewModels.SettingsPageViewModel>();
-            services.AddTransient<ViewModels.DiagnosticsPageViewModel>();
-            services.AddTransient<ViewModels.UpdateCenterViewModel>();
-            services.AddTransient<ViewModels.SetupWizardViewModel>();
-
-            // HTTP client (transient by default)
-                    services.AddHttpClient<ApiService>(client =>
-                    {
-                        client.Timeout = TimeSpan.FromSeconds(30);
-                        client.DefaultRequestHeaders.Add("User-Agent", AppMetadata.UserAgent);
-                    });
+            AddData(services);
+            AddUpdates(services);
+            AddPresence(services);
+            AddCore(services);
+            AddHttp(services);
 
             _provider = services.BuildServiceProvider();
         }
+    }
+
+    /// <summary>Persistence module: the local database.</summary>
+    private static void AddData(ServiceCollection services)
+    {
+        // Singleton services (process-lifetime objects expose Current;
+        // the container owns the registration so there is one composition
+        // root instead of scattered news).
+        services.AddSingleton<DatabaseService>(DatabaseService.Current);
+    }
+
+    /// <summary>Updates module: whichever engine the app was built with.</summary>
+    private static void AddUpdates(ServiceCollection services)
+    {
+        services.AddSingleton<UpdateService>(UpdateService.Current);
+        services.AddSingleton<IUpdateService>(UpdateService.Current);
+    }
+
+    /// <summary>Presence module: tray icon and OS toasts.</summary>
+    private static void AddPresence(ServiceCollection services)
+    {
+        services.AddSingleton<SystemTrayService>(SystemTrayService.Current);
+        services.AddSingleton<DesktopToastService>(DesktopToastService.Current);
+    }
+
+    /// <summary>Core module: state, navigation, and page view models.</summary>
+    private static void AddCore(ServiceCollection services)
+    {
+        services.AddSingleton<WindowStateService>(WindowStateService.Current);
+        services.AddSingleton<FirstRunService>(FirstRunService.Current);
+        services.AddSingleton<LocalizationService>(LocalizationService.Current);
+        services.AddSingleton<AppInfo>(AppInfo.Current);
+        services.AddSingleton<ThemeService>(ThemeService.Current);
+        services.AddSingleton<IFilePickerService, FilePickerService>();
+        services.AddSingleton<NavigationService>(NavigationService.Current);
+
+        // ViewModels are transient: each page gets a fresh instance.
+        services.AddTransient<ViewModels.SettingsPageViewModel>();
+        services.AddTransient<ViewModels.DiagnosticsPageViewModel>();
+        services.AddTransient<ViewModels.UpdateCenterViewModel>();
+        services.AddTransient<ViewModels.SetupWizardViewModel>();
+    }
+
+    /// <summary>HTTP module: typed clients with the resilience kit (P2-2).</summary>
+    private static void AddHttp(ServiceCollection services)
+    {
+        services.AddTransient<ExponentialRetryHandler>();
+        // HTTP client (transient by default)
+        services.AddHttpClient<ApiService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Add("User-Agent", AppMetadata.UserAgent);
+        }).AddHttpMessageHandler<ExponentialRetryHandler>();
     }
 
     /// <summary>

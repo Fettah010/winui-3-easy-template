@@ -83,6 +83,9 @@ public partial class App : Application
         await Task.Run(() =>
         {
             ServiceLocator.Initialize();
+            // Warm the settings cache off the UI thread so later Gets are
+            // memory-only (P0-2); the first load is the only disk touch.
+            LocalSettingsStore.PreloadShared();
             LocalizationService.Current.Initialize();
             // Unpackaged installs have no manifest: claim our deep-link
             // scheme per-user (HKCU, no admin); MSIX covers itself.
@@ -98,24 +101,38 @@ public partial class App : Application
             "Services ready after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
     }
 
-    private async Task TransitionToMainWindow()
+    private Task TransitionToMainWindow()
     {
-        if (_splash is null || _mainWindow is null) return;
+        if (_splash is null || _mainWindow is null) return Task.CompletedTask;
 
-        // Close splash with animation
-        var splashCloseTask = _splash.CloseWithAnimation();
-
-        // Small overlap — start activating main window before splash fully closes
-        await Task.Delay(100);
-
-        _mainWindow.Activate();
+        // P0-1: no fixed sleeps on the critical path. The splash close
+        // animation runs while the main window activates underneath it;
+        // time-to-interactive is the Activate, not the fade. The entrance
+        // animation is fire-and-forget for the same reason.
+        var splash = _splash;
         _splash = null;
 
-        // Wait for splash close animation to finish
-        await splashCloseTask;
+        _mainWindow.Activate();
 
-        // Fade in main window content
-        await WindowChromeService.Current.PlayEntranceAnimation(_mainWindow.ContentRoot);
+        // Splash teardown (its close animation, then Close) finishes in the
+        // background; a fault there must never take down the launch.
+        _ = splash.CloseWithAnimation().ContinueWith(
+            t =>
+            {
+                if (t.IsFaulted)
+                {
+                    try { AppLog.Error(t.Exception, "Splash close failed"); } catch { }
+                }
+            },
+            TaskScheduler.Default);
+
+        try
+        {
+            _ = WindowChromeService.Current.PlayEntranceAnimation(_mainWindow.ContentRoot);
+        }
+        catch { }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>

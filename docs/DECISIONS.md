@@ -259,3 +259,59 @@ in git history; this file saves the next agent the archaeology.
 - **2026-09-15 — UpdateCenter takes the Settings page shell.**
   Same Grid viewport wrapper (the shift fix), captions, and card
   language; pages must never bare-StackPanel inside a ScrollViewer.
+- **2026-09-16 — Performance plan P0-P3 implemented (uncommitted).**
+  `docs/PERFORMANCE-SCALABILITY-PLAN.md` App. C (record) + mirror in
+  `Templates/Project/docs/`. Fast tier green (build 0/0; 267 passed + 4
+  skipped); parity OK (158). Guard-manifest updates: `MainWindow.xaml.cs`
+  (early tray-icon block moved into the deferred method),
+  `Services/LoggingService.cs` (single shared `DEBUG` guard behind
+  `IsDebugBuild`), `Tests/Services/ServiceLocatorTests.cs` (new module
+  tests). Full scaffold matrix + Live-UI screenshots pending.
+- **2026-09-16 — P2-1 DI ownership rule: Current owns, container references.**
+  Process-lifetime singletons stay owned by their `Current` accessor
+  (never disposed by `Shutdown`); type-registered services
+  (`IFilePickerService`, `HttpClient`s, `ExponentialRetryHandler`) are
+  container-owned and die with the provider. Modules are private
+  `Add*` methods in `ServiceLocator` (same file, guard order preserved)
+  so the parity manifest never sees a fork.
+- **2026-09-16 — P2-2 HTTP resilience is in-repo, not Polly.**
+  `ExponentialRetryHandler` (3 tries, 200 ms base) costs zero package
+  weight; Polly revisits only when someone needs circuit-breaking the
+  handler cannot express. Typed `ApiResult<T>` exists for new call
+  sites; the template's own call sites keep never-throw (house rule).
+- **2026-09-16 — P2-3 nav caching policy: cache light, keep heavy transient.**
+  `HomePage` is `NavigationCacheMode.Required` (static content, live loc
+  bindings); log-tail pages stay default-transient so a return never
+  shows a stale tail. Every navigation records count + last timing in
+  `AppMetrics` (diagnostics page shows `tag ×n @ms`).
+- **2026-09-16 — P2-4 localization at scale deferred (still 3 languages).**
+  No `.resw`/plural work until a 4th language is requested; the
+  dictionary + coverage-test system is cheaper below that line.
+- **2026-09-16 — P1-4 quiet-hours decision: no tray-only hush.**
+  The background loop prompts whenever a prepared/downloaded update is
+  ready, trayed or not — a silent security update is worse than a
+  dialog. Metered networks defer the download (opt-out setting
+  `DownloadOnMetered`); the check itself still runs.
+- **2026-09-16 — P3 guardrails are warn-first for one release.**
+  `StartupBudgets.Check` and `measure-publish-weight.ps1` warn on
+  breach/jump; `-FailOnJump` (and failing budget tests) arm after the
+  first green release with baselines.
+- **2026-09-16 — P3-3 smoke charter pinned.**
+  FlaUI stays launch + nav + theme + language; all new page coverage
+  goes to headless tests (`WaitForTailAsync`/`WaitForFilterAsync` exist
+  so async UI pipelines stay deterministic without sleeps).
+- **2026-09-16 — P3-4 flag discipline restated.**
+  No new template bools in this plan (all work fits existing flags);
+  `Services/Data/IRepository.cs` ships unconditionally with no
+  `DatabaseService` dependency so `!database` scaffolds compile it.
+- **2026-09-16 — Never write a bare `#if` in a template-bound file.**
+  The template engine evaluates bare `#if DEBUG` at scaffold time
+  (false branch kept — proven: it froze `VerboseLogging=false` into
+  scaffolds for years via `SettingsService`), and worse, a bare `#if`
+  inside a *comment* of a conditioned file truncated
+  `LoggingService.cs` at scaffold (matrix caught it). Compile-time
+  build-config branches live behind runtime checks
+  (`LoggingService.IsDebugBuild` via `DebuggableAttribute`) or
+  engine-native `#if (...)` guards — never bare preprocessor text,
+  not even in comments. Tests assert self-consistently
+  (`IsDebugBuild ? Debug : Information`) for the same reason.

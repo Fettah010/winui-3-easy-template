@@ -51,4 +51,15 @@ public class AppMetricsTests
         AppMetrics.RecordException();
         Assert.AreEqual(before + 1, AppMetrics.GetSnapshot().ExceptionCount);
     }
+
+    [TestMethod]
+    public void RecordNavigation_WithTiming_StoresLastValue()
+    {
+        // P2-3: timed navigations feed the diagnostics nav-timing display.
+        string tag = Unique("timed-page");
+        AppMetrics.RecordNavigation(tag, 17.5);
+        var snapshot = AppMetrics.GetSnapshot();
+        Assert.AreEqual(17.5, snapshot.NavigationTimingsMs[tag]);
+        Assert.IsGreaterThanOrEqualTo(1L, snapshot.NavigationCounts[tag]);
+    }
 }

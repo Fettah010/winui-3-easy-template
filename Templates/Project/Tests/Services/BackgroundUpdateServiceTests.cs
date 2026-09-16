@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using DevTemWinUi3.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,5 +31,35 @@ public class BackgroundUpdateServiceTests
         // Test runs are never installed: the guard must short-circuit
         // before touching the feed (no window needed either).
         await BackgroundUpdateService.Current.CheckForUpdatesAsync(null);
+    }
+
+    [TestMethod]
+    public async Task PeriodicLoop_PreCancelledToken_ReturnsPromptly()
+    {
+        // P1-4: a cancelled loop is an expected shutdown, never an error.
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        await BackgroundUpdateService.Current.RunPeriodicChecksAsync(
+            null, System.TimeSpan.FromMilliseconds(20), cts.Token);
+    }
+
+    [TestMethod]
+    public async Task PeriodicLoop_CancelMidRun_StopsLooping()
+    {
+        // P1-4: cancelling mid-run stops the timer (window-close path).
+        using var cts = new CancellationTokenSource();
+        var loop = BackgroundUpdateService.Current.RunPeriodicChecksAsync(
+            null, System.TimeSpan.FromMilliseconds(20), cts.Token);
+        await Task.Delay(120);
+        cts.Cancel();
+        await loop;
+    }
+
+    [TestMethod]
+    public void IsMeteredConnection_DoesNotThrow()
+    {
+        // P1-4: environment-dependent, so only the never-throw contract
+        // is pinned (true/false both acceptable headless).
+        _ = BackgroundUpdateService.IsMeteredConnection();
     }
 }

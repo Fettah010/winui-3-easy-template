@@ -19,6 +19,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
 {
     private readonly IUpdateService? _updates;
     private readonly SynchronizationContext? _uiThread;
+    private readonly ProgressThrottler _progressThrottler = new();
     private bool _busy;
 
     [ObservableProperty]
@@ -212,12 +213,19 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
             ProgressVisibility = Visibility.Visible;
             DownloadProgress = 0;
             StatusMessage = loc.GetString("SettingsDownloadingProgress", 0);
+            // P1-2: coalesce the callback burst before marshalling — the
+            // bar cannot render hundreds of updates per second anyway.
+            _progressThrottler.Reset();
             await _updates.DownloadPendingUpdateAsync(percent =>
+            {
+                if (!_progressThrottler.ShouldReport(percent, DateTimeOffset.UtcNow))
+                    return;
                 SetOnUiThread(() =>
                 {
                     DownloadProgress = percent;
                     StatusMessage = loc.GetString("SettingsDownloadingProgress", percent);
-                }));
+                });
+            });
             ct.ThrowIfCancellationRequested();
             ProgressVisibility = Visibility.Collapsed;
             StatusMessage = loc.GetString("SettingsInstalling");

@@ -63,4 +63,24 @@ public class SettingsServiceTests
         SettingsService.Current.ResetToDefaults();
         Assert.IsFalse(SettingsService.Current.CrashReportsEnabled);
     }
+
+    [TestMethod]
+    public void FastLaunch_DefaultOff_AndRoundTrips()
+    {
+        Assert.IsFalse(SettingsService.Current.FastLaunch);
+        SettingsService.Current.FastLaunch = true;
+        Assert.IsTrue(SettingsService.Current.FastLaunch);
+        SettingsService.Current.ResetToDefaults();
+        Assert.IsFalse(SettingsService.Current.FastLaunch);
+    }
+
+    [TestMethod]
+    public void DownloadOnMetered_DefaultOff_AndRoundTrips()
+    {
+        Assert.IsFalse(SettingsService.Current.DownloadOnMetered);
+        SettingsService.Current.DownloadOnMetered = true;
+        Assert.IsTrue(SettingsService.Current.DownloadOnMetered);
+        SettingsService.Current.ResetToDefaults();
+        Assert.IsFalse(SettingsService.Current.DownloadOnMetered);
+    }
 }

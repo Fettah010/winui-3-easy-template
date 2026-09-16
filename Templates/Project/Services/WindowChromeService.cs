@@ -73,26 +73,32 @@ public sealed class WindowChromeService
 
     /// <summary>
     /// Fades in window content after the splash screen transition.
-    /// Called by App after splash closes.
+    /// Called by App after splash closes (fire-and-forget: time-to-
+    /// interactive does not wait for it). Completes on the animation
+    /// itself with a bounded fallback — never a fixed sleep.
     /// </summary>
     public async Task PlayEntranceAnimation(FrameworkElement root)
     {
-        var fadeIn = new DoubleAnimation
+        try
         {
-            From = 0,
-            To = 1,
-            Duration = new Duration(TimeSpan.FromMilliseconds(350)),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
+            var fadeIn = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(350))),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
 
-        Storyboard.SetTarget(fadeIn, root);
-        Storyboard.SetTargetProperty(fadeIn, "Opacity");
+            Storyboard.SetTarget(fadeIn, root);
+            Storyboard.SetTargetProperty(fadeIn, "Opacity");
 
-        var story = new Storyboard();
-        story.Children.Add(fadeIn);
-        story.Begin();
+            var story = new Storyboard();
+            story.Children.Add(fadeIn);
 
-        await Task.Delay(350);
+            await LaunchAnimations.AwaitStoryboardAsync(
+                story, TimeSpan.FromMilliseconds(500));
+        }
+        catch { }
     }
 
     private static void SetTitleBarColors(Window window, bool isDark)

@@ -20,6 +20,12 @@ public partial class SettingsPageViewModel : ObservableObject
     /// </summary>
     private readonly SynchronizationContext? _uiThread = SynchronizationContext.Current;
 
+    /// <summary>
+    /// Coalesces the download-progress burst before UI marshalling (P1-2);
+    /// reset per install. Shared shape with the Update Center path.
+    /// </summary>
+    private readonly ProgressThrottler _progressThrottler = new();
+
     private bool _checking;
     private bool _installing;
 
@@ -368,19 +374,26 @@ public partial class SettingsPageViewModel : ObservableObject
         IsCheckUpdatesEnabled = false;
 
         // Smooth determinate progress while the delta/full package
-        // downloads; the callback runs on a background thread.
+        // downloads; the callback runs on a background thread. P1-2: the
+        // throttler coalesces the burst (percent delta or 100 ms) so the
+        // dispatcher is not flooded.
         DownloadProgressVisibility = Visibility.Visible;
         DownloadProgress = 0;
         UpdateStatusMessage = loc.GetString("SettingsDownloadingProgress", 0);
+        _progressThrottler.Reset();
 
         try
         {
             await _updates.DownloadPendingUpdateAsync(percent =>
+            {
+                if (!_progressThrottler.ShouldReport(percent, DateTimeOffset.UtcNow))
+                    return;
                 SetOnUiThread(() =>
                 {
                     DownloadProgress = percent;
                     UpdateStatusMessage = loc.GetString("SettingsDownloadingProgress", percent);
-                }));
+                });
+            });
             ct.ThrowIfCancellationRequested();
 
             UpdateStatusMessage = loc.GetString("SettingsInstalling");

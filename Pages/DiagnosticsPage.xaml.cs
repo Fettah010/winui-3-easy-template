@@ -176,7 +176,14 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
                 ? "0"
                 : string.Join(", ", snapshot.NavigationCounts
                     .OrderBy(kv => kv.Key, StringComparer.Ordinal)
-                    .Select(kv => $"{kv.Key} ×{kv.Value.ToString(CultureInfo.InvariantCulture)}"));
+                    .Select(kv =>
+                    {
+                        string timing = snapshot.NavigationTimingsMs.TryGetValue(
+                            kv.Key, out double ms)
+                            ? $" @{ms.ToString("F0", CultureInfo.InvariantCulture)} ms"
+                            : string.Empty;
+                        return $"{kv.Key} ×{kv.Value.ToString(CultureInfo.InvariantCulture)}{timing}";
+                    }));
             lines.Add($"{loc.GetString("DiagnosticsNavigations")}: {navs}");
             string lastCheck = snapshot.LastUpdateCheckMs.HasValue
                 ? snapshot.LastUpdateCheckMs.Value.ToString("F0", CultureInfo.InvariantCulture) + " ms"

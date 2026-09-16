@@ -95,7 +95,7 @@ public sealed partial class SplashScreen : Window
         if (args.WindowActivationState != WindowActivationState.Deactivated)
         {
             this.Activated -= OnActivated;
-            _ = PlayEntranceAnimation();
+            PlayEntranceAnimation();
         }
     }
 
@@ -139,46 +139,51 @@ public sealed partial class SplashScreen : Window
         catch { }
     }
 
-    private async Task PlayEntranceAnimation()
+    private void PlayEntranceAnimation()
     {
-        var fadeIn = new DoubleAnimation
+        // Fire-and-forget by design (P0-1): the entrance overlaps service
+        // init on the launch path, so nothing awaits it. Durations collapse
+        // under reduced-motion / fast-launch (LaunchAnimations.Scale).
+        try
         {
-            From = 0,
-            To = 1,
-            Duration = new Duration(TimeSpan.FromMilliseconds(500)),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
+            var fadeIn = new DoubleAnimation
+            {
+                From = 0,
+                To = 1,
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(500))),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
 
-        var scaleX = new DoubleAnimation
-        {
-            From = 0.96,
-            To = 1.0,
-            Duration = new Duration(TimeSpan.FromMilliseconds(600)),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
+            var scaleX = new DoubleAnimation
+            {
+                From = 0.96,
+                To = 1.0,
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(600))),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
 
-        var scaleY = new DoubleAnimation
-        {
-            From = 0.96,
-            To = 1.0,
-            Duration = new Duration(TimeSpan.FromMilliseconds(600)),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
-        };
+            var scaleY = new DoubleAnimation
+            {
+                From = 0.96,
+                To = 1.0,
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(600))),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
 
-        Storyboard.SetTarget(fadeIn, RootGrid);
-        Storyboard.SetTargetProperty(fadeIn, "Opacity");
-        Storyboard.SetTarget(scaleX, RootTransform);
-        Storyboard.SetTargetProperty(scaleX, "ScaleX");
-        Storyboard.SetTarget(scaleY, RootTransform);
-        Storyboard.SetTargetProperty(scaleY, "ScaleY");
+            Storyboard.SetTarget(fadeIn, RootGrid);
+            Storyboard.SetTargetProperty(fadeIn, "Opacity");
+            Storyboard.SetTarget(scaleX, RootTransform);
+            Storyboard.SetTargetProperty(scaleX, "ScaleX");
+            Storyboard.SetTarget(scaleY, RootTransform);
+            Storyboard.SetTargetProperty(scaleY, "ScaleY");
 
-        var story = new Storyboard();
-        story.Children.Add(fadeIn);
-        story.Children.Add(scaleX);
-        story.Children.Add(scaleY);
-        story.Begin();
-
-        await Task.Delay(600);
+            var story = new Storyboard();
+            story.Children.Add(fadeIn);
+            story.Children.Add(scaleX);
+            story.Children.Add(scaleY);
+            story.Begin();
+        }
+        catch { }
     }
 
     public async Task CloseWithAnimation()
@@ -189,7 +194,7 @@ public sealed partial class SplashScreen : Window
             {
                 From = 1.0,
                 To = 0,
-                Duration = new Duration(TimeSpan.FromMilliseconds(250)),
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(250))),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
             };
 
@@ -197,7 +202,7 @@ public sealed partial class SplashScreen : Window
             {
                 From = 1.0,
                 To = 0.98,
-                Duration = new Duration(TimeSpan.FromMilliseconds(250)),
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(250))),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
             };
 
@@ -205,7 +210,7 @@ public sealed partial class SplashScreen : Window
             {
                 From = 1.0,
                 To = 0.98,
-                Duration = new Duration(TimeSpan.FromMilliseconds(250)),
+                Duration = new Duration(LaunchAnimations.Scale(TimeSpan.FromMilliseconds(250))),
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
             };
 
@@ -220,9 +225,11 @@ public sealed partial class SplashScreen : Window
             story.Children.Add(fadeOut);
             story.Children.Add(scaleXOut);
             story.Children.Add(scaleYOut);
-            story.Begin();
 
-            await Task.Delay(300);
+            // Complete on the animation itself (bounded fallback), not a
+            // fixed sleep past its duration.
+            await LaunchAnimations.AwaitStoryboardAsync(
+                story, TimeSpan.FromMilliseconds(400));
         }
         catch { }
 

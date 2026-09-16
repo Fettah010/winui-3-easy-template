@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -38,6 +40,8 @@ public sealed class NotificationItem
 public sealed class NotificationService
 {
     private Panel? _host;
+    private readonly Queue<(NotificationItem Item, int DurationMs)> _pending = new();
+    private readonly Dictionary<FrameworkElement, CancellationTokenSource> _lifetimes = new();
 
     public static NotificationService Current { get; } = new();
 
@@ -66,27 +70,75 @@ public sealed class NotificationService
     /// above) so a faulted toast can never crash the process — <c>async
     /// void</c> would rethrow on the sync context. Unobserved failures are
     /// logged by the handler in <c>Program</c>.
+    /// P1-2: bursts are bounded — at most <c>ToastPolicy.MaxVisible</c>
+    /// cards show at once, the rest queue (oldest dropped past the cap).
+    /// Must be called on the UI thread (host children are thread-affine).
     /// </summary>
-    public async Task Show(string title, string message, NotificationType type, int durationMs = 4000)
+    public Task Show(string title, string message, NotificationType type, int durationMs = 4000)
+    {
+        if (_host is null) return Task.CompletedTask;
+
+        var item = new NotificationItem(title, message, type);
+        if (!ToastPolicy.ShouldShowNow(_host.Children.Count))
+        {
+            if (!ToastPolicy.ShouldQueue(_pending.Count))
+                _pending.Dequeue();
+            _pending.Enqueue((item, durationMs));
+            return Task.CompletedTask;
+        }
+        return ShowCardAsync(item, durationMs);
+    }
+
+    private async Task ShowCardAsync(NotificationItem item, int durationMs)
     {
         if (_host is null) return;
 
-        var card = new NotificationCard { Notification = new NotificationItem(title, message, type) };
-        card.DismissRequested += (_, _) => DismissCard(card);
+        var card = new NotificationCard { Notification = item };
+        var lifetime = new CancellationTokenSource();
+        card.DismissRequested += (_, _) =>
+        {
+            try { lifetime.Cancel(); } catch { }
+            DismissCard(card);
+        };
+        _lifetimes[card] = lifetime;
         // Newest on top: the bottom-anchored stack grows upward.
         _host.Children.Insert(0, card);
 
         // Slide in
         AnimateSlideIn(card);
 
-        // Auto-dismiss
-        await Task.Delay(durationMs);
+        // Auto-dismiss; manual dismissal cancels this wait (P1-2) so a
+        // dismissed card never lingers in the lifetime table.
+        try
+        {
+            await Task.Delay(durationMs, lifetime.Token);
+        }
+        catch (OperationCanceledException) { }
+        catch { }
+        try
+        {
+            _lifetimes.Remove(card);
+            lifetime.Dispose();
+        }
+        catch { }
         DismissCard(card);
     }
 
     public void DismissCard(FrameworkElement card)
     {
-        if (_host is null || !_host.Children.Contains(card)) return;
+        var host = _host;
+        if (host is null || !host.Children.Contains(card)) return;
+
+        try
+        {
+            if (_lifetimes.TryGetValue(card, out var lifetime))
+            {
+                _lifetimes.Remove(card);
+                try { lifetime.Cancel(); } catch { }
+                try { lifetime.Dispose(); } catch { }
+            }
+        }
+        catch { }
 
         // Slide via RenderTransform (panel-agnostic): the old Canvas.Left
         // animation assumed a Canvas host.
@@ -116,8 +168,31 @@ public sealed class NotificationService
         var sb = new Storyboard();
         sb.Children.Add(fadeOut);
         sb.Children.Add(slideOut);
-        sb.Completed += (_, _) => _host.Children.Remove(card);
+        sb.Completed += (_, _) =>
+        {
+            try { host.Children.Remove(card); } catch { }
+            PumpQueue();
+        };
         sb.Begin();
+    }
+
+    /// <summary>
+    /// Shows the next queued toast when a visible slot freed up. Must run
+    /// on the UI thread (called from card teardown). Never throws.
+    /// </summary>
+    private void PumpQueue()
+    {
+        try
+        {
+            var host = _host;
+            if (host is null || _pending.Count == 0)
+                return;
+            if (!ToastPolicy.ShouldShowNow(host.Children.Count))
+                return;
+            var (item, durationMs) = _pending.Dequeue();
+            _ = ShowCardAsync(item, durationMs);
+        }
+        catch { }
     }
 
     private void AnimateSlideIn(FrameworkElement card)

@@ -1,0 +1,1 @@
+{"bytes":281198381,"mb":268.2,"measured":"2026-09-16","configuration":"Release win-x64 self-contained","note":"P3-2 baseline. CI warns (fails with -FailOnJump) on unexplained jumps over 10 percent."}

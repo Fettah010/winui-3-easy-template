@@ -56,4 +56,16 @@ public class InMemoryLogSinkTests
         sink.Emit(TestEvents.Make("kept"));
         Assert.AreEqual(1, sink.Count);
     }
+
+    [TestMethod]
+    public void Count_StaysBounded_UnderConcurrentEmit()
+    {
+        // P1-1: the O(1) counter stays exact under contention and the
+        // buffer never grows past capacity.
+        var sink = new InMemoryLogSink(64);
+        System.Threading.Tasks.Parallel.For(0, 4096, i =>
+            sink.Emit(TestEvents.Make("burst-" + i)));
+        Assert.AreEqual(64, sink.Count);
+        Assert.HasCount(64, sink.SnapshotNewestFirst());
+    }
 }

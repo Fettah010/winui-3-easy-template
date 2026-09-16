@@ -10,11 +10,21 @@ namespace DevTemWinUi3.Services;
 /// SQLite database service for local data persistence.
 /// Database file lives under <see cref="AppPaths.DataFolder"/> (writable
 /// for both distributions — the packaged install directory is read-only).
+/// Performance plan P1-3: WAL journal mode + busy timeout, retryable init
+/// (a failed first init no longer latches success), and an ordered
+/// idempotent migration runner over a <c>schema_version</c> table.
 /// </summary>
 public sealed class DatabaseService : IDisposable
 {
+    /// <summary>Current schema version (highest migration applied to fresh DBs).</summary>
+    internal const int CurrentSchemaVersion = 2;
+
+    private const int MaxInitAttempts = 3;
+    private static readonly TimeSpan RetryDelay = TimeSpan.FromMilliseconds(100);
+
     private SqliteConnection? _connection;
     private bool _initialized;
+    private readonly object _initGate = new();
 
     public static DatabaseService Current { get; } = new();
 
@@ -22,39 +32,194 @@ public sealed class DatabaseService : IDisposable
     {
     }
 
+    /// <summary>Test seam: an instance bound to a scratch file.</summary>
+    internal DatabaseService(string databasePath)
+    {
+        DatabasePath = databasePath;
+    }
+
     public string DatabasePath { get; } = Path.Combine(
         AppPaths.DataFolder, "Data", "app.db");
 
-    /// <summary>
-    /// Initializes the database connection and creates tables if needed.
-    /// </summary>
-    public async Task InitializeAsync()
+    /// <summary>Whether <see cref="InitializeAsync"/> has succeeded.</summary>
+    public bool IsInitialized
     {
-        if (_initialized) return;
-        _initialized = true;
-
-        try
+        get
         {
-            var dir = Path.GetDirectoryName(DatabasePath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
+            lock (_initGate)
+            {
+                return _initialized;
+            }
+        }
+    }
 
-            _connection = new SqliteConnection($"Data Source={DatabasePath}");
-            await _connection.OpenAsync();
-
-            // Create example settings table
-            await ExecuteAsync(@"
+    /// <summary>
+    /// Ordered schema migrations (version, SQL). Each entry must be
+    /// idempotent (<c>IF NOT EXISTS</c>) so a killed init can safely
+    /// re-run. Version 1 is the original Settings table; version 2 adds
+    /// the version tracking itself.
+    /// </summary>
+    internal static readonly (int Version, string Sql)[] Migrations = new[]
+    {
+        (1, @"
                 CREATE TABLE IF NOT EXISTS Settings (
                     Key TEXT PRIMARY KEY,
                     Value TEXT NOT NULL,
                     UpdatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )");
+                )"),
+        (2, @"
+                CREATE TABLE IF NOT EXISTS schema_version (
+                    Version INTEGER PRIMARY KEY,
+                    AppliedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )"),
+    };
 
-            AppLog.Information("Database initialized: {Path}", DatabasePath);
-        }
-        catch (Exception ex)
+    /// <summary>
+    /// Initializes the database connection and migrates the schema.
+    /// Retries transient failures (<see cref="MaxInitAttempts"/>); success
+    /// is latched only after the migrations commit, so a kill during first
+    /// init recovers on the next call. Never throws (logs and reports via
+    /// <see cref="IsInitialized"/>).
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        lock (_initGate)
         {
-            AppLog.Error(ex, "Failed to initialize database");
+            if (_initialized) return;
+        }
+
+        Exception? lastError = null;
+        for (int attempt = 1; attempt <= MaxInitAttempts; attempt++)
+        {
+            try
+            {
+                await InitializeCoreAsync().ConfigureAwait(false);
+                lock (_initGate)
+                {
+                    _initialized = true;
+                }
+                AppLog.Information("Database initialized: {Path}", DatabasePath);
+                return;
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+                if (attempt < MaxInitAttempts)
+                {
+                    try { await Task.Delay(RetryDelay).ConfigureAwait(false); } catch { }
+                }
+            }
+        }
+
+        if (lastError is not null)
+            AppLog.Error(lastError, "Failed to initialize database");
+    }
+
+    private async Task InitializeCoreAsync()
+    {
+        var dir = Path.GetDirectoryName(DatabasePath);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        var connection = new SqliteConnection($"Data Source={DatabasePath}");
+        await connection.OpenAsync().ConfigureAwait(false);
+
+        try
+        {
+            await ApplyPragmasAsync(connection).ConfigureAwait(false);
+            await ApplyMigrationsAsync(connection).ConfigureAwait(false);
+        }
+        catch
+        {
+            try { connection.Dispose(); } catch { }
+            throw;
+        }
+
+        var previous = _connection;
+        _connection = connection;
+        try
+        {
+            previous?.Dispose();
+        }
+        catch { }
+    }
+
+    private static async Task ApplyPragmasAsync(SqliteConnection connection)
+    {
+        // WAL lets readers proceed during writes (the deferred-init and UI
+        // threads share this file); a busy timeout turns SQLITE_BUSY into
+        // a short wait instead of an instant failure. Best-effort: a
+        // database that refuses pragmas still works, just slower.
+        string[] pragmas = new string[]
+        {
+            "PRAGMA journal_mode=WAL;",
+            "PRAGMA busy_timeout=5000;",
+            "PRAGMA synchronous=NORMAL;",
+        };
+        foreach (var pragma in pragmas)
+        {
+            try
+            {
+                await using var cmd = connection.CreateCommand();
+                cmd.CommandText = pragma;
+                await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+            }
+            catch { }
+        }
+    }
+
+    /// <summary>
+    /// Applies pending migrations in version order and records each in
+    /// <c>schema_version</c>. Idempotent: re-running applies nothing.
+    /// </summary>
+    internal static async Task ApplyMigrationsAsync(SqliteConnection connection)
+    {
+        // The version table itself is bootstrapped first: stamps below
+        // would otherwise fail on fresh databases (no such table).
+        await using (var bootstrap = connection.CreateCommand())
+        {
+            bootstrap.CommandText = @"
+                CREATE TABLE IF NOT EXISTS schema_version (
+                    Version INTEGER PRIMARY KEY,
+                    AppliedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )";
+            await bootstrap.ExecuteNonQueryAsync().ConfigureAwait(false);
+        }
+        int applied = await ReadSchemaVersionAsync(connection).ConfigureAwait(false);
+        foreach (var (version, sql) in Migrations)
+        {
+            if (version <= applied)
+                continue;
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = sql;
+            await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+            await using var stamp = connection.CreateCommand();
+            stamp.CommandText = "INSERT OR IGNORE INTO schema_version (Version) VALUES ($v)";
+            stamp.Parameters.AddWithValue("$v", version);
+            await stamp.ExecuteNonQueryAsync().ConfigureAwait(false);
+            applied = version;
+        }
+    }
+
+    internal static async Task<int> ReadSchemaVersionAsync(SqliteConnection connection)
+    {
+        try
+        {
+            await using var check = connection.CreateCommand();
+            check.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version'";
+            var exists = await check.ExecuteScalarAsync().ConfigureAwait(false);
+            if (exists is null || exists == DBNull.Value)
+                return 0;
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT COALESCE(MAX(Version), 0) FROM schema_version";
+            var result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
+            if (result is null || result == DBNull.Value)
+                return 0;
+            return Convert.ToInt32(result, CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            return 0;
         }
     }
 
