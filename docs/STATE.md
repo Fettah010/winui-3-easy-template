@@ -5,22 +5,12 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** performance plan implemented. P0-P3 landed in the working
-  tree, all tiers runnable green except full-matrix flake watch.
-- **Version:** app `0.0.8-beta`; template package `0.3.2`.
-- **Tags:** `v0.0.8-beta` (release.yml success, assets live); `templates-v0.3.2` (templates-publish success → NuGet).
-- **Branches:** `main` @ `7916e03` + uncommitted perf work (held per rule).
-- **Tree:** dirty (perf plan: ~60 modified + ~18 new app/template files).
-  Nothing committed, pushed, tagged, or released.
-- **CI health (this session):** local build 0/0; `dotnet test Tests/`
-  267 passed + 4 skipped (pre-existing skips); parity OK (159);
-  FlaUI smoke 5 passed + 1 skipped (59 s); scaffold matrix 20/21 per
-  full run (single-test load flakes in rotating combos, all green solo;
-  subset-7 + rebrand green); publish weight 268.2 MB baseline recorded
-  (`docs/publish-weight-baseline.json`).
-- **Next:** commit on request (review the 103-path diff first); then the
-  release runbook in `docs/WORKFLOW.md`. Open: `DISCOVERY-PLAN.md`
-  A3/A4+B/C/D, roadmap triage (85 boxes), full-matrix re-run on a quiet
-  machine if a clean 21/21 is wanted for the record.
+- **Goal:** all green. `v0.0.9-beta` + `templates-v0.3.3` shipped; every CI leg success.
+- **Version:** app `0.0.9-beta`; template package `0.3.3`.
+- **Tags:** `v0.0.9-beta` (release.yml success, assets live); `templates-v0.3.3` (templates-publish success → NuGet 0.3.3 indexed).
+- **Branches:** `main` pushed; `beta` tracks `v0.0.9-beta` (verified).
+- **Tree:** clean (pending this STATE refresh).
+- **CI health (last known):** Release success, templates-publish success, templates matrix success, msix SUCCESS, ui-tests SUCCESS. Local: build 0/0, tests 267+4, parity OK (159), smoke 5+1, publish baseline 268.2 MB.
+- **Next:** packaged proof on a kit machine (WACK still manual). Open: `DISCOVERY-PLAN.md` A3/A4+B/C/D, roadmap triage (85 boxes).
 
 (End of file - total 14 lines)
