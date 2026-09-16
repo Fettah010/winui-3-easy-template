@@ -5,8 +5,7 @@ first before making changes.
 
 ## Session bootstrap (agents — do this before touching anything)
 
-1. Read `AGENTS.md` → `docs/STATE.md` → `docs/WORKFLOW.md`, in order
-   (`docs/DISCOVERY-PLAN.md` only for discovery/SEO work).
+1. Read `AGENTS.md` → `docs/STATE.md` → `docs/WORKFLOW.md`, in order.
 2. `git status`, `git log --oneline -5`, newest tags.
 3. Confirm versions: csproj `<Version>`/`<InformationalVersion>` vs tags.
 4. `dotnet build -c Debug -p:Platform=x64` — the tree must be green
@@ -16,7 +15,6 @@ first before making changes.
 
 Doc map: `AGENTS.md` conventions (stable) · `docs/STATE.md` current facts
 (mutable) ·
-`docs/DISCOVERY-PLAN.md` discovery/SEO plan ·
 `docs/WORKFLOW.md` definition-of-done per change type (incl. release runbook) ·
 `docs/DECISIONS.md` why things are the way they are.
 
@@ -55,10 +53,11 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Services/AppFeatures.cs` | Scaffold-time flags (distribution, setup, update mode); gates XAML-free UI visibility. |
 | `Build/Features.Distribution.props` | `DevTemDistribution`/`DevTemSetupWizard`/`DevTemUpdates` + invalid-combo MSBuild errors. |
 | `Pages/SetupWizardPage.*` | First-run wizard: PipsPager steps (welcome → location → shortcuts → launch → done). |
-| `Pages/UpdateCenterPage.*` | Update Center: check → download (progress) → install + release notes; slim status for external modes. |
+| `Controls/UpdatePopup.xaml(.cs)` | Animated update popup (checking animation, progress, restart) — the single update surface. |
+| `Services/UpdateDialogService.cs` | Check/available/ready popup flows over `UpdateCenterViewModel` (UI-bound, never-throw). |
 | `ViewModels/SetupWizardViewModel.*` | Wizard step math + persisted choices (headless-tested). |
-| `ViewModels/UpdateCenterViewModel.*` | Update-flow state for the Center page (null-tolerant, headless-tested). |
-| `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (restart prompt fully localized). |
+| `ViewModels/UpdateCenterViewModel.*` | Update-flow state for the popup (null-tolerant, headless-tested). |
+| `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (auto-install vs ask-mode, metered guard). |
 | `Services/DatabaseInitializer.cs` | Deferred database init (best-effort, idempotent). |
 | `Pages/HomePage.*` | Landing page. |
 | `Pages/SettingsPage.*` | App settings: theme selector, update channel, auto-check toggle, app info. |
@@ -203,7 +202,7 @@ or run from the terminal when the `(Dev)` shortcut exists — point at it.
 
 ## Versioning
 
-Current version: **0.0.9-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.10-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

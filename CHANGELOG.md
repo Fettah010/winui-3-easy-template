@@ -8,6 +8,36 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.10-beta] - 2026-09-16
+
+### Fixed
+
+- Updates no longer hijack launch: Velopack auto-apply stays off and all
+  update work runs past the first frame, so the app always opens first
+  and asks afterwards (previously a staged update applied silently on
+  start — click, nothing opens, second click shows the new version).
+- Check-for-updates feedback: the animated update popup always answers
+  (checking animation, up-to-date confirmation, progress, error + retry) —
+  no more silent no-op when already on the latest version.
+- Diagnostics Clear now clears the live buffer (was filters-only); the
+  live list glides to new arrivals while unpaused; the file tail
+  auto-refreshes instead of showing stale content. Fixed a concurrent
+  counter race in the event buffer trimmer.
+- READMEs describe the app (SEO navel-gazing removed); obsolete plan
+  files deleted from both trees.
+
+### Added
+
+- Update Center page retired in favor of one animated popup
+  (`Controls/UpdatePopup` + `UpdateDialogService`): checking (animated
+  dots, linear bar — no spinner), release notes, in-popup download
+  progress, Restart now / Later. Entry points: Settings, tray, Home,
+  background detection.
+- Settings "Install updates automatically" (default on): off means the
+  popup asks before anything downloads. "Later" keeps the download
+  staged and re-prompts after the next launch — never applies at startup.
+
 ## [0.0.9-beta] - 2026-09-16
 
 ### Added

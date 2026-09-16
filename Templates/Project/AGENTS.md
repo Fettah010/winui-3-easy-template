@@ -47,10 +47,11 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Services/AppFeatures.cs` | Scaffold-time flags (distribution, setup, update mode); gates XAML-free UI visibility. |
 | `Build/Features.Distribution.props` | `DevTemDistribution`/`DevTemSetupWizard`/`DevTemUpdates` + invalid-combo MSBuild errors. |
 | `Pages/SetupWizardPage.*` | First-run wizard: PipsPager steps (setup feature). |
-| `Pages/UpdateCenterPage.*` | Update Center: check → download → install + release notes (status surface when updates are external/none). |
+| `Controls/UpdatePopup.xaml(.cs)` | Animated update popup (checking animation, progress, restart) — the single update surface. |
+| `Services/UpdateDialogService.cs` | Check/available/ready popup flows over `UpdateCenterViewModel` (UI-bound, never-throw). |
 | `ViewModels/SetupWizardViewModel.*` | Wizard step math + persisted choices (setup feature). |
-| `ViewModels/UpdateCenterViewModel.*` | Update-flow state for the Center page (null-tolerant). |
-| `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (restart prompt fully localized) (updates feature). |
+| `ViewModels/UpdateCenterViewModel.*` | Update-flow state for the popup (null-tolerant). |
+| `Services/BackgroundUpdateService.cs` | Deferred DB init, update check, periodic loop (auto-install vs ask-mode, metered guard) (updates feature). |
 | `Services/DatabaseInitializer.cs` | Deferred database init (database feature). |
 | `Pages/HomePage.*` | Landing page. |
 | `Pages/SettingsPage.*` | App settings: theme selector, update channel, auto-check toggle, app info. |
@@ -189,7 +190,7 @@ desktop first instead of asking):
 
 ## Versioning
 
-Current version: **0.0.9-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+Current version: **0.0.10-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
 default to the beta channel; stable releases use the plain version).

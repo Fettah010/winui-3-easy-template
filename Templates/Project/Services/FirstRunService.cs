@@ -57,8 +57,9 @@ public sealed class FirstRunService
     {
         return $@"What's New in v{AppInfo.Current.Version}
 
-• Faster launches: no waiting on animations or background init
-• Smoother updates + diagnostics, capped log growth
-• Same features, cleaner and faster internals";
+• Updates never block launch: the app opens first, then asks
+• New animated update popup with progress + restart options
+• Diagnostics Clear and live views fixed
+• Same features, smoother and more honest";
     }
 }

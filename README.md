@@ -10,7 +10,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-67ac09?style=for-the-badge" alt="MIT license" /></a>
 </p>
 
-Production-ready **WinUI 3 starter template** for Windows desktop apps. If you are searching for a **WinUI 3 template**, **WinUI 3 starter**, or **best WinUI 3 template**, this is the repo and the template to start from.
+Production-ready **WinUI 3 starter template** for Windows desktop apps: a real app shell with updates, settings, diagnostics, and release automation already wired up.
 
 It is built for teams that want a real app shell instead of a blank canvas: **MVVM**, **Mica window**, **system tray**, **Velopack auto-updates**, **localization**, **logging**, **SQLite**, **typed HTTP client**, and a **release pipeline** already wired up.
 
@@ -63,6 +63,12 @@ Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
 the flags, and `docs/FEATURES.md` records what each scaffold picked.
 
+## What's new in 0.0.10-beta
+
+- Updates never block launch (app opens first, then asks), one animated
+  update popup with progress + restart options, diagnostics Clear and
+  live views fixed — full notes in [CHANGELOG.md](CHANGELOG.md)
+
 ## What's new in 0.0.9-beta
 
 - Faster launches (no fixed animation waits, deferred tray/toast),
@@ -91,7 +97,7 @@ the flags, and `docs/FEATURES.md` records what each scaffold picked.
 
 - Packaged MSIX distribution (`--distribution msix`) with native
   AppInstaller / Store updates and a documented Store preset
-- First-run setup wizard (portable installs) + Update Center page
+- First-run setup wizard (portable installs) + animated update popup
   with download progress and release notes
 - Template package `0.3.0` on NuGet — full notes in [CHANGELOG.md](CHANGELOG.md)
 
@@ -110,7 +116,7 @@ This repo is both a full sample app and the source of the project template. It d
 App shell
 ├── Home page
 ├── Settings page
-├── Update Center page
+├── Animated update popup (check → download → restart)
 ├── First-run setup wizard (portable)
 ├── Tray + toast behavior
 ├── Update checks + restart prompt
@@ -127,16 +133,6 @@ Yes. DevTem is designed as a production-ready starter for desktop apps, not a ba
 ### Is this better than the official blank WinUI app?
 
 For a real application, yes. The official blank app is the correct starting point for learning WinUI or writing a minimal app from scratch. DevTem is the better starting point when you want a working desktop app foundation from day one.
-
-### Why are the keywords so specific?
-
-Search relevance in template ecosystems is dominated by titles, descriptions, tags, and the exact phrases people type into `dotnet new search` and Google. The package and repo are written to match queries like:
-
-- `winui 3 template`
-- `best winui 3 template`
-- `winui starter`
-- `windows desktop template`
-- `mvvm winui template`
 
 ## Repository layout
 
