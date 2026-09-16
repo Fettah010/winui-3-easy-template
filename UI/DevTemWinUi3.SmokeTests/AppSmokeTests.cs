@@ -240,8 +240,7 @@ public sealed class AppSmokeTests
         {
             ForegroundWindow();
             var check = RequireElement("CheckUpdatesButton", "Check-for-updates button");
-            try { check.Focus(); } catch { }
-            try { check.Click(); } catch { }
+            InvokeOrClick(check);
             var popup = WaitForElement("UpdatePopupTitle", NavigateTimeout);
             if (popup is not null)
             {
@@ -266,7 +265,7 @@ public sealed class AppSmokeTests
                             Task.Delay(500).Wait();
                             continue;
                         }
-                        candidate.Click();
+                        InvokeOrClick(candidate);
                         closed = true;
                     }
                     catch
@@ -419,6 +418,28 @@ public sealed class AppSmokeTests
             () => window.FindFirstDescendant(cf => cf.ByAutomationId(automationId)),
             timeout,
             TimeSpan.FromMilliseconds(250)).Result;
+    }
+
+    /// <summary>
+    /// Activates an element without a mouse: UIA Invoke works even when the
+    /// target is scrolled out of view (small CI screens), where a synthetic
+    /// click would land on whatever happens to be at those coordinates.
+    /// Falls back to a mouse click when the pattern is unavailable.
+    /// </summary>
+    private static void InvokeOrClick(AutomationElement element)
+    {
+        try
+        {
+            var invoke = element.Patterns.Invoke.PatternOrDefault;
+            if (invoke is not null)
+            {
+                invoke.Invoke();
+                return;
+            }
+        }
+        catch { }
+        try { element.Focus(); } catch { }
+        try { element.Click(); } catch { }
     }
 
     private static void ClickNavAndWaitForPage(string navAutomationId, string titleAutomationId)
