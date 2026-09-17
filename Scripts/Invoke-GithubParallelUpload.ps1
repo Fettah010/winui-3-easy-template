@@ -78,10 +78,23 @@ foreach ($file in $Files) {
     $mb = [math]::Round($item.Length / 1MB, 1)
     Write-Host "  queue: $($item.Name) ($mb MB)"
     if ($PSCmdlet.ShouldProcess($item.FullName, "Upload to $Tag")) {
+        # The job never throws: it returns its transcript plus a marker,
+        # so one file's failure can never hide another file's gh output
+        # (Receive-Job rethrows job exceptions instead of returning them).
         $jobs += Start-Job -Name $item.Name -ScriptBlock {
             param($jobTag, $jobRepo, $assetPath)
-            & gh release upload $jobTag $assetPath --repo $jobRepo --clobber 2>&1
-            if ($LASTEXITCODE -ne 0) { throw "gh release upload failed for $assetPath." }
+            $attempts = 3
+            for ($try = 1; $try -le $attempts; $try++) {
+                Write-Output ("attempt $try of $attempts for " + $assetPath)
+                & gh release upload $jobTag $assetPath --repo $jobRepo --clobber 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Output ("UPLOAD_OK:" + $assetPath)
+                    return
+                }
+                Write-Output ("attempt $try failed with exit $LASTEXITCODE.")
+                if ($try -lt $attempts) { Start-Sleep -Seconds (15 * $try) }
+            }
+            Write-Output ("UPLOAD_FAILED:" + $assetPath)
         } -ArgumentList @($Tag, $Repo, $item.FullName)
     }
 }
@@ -89,13 +102,15 @@ foreach ($file in $Files) {
 $failed = @()
 foreach ($job in $jobs) {
     $null = Wait-Job $job
-    # Receive-Job rethrows a failed job's exception: catch it so the log
-    # keeps every job's output and the failure list stays complete.
     $lines = @()
     try { $lines = @(Receive-Job $job 2>&1) }
     catch { $lines = @("job error: " + (($_.Exception.Message | Out-String).Trim())) }
-    foreach ($line in $lines) { Write-Host ("[" + $job.Name + "] " + $line) }
-    if ($job.State -ne "Completed") { $failed += $job.Name }
+    $ok = $false
+    foreach ($line in $lines) {
+        Write-Host ("[" + $job.Name + "] " + $line)
+        if ("$line" -like "UPLOAD_OK:*") { $ok = $true }
+    }
+    if (-not $ok -or $job.State -ne "Completed") { $failed += $job.Name }
     try { Remove-Job $job -Force -ErrorAction SilentlyContinue } catch { }
 }
 if ($failed.Count -gt 0) { throw ("Parallel upload failed for: " + ($failed -join ", ")) }
