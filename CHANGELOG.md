@@ -13,6 +13,16 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.15-beta] - 2026-09-17
+
+### Changed
+
+- Update-test release: no app behavior changes besides the version
+  itself. With `v0.0.14-beta` installed via `setup.exe`, this version
+  exercises the fixed update flow end to end (busy check button →
+  toast/dialog → download progress → restart prompt).
+
 ## [0.0.14-beta] - 2026-09-17
 
 ### Fixed
