@@ -76,7 +76,13 @@ public sealed class NotificationService
     /// </summary>
     public Task Show(string title, string message, NotificationType type, int durationMs = 4000)
     {
-        if (_host is null) return Task.CompletedTask;
+        if (_host is null)
+        {
+            // Silent drops are undebuggable (the update flow reports every
+            // state through here): leave a breadcrumb naming the cause.
+            try { AppLog.Warning("Toast dropped (host not initialized): {Title}", title); } catch { }
+            return Task.CompletedTask;
+        }
 
         var item = new NotificationItem(title, message, type);
         if (!ToastPolicy.ShouldShowNow(_host.Children.Count))

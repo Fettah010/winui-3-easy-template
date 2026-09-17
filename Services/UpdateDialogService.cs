@@ -253,20 +253,26 @@ public static class UpdateDialogService
     {
         var snap = Snapshot();
         if (snap is null)
+        {
+            AppLog.Warning("Update check skipped: window not ready (deferred init has not run yet)");
             return;
+        }
         var (window, loc) = snap.Value;
         string title = loc.GetString("UpdatePopupTitle");
+        AppLog.Information("Update check started (manual)");
 
         var updates = ResolveUpdates();
 
         if (AppFeatures.IsExternallyManaged)
         {
+            AppLog.Information("Update check: externally managed, not checking");
             ToastInfo(title, UpdateCenterViewModel.ExternalHandlerText(loc));
             return;
         }
 
         if (updates is null)
         {
+            AppLog.Warning("Update check: no update engine registered");
             ToastError(title, loc.GetString("UpdateCenterNoEngine"));
             return;
         }
@@ -287,12 +293,14 @@ public static class UpdateDialogService
         {
             if (!updates.IsInstalled)
             {
+                AppLog.Information("Update check: app is not installed, nothing to update");
                 ToastInfo(title, loc.GetString("SettingsNotInstalled"));
                 return;
             }
         }
         catch { }
 
+        AppLog.Information("Update check: polling feed");
         ToastInfo(title, TrimEllipsis(loc.GetString("SettingsChecking")));
 
         var vm = new UpdateCenterViewModel(updates);
@@ -303,6 +311,7 @@ public static class UpdateDialogService
             var finished = await Task.WhenAny(checkTask, timeoutTask).ConfigureAwait(false);
             if (finished != checkTask)
             {
+                AppLog.Warning("Update check timed out after {Timeout}s", timeout.TotalSeconds);
                 ToastError(title, loc.GetString("SettingsCheckFailed"));
                 return;
             }
@@ -321,14 +330,17 @@ public static class UpdateDialogService
 
         if (vm.LastCheckFailed)
         {
+            AppLog.Warning("Update check failed: {Detail}", vm.StatusMessage);
             await ShowErrorDialogAsync(window, loc, title, vm.StatusMessage).ConfigureAwait(false);
             return;
         }
         if (!vm.HasUpdate)
         {
+            AppLog.Information("Update check: already on the latest version");
             ToastSuccess(title, loc.GetString("SettingsNoUpdate"));
             return;
         }
+        AppLog.Information("Update check: v{Version} available", vm.PendingVersion);
         await ShowAvailableDialogAsync(window, loc, title, vm).ConfigureAwait(false);
     }
 
@@ -341,6 +353,7 @@ public static class UpdateDialogService
         var updates = ResolveUpdates();
         if (updates is null || !result.HasUpdate)
             return;
+        AppLog.Information("Update available (background): v{Version}", result.Version);
         string title = loc.GetString("UpdatePopupTitle");
         var vm = new UpdateCenterViewModel(updates);
         vm.PublishResult(result);
@@ -449,6 +462,7 @@ public static class UpdateDialogService
         vm.PropertyChanged += OnProgress;
         Task<ContentDialogResult>? showTask = null;
         Task? downloadTask = null;
+        AppLog.Information("Update download started");
         try
         {
             try { showTask = dialog.ShowAsync().AsTask(); } catch { showTask = null; }
@@ -483,11 +497,13 @@ public static class UpdateDialogService
 
         if (!vm.CanInstall)
         {
+            AppLog.Warning("Update download failed: {Detail}", vm.StatusMessage);
             ToastError(title, string.IsNullOrWhiteSpace(vm.StatusMessage)
                 ? loc.GetString("SettingsCheckFailed")
                 : vm.StatusMessage);
             return;
         }
+        AppLog.Information("Update download complete, prompting restart");
         await ShowReadyCoreAsync(
             string.IsNullOrWhiteSpace(vm.PendingVersion) ? null : vm.PendingVersion,
             string.IsNullOrWhiteSpace(vm.ReleaseNotes) ? null : vm.ReleaseNotes).ConfigureAwait(false);
@@ -497,7 +513,11 @@ public static class UpdateDialogService
     {
         var snap = Snapshot();
         if (snap is null)
+        {
+            AppLog.Warning("Update restart prompt skipped: window not ready");
             return Task.CompletedTask;
+        }
+        AppLog.Information("Update ready, prompting restart: v{Version}", version);
         var (window, loc) = snap.Value;
         return ShowReadyDialogAsync(window, loc, version, notes);
     }

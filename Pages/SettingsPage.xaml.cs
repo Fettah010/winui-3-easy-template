@@ -181,11 +181,37 @@ public sealed partial class SettingsPage : Page, INavigationAware
         return tcs.Task;
     }
 
-    private void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+    private bool _checking;
+
+    private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
     {
         // A manual click wins over any armed auto-check still waiting.
         _autoCheckArmed = false;
-        _ = UpdateDialogService.ShowCheckAsync();
+        if (_checking)
+            return;
+        _checking = true;
+        // Immediate click feedback on the button itself (disabled +
+        // "Checking…"): the result arrives via toast or dialog, which can
+        // take a network round-trip — the button must visibly own the
+        // in-flight check until then. Restored in finally so it can never
+        // stick, whatever the flow below does.
+        try
+        {
+            CheckUpdatesButton.IsEnabled = false;
+            CheckUpdatesButton.Content = LocalizationService.Current.GetString("SettingsChecking");
+            await UpdateDialogService.ShowCheckAsync();
+        }
+        catch { }
+        finally
+        {
+            try
+            {
+                CheckUpdatesButton.Content = LocalizationService.Current.GetString("SettingsCheckNow");
+                CheckUpdatesButton.IsEnabled = true;
+            }
+            catch { }
+            _checking = false;
+        }
     }
 
     private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)

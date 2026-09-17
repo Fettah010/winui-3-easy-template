@@ -92,8 +92,12 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// Post-first-frame init: tray icon/window, notifications, OS toasts,
-    /// and the first-run/what's-new flow. Runs on the UI thread via a
-    /// low-priority dispatcher item (see ctor). Never throws.
+    /// update dialogs, and the first-run/what's-new flow. Runs on the UI
+    /// thread via a low-priority dispatcher item (see ctor). Never throws.
+    /// Each service initializes in its own guard: one failing service must
+    /// never abort the rest (a single shared try used to leave the app
+    /// silently half-wired — e.g. no update surface and no first-run
+    /// dialog — with only one log line).
     /// </summary>
     private void InitializeDeferredServices()
     {
@@ -104,11 +108,25 @@ public sealed partial class MainWindow : Window
                 bool initialDark = themedRootForIcon.ActualTheme == ElementTheme.Dark;
                 try { SystemTrayService.Current.RefreshThemeIcon(initialDark); } catch { }
             }
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Deferred window icon init failed");
+        }
 
+        try
+        {
             // Initialize system tray
             SystemTrayService.Current.Initialize(this);
             SystemTrayService.Current.NavigationRequested += OnTrayNavigationRequested;
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Deferred tray init failed");
+        }
 
+        try
+        {
             // Initialize notification services (in-app cards + OS toasts)
             NotificationService.Current.Initialize(NotificationHost);
             DesktopToastService.Current.Initialize();
@@ -116,16 +134,30 @@ public sealed partial class MainWindow : Window
             {
                 try { DispatcherQueue.TryEnqueue(() => WindowActivator.ShowAndActivate(this)); } catch { }
             };
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Deferred notification init failed");
+        }
 
-            // The single update surface (animated popup, not a page).
+        try
+        {
+            // The single update surface (toasts + native dialogs).
             UpdateDialogService.Initialize(this, UpdatePopupControl);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Deferred update dialog init failed");
+        }
 
+        try
+        {
             // Show first-run or what's-new dialog after window is shown
             _ = FirstRunDialogService.ShowIfNeededAsync(this);
         }
         catch (Exception ex)
         {
-            AppLog.Error(ex, "Deferred window services init failed");
+            AppLog.Error(ex, "Deferred first-run init failed");
         }
     }
 

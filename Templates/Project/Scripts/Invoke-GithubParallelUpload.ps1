@@ -3,9 +3,12 @@
 # upload-github.ps1 (local top-up of an already-packed folder).
 #
 # Why parallel: single-file uploads to GitHub crawl at ~2-3 Mbps from any
-# machine (measured with both vpk and gh), so four serial ~270MB assets
-# take ~1h and trip step timeouts; parallel lands in ~15 min with
-# per-file progress in the log. vpk's own uploader is serial, hence gh.
+# machine (measured with both vpk and gh). The release script already drops
+# the duplicate Portable.zip carrier, so a release is ~230MB across ~6
+# files (measured 0.0.12: 340MB in 28min with the zip; expect ~18min
+# without). vpk's own uploader is serial, hence gh. Per-file attempts log
+# inline; a totals line (MB, elapsed, effective MB/s) closes the run so
+# regressions in upload speed are visible in CI logs.
 #
 #   powershell -File Scripts/Invoke-GithubParallelUpload.ps1 `
 #     -Tag v0.0.4-beta -Title "DevTem-WinUI 3 0.0.4-beta" `
@@ -72,9 +75,12 @@ elseif ($PreRelease) {
 # One background job per file (Start-Job works on PS 5.1 and 7 alike).
 # Jobs inherit the environment, so GITHUB_TOKEN flows to gh automatically.
 Write-Host "Uploading $($Files.Count) asset(s) in parallel to $Tag ..."
+$uploadStart = Get-Date
+$totalBytes = [long]0
 $jobs = @()
 foreach ($file in $Files) {
     $item = Get-Item -LiteralPath $file
+    $totalBytes += $item.Length
     $mb = [math]::Round($item.Length / 1MB, 1)
     Write-Host "  queue: $($item.Name) ($mb MB)"
     if ($PSCmdlet.ShouldProcess($item.FullName, "Upload to $Tag")) {
@@ -114,7 +120,11 @@ foreach ($job in $jobs) {
     try { Remove-Job $job -Force -ErrorAction SilentlyContinue } catch { }
 }
 if ($failed.Count -gt 0) { throw ("Parallel upload failed for: " + ($failed -join ", ")) }
+$elapsed = (Get-Date) - $uploadStart
+$totalMb = [math]::Round($totalBytes / 1MB, 1)
+$rate = if ($elapsed.TotalSeconds -gt 0) { [math]::Round($totalMb / $elapsed.TotalSeconds, 2) } else { 0 }
 Write-Host ("All " + $Files.Count + " asset(s) uploaded to $Tag.")
+Write-Host ("Upload totals: $totalMb MB in $([math]::Round($elapsed.TotalMinutes, 1)) min (effective $rate MB/s).")
 
 if ($Publish) {
     if ($PSCmdlet.ShouldProcess($Tag, "Publish release (un-draft)")) {

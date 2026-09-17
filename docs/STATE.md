@@ -5,10 +5,12 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** all green. `v0.0.13-beta` (update demo) cut on top of the `v0.0.12-beta` update-UX rebuild.
-- **Version:** app `0.0.13-beta`; template package `0.3.6`.
-- **Tags:** `v0.0.13-beta` (release.yml → beta channel); `templates-v0.3.6` (templates-publish success → NuGet).
-- **Branches:** `main` pushed; `beta` tracks `v0.0.13-beta` (to verify).
+- **Goal:** all green. `v0.0.14-beta` — check-now feedback fixes + slimmer uploads (0.0.13 draft deleted, never published).
+- **Version:** app `0.0.14-beta`; template package `0.3.6`.
+- **Tags:** `v0.0.14-beta` (release.yml → beta channel); `templates-v0.3.6` (templates-publish success → NuGet).
+- **Branches:** `main` pushed; `beta` tracks `v0.0.14-beta` (to verify).
+- **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).
+- **Check-now fix (v0.0.14):** per-service deferred-init guards (one throw can't half-wire the app), busy check button (disabled + "Checking…" until the flow resolves), AppLog breadcrumbs on every update stage + dropped-toast/host warnings. If a check is ever silent again, `Logs/applog-*.log` names the cause.
 - **Tree:** clean (pending this STATE refresh).
 - **CI health (last known):** Local: build 0/0, tests 268+1, parity OK (157), MSIX `-Validate` + `-DryRun` (+AppInstaller feed) pass, template matrix green (21 combos incl. init-template scratch), smoke launch + update-check pass live in isolation (full suite flaky on shared desktop — known fragile point).
 - **Release pipeline:** `vpk` packs, `Scripts/Invoke-GithubParallelUpload.ps1` uploads (`gh`, one job per asset, 3x retry, markers). Serial `vpk upload github` topped ~1h at ~2-3 Mbps and tripped timeouts; parallel lands ~11 min. See DECISIONS + AGENTS gotcha 5.

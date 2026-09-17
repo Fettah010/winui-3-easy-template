@@ -12,6 +12,28 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.14-beta] - 2026-09-17
+
+### Fixed
+
+- "Check now" doing nothing with no feedback: each deferred window
+  service now initializes in its own guard (one failure can no longer
+  silently kill the update surface), the check button disables with a
+  "Checking…" label for the whole in-flight check, and the update flow
+  logs every stage to `Logs/applog-*.log` (including dropped toasts and
+  a not-ready window) so a silent check is diagnosable.
+- Release uploads slimmed ~33%: `Portable.zip` duplicates the full
+  payload and the updater never reads it, so it is packed locally but
+  no longer uploaded unless `-IncludePortableZip` is passed
+  (~340MB/28min → ~230MB/~18min); the parallel uploader now logs
+  totals (MB, elapsed, effective MB/s).
+
+### Added
+
+- Headless regression test proving every update-dialog entry completes
+  with no window wired (never hangs).
+
 ## [0.0.13-beta] - 2026-09-17
 
 ### Changed

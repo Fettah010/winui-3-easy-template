@@ -13,6 +13,14 @@
 #
 # Output:
 #   Releases/  containing setup.exe, *.nupkg update packages and releases feed.
+#
+# Asset diet (upload speed): vpk emits Setup.exe, a full .nupkg, a delta
+# .nupkg, a Portable.zip, and the feed files — but Setup.exe, the full
+# .nupkg, and Portable.zip all carry the same ~115MB payload, and the
+# updater only ever reads Setup.exe (fresh installs) + the .nupkgs. At
+# GitHub's ~2-3 Mbps per stream, every duplicate 115MB carrier costs
+# ~8 min, so Portable.zip is packed locally but NOT uploaded unless
+# -IncludePortableZip is passed (measured: 340MB/28min -> ~230MB/~18min).
 # ------------------------------------------------------------------------------
 
 param(
@@ -24,6 +32,7 @@ param(
     [switch]$Download,            # fetch the previous release so deltas are generated
     [switch]$Publish,             # create the GitHub release as published (not a draft)
     [switch]$PreRelease,          # mark the GitHub release as a pre-release
+    [switch]$IncludePortableZip,  # also upload *-Portable.zip (off: updater never reads it)
     [string]$Tag = ""             # git tag for the release (default: "v$Version")
 )
 
@@ -139,6 +148,15 @@ if ([string]::IsNullOrWhiteSpace($Tag)) { $Tag = "v$Version" }
 $produced = @(Get-ChildItem -LiteralPath $ReleasesDir -Recurse -File -ErrorAction SilentlyContinue |
     Where-Object { $_.LastWriteTime -ge $packStart })
 if ($produced.Count -eq 0) { throw "vpk pack produced no files under $ReleasesDir." }
+if (-not $IncludePortableZip) {
+    $dropped = @($produced | Where-Object { $_.Name -like "*-Portable.zip" })
+    foreach ($d in $dropped) {
+        $mb = [math]::Round($d.Length / 1MB, 1)
+        Write-Host "  skip (not uploaded, still in Releases/): $($d.Name) ($mb MB)"
+    }
+    $produced = @($produced | Where-Object { $_.Name -notlike "*-Portable.zip" })
+}
+if ($produced.Count -eq 0) { throw "Nothing left to upload after asset filtering." }
 $uploadFiles = @($produced | ForEach-Object { $_.FullName })
 
 $uploadArgs = @{
