@@ -201,6 +201,11 @@ default to the beta channel; stable releases use the plain version).
 2. **vpk v1.x flag names:** `--icon` (NOT `--packIcon`); `-u/--packId`, `-v/--packVersion`.
 3. **Velopack versions must keep increasing.** Same version can only go to one channel.
 4. **Channels ≠ git branches.** Channels are separate feeds. Branches track releases.
+5. **Release uploads are parallel.** `build-and-release.ps1` packs with
+   `vpk` but uploads with `Scripts/Invoke-GithubParallelUpload.ps1`
+   (`gh`, one job per asset): single-file uploads crawl at ~2-3 Mbps,
+   so serial ~270MB assets take ~1h and trip timeouts. Never go back
+   to serial `vpk upload github`.
 5. **Tag naming determines channel:** `v0.0.1-beta` → beta, `v0.0.1` → stable.
 6. **Never use ApplicationData.LocalSettings.** It does not persist for unpackaged
    apps (no settings.dat is ever written) — all settings go through

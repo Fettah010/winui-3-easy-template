@@ -53,7 +53,9 @@ jobs:
   release:
     name: Build & publish
     runs-on: windows-latest
-    timeout-minutes: 45
+    # Uploading ~800MB of assets at ~2-3 Mbps takes ~15 min even parallel;
+    # keep headroom for slow days (the serial era tripped 45 min).
+    timeout-minutes: 90
 
     steps:
       - name: Checkout

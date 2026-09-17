@@ -340,3 +340,13 @@ in git history; this file saves the next agent the archaeology.
   `AGENTS.md` bootstrap/map entries updated. README keyword-stuffing
   (the "why are the keywords so specific" FAQ + stuffed intro) removed;
   READMEs describe the app now.
+- **2026-09-17 — Release uploads are parallel (`gh`, one job per asset).**
+  The 0.0.11-beta release hung ~1h in `vpk upload github`: four serial
+  ~270MB assets at a measured ~2-3 Mbps (same via `vpk` and `gh`, so the
+  pipe — not the tool — is the bottleneck). Packing stays with `vpk`;
+  transport moved to `Scripts/Invoke-GithubParallelUpload.ps1` (draft-
+  first, `--clobber` re-runnable, publishes after all jobs land),
+  shared by `build-and-release.ps1` (fresh-timestamp asset selection)
+  and `upload-github.ps1`. Payload shrink rejected: R2R stays (startup
+  perf), ONNX/DirectML stay (framework closure). Job timeout 45 → 90
+  min backstop. Proven live against the 0.0.11-beta draft.

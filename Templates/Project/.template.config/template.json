@@ -248,6 +248,7 @@
             "Tests/Services/BackgroundUpdateServiceTests.cs",
             ".github/workflows/release.yml",
             "Scripts/build-and-release.ps1",
+            "Scripts/Invoke-GithubParallelUpload.ps1",
             "Scripts/local-smoke-test.ps1",
             "Scripts/upload-github.ps1",
             "docs/feature-guides/updates-velopack.md"

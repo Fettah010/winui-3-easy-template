@@ -90,7 +90,10 @@ if ($Download -and -not [string]::IsNullOrWhiteSpace($GithubToken)) {
 }
 
 # 2) Pack the publish folder into a Velopack release (installer + deltas).
+# The pack timestamp below selects exactly the files this run produced:
+# a previous download may have left stale files behind in ReleasesDir.
 Write-Host "`n==> vpk pack" -ForegroundColor Cyan
+$packStart = Get-Date
 $packArgs = @(
     "pack",
     "-u", $AppId,
@@ -120,26 +123,36 @@ if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
 if ($LASTEXITCODE -ne 0) { throw "vpk pack failed with exit code $LASTEXITCODE" }
 
 # 3) Upload the release to GitHub (draft by default; add -Publish to flip).
-Write-Host "`n==> vpk upload github" -ForegroundColor Cyan
+# Parallel gh upload (see Invoke-GithubParallelUpload.ps1): vpk's own
+# uploader is serial and ~270MB assets crawl at ~2-3 Mbps (~1h total),
+# while parallel lands in ~15 min. Packing stays with vpk; only the
+# transport moves.
+Write-Host "`n==> github upload (parallel)" -ForegroundColor Cyan
 if ([string]::IsNullOrWhiteSpace($GithubToken)) {
     Write-Warning "GITHUB_TOKEN is not set - skipping upload. Release is ready in $ReleasesDir"
     Write-Host "Run .\upload-github.ps1 after exporting GITHUB_TOKEN." -ForegroundColor Yellow
     return
 }
 
-$uploadArgs = @(
-    "upload", "github",
-    "--repoUrl", $GithubRepoUrl,
-    "--token", $GithubToken,
-    "-o", $ReleasesDir,
-    "-c", $Channel,
-    "--releaseName", "DevTem-WinUI 3 $Version"
-)
-if ($Publish)    { $uploadArgs += "--publish" }
-if ($PreRelease) { $uploadArgs += "--pre" }
+$env:GITHUB_TOKEN = $GithubToken
 if ([string]::IsNullOrWhiteSpace($Tag)) { $Tag = "v$Version" }
-$uploadArgs += @("--tag", $Tag)
-& vpk @uploadArgs
-if ($LASTEXITCODE -ne 0) { throw "vpk upload github failed with exit code $LASTEXITCODE" }
+$produced = @(Get-ChildItem -LiteralPath $ReleasesDir -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.LastWriteTime -ge $packStart })
+if ($produced.Count -eq 0) { throw "vpk pack produced no files under $ReleasesDir." }
+$uploadFiles = @($produced | ForEach-Object { $_.FullName })
+
+$uploadArgs = @{
+    Tag = $Tag
+    Title = "DevTem-WinUI 3 $Version"
+    Files = $uploadFiles
+    Repo = ($GithubRepoUrl -replace "^https://github\.com/", "")
+}
+if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes) -and (Test-Path -LiteralPath $ReleaseNotes)) {
+    $uploadArgs["NotesFile"] = $ReleaseNotes
+}
+if ($Publish)    { $uploadArgs["Publish"] = $true }
+if ($PreRelease) { $uploadArgs["PreRelease"] = $true }
+& (Join-Path $PSScriptRoot "Invoke-GithubParallelUpload.ps1") @uploadArgs
+if ($LASTEXITCODE -ne 0) { throw "Parallel upload failed with exit code $LASTEXITCODE" }
 
 Write-Host "`n==> Done. Release $Version published to $GithubRepoUrl" -ForegroundColor Green
