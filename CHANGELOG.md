@@ -9,6 +9,15 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.11-beta] - 2026-09-17
+
+### Fixed
+
+- Update-flow verification release: exercises the 0.0.10 popup end to
+  end (background detection → silent download → animated restart
+  prompt). No app behavior changes besides the version itself.
+
 ## [0.0.10-beta] - 2026-09-16
 
 ### Fixed

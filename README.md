@@ -63,6 +63,12 @@ Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
 the flags, and `docs/FEATURES.md` records what each scaffold picked.
 
+## What's new in 0.0.11-beta
+
+- Update-flow verification release (no behavior changes): watch the
+  0.0.10 popup detect, download, and prompt restart — full notes in
+  [CHANGELOG.md](CHANGELOG.md)
+
 ## What's new in 0.0.10-beta
 
 - Updates never block launch (app opens first, then asks), one animated
