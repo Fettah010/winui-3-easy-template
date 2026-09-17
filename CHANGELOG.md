@@ -11,6 +11,16 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.13-beta] - 2026-09-17
+
+### Changed
+
+- Update demo release: no app behavior changes besides the version
+  itself. Install `v0.0.12-beta` via `setup.exe`, then watch the new
+  update flow pick this version up (toast on detect, native dialog for
+  install, progress, restart prompt).
+
 ## [0.0.12-beta] - 2026-09-17
 
 ### Changed
