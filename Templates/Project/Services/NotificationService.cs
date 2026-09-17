@@ -76,7 +76,8 @@ public sealed class NotificationService
     /// </summary>
     public Task Show(string title, string message, NotificationType type, int durationMs = 4000)
     {
-        if (_host is null)
+        var host = _host;
+        if (host is null)
         {
             // Silent drops are undebuggable (the update flow reports every
             // state through here): leave a breadcrumb naming the cause.
@@ -84,8 +85,25 @@ public sealed class NotificationService
             return Task.CompletedTask;
         }
 
+        // Host children are thread-affine: background callers (update
+        // checks, downloads) are marshalled instead of dying with
+        // RPC_E_WRONG_THREAD in a fire-and-forget task nobody observes.
+        try
+        {
+            var queue = host.DispatcherQueue;
+            if (queue is not null && !queue.HasThreadAccess)
+            {
+                queue.TryEnqueue(() =>
+                {
+                    try { _ = Show(title, message, type, durationMs); } catch { }
+                });
+                return Task.CompletedTask;
+            }
+        }
+        catch { }
+
         var item = new NotificationItem(title, message, type);
-        if (!ToastPolicy.ShouldShowNow(_host.Children.Count))
+        if (!ToastPolicy.ShouldShowNow(host.Children.Count))
         {
             if (!ToastPolicy.ShouldQueue(_pending.Count))
                 _pending.Dequeue();

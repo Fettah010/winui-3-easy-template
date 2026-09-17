@@ -14,6 +14,28 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.16-beta] - 2026-09-17
+
+### Fixed
+
+- Manual update checks that silently died after the network round-trip:
+  the update dialog service now stays on the UI thread for its whole
+  flow (background-thread UI calls threw into the never-throw guards
+  and the user saw nothing), and toasts self-marshal to the UI thread
+  so background callers can never lose them.
+- Missing update feedback: a toast now announces "update available"
+  before the install dialog, a toast confirms "download complete"
+  before the restart prompt, and the no-update toast reliably appears.
+- Home "Check for updates" now visibly drives the Settings check
+  (same thread fix — the wiring was already there).
+
+### Changed
+
+- Velopack setup branding: branded splash art (`Assets/SetupSplash.png`)
+  plus a Windows-accent (`#0078D4`) progress bar instead of the
+  default green.
+
 ## [0.0.15-beta] - 2026-09-17
 
 ### Changed

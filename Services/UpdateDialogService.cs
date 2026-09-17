@@ -21,6 +21,12 @@ namespace DevTemWinUi3.Services;
 /// before <see cref="Initialize"/>). Checks always terminate: an
 /// unpackaged run short-circuits (nothing to update) and network checks
 /// race a timeout, so the "checking forever" state cannot happen.
+/// Thread-affinity rule: every await below resumes on the UI thread
+/// (no ConfigureAwait(false) past the dispatcher hop). Toasts, dialogs,
+/// and progress controls are thread-affine — a background-thread
+/// continuation throws RPC_E_WRONG_THREAD, gets swallowed by the
+/// never-throw guards, and the user sees exactly nothing. That failure
+/// mode is silent by construction, so this file must never reintroduce it.
 /// </summary>
 public static class UpdateDialogService
 {
@@ -230,7 +236,7 @@ public static class UpdateDialogService
         }
         if (popup is not null)
         {
-            try { await popup.HideAsync().ConfigureAwait(false); } catch { }
+            try { await popup.HideAsync(); } catch { }
         }
     }
 
@@ -308,14 +314,16 @@ public static class UpdateDialogService
         {
             var checkTask = vm.CheckAsync(token);
             var timeoutTask = Task.Delay(timeout, token);
-            var finished = await Task.WhenAny(checkTask, timeoutTask).ConfigureAwait(false);
+            // Plain awaits (UI thread): see the thread-affinity rule on the
+            // class — every toast/dialog below is thread-affine.
+            var finished = await Task.WhenAny(checkTask, timeoutTask);
             if (finished != checkTask)
             {
                 AppLog.Warning("Update check timed out after {Timeout}s", timeout.TotalSeconds);
                 ToastError(title, loc.GetString("SettingsCheckFailed"));
                 return;
             }
-            try { await checkTask.ConfigureAwait(false); } catch { }
+            try { await checkTask; } catch { }
         }
         catch (OperationCanceledException)
         {
@@ -331,7 +339,7 @@ public static class UpdateDialogService
         if (vm.LastCheckFailed)
         {
             AppLog.Warning("Update check failed: {Detail}", vm.StatusMessage);
-            await ShowErrorDialogAsync(window, loc, title, vm.StatusMessage).ConfigureAwait(false);
+            await ShowErrorDialogAsync(window, loc, title, vm.StatusMessage);
             return;
         }
         if (!vm.HasUpdate)
@@ -341,7 +349,7 @@ public static class UpdateDialogService
             return;
         }
         AppLog.Information("Update check: v{Version} available", vm.PendingVersion);
-        await ShowAvailableDialogAsync(window, loc, title, vm).ConfigureAwait(false);
+        await ShowAvailableDialogAsync(window, loc, title, vm);
     }
 
     private static async Task ShowAvailableCoreAsync(UpdateCheckResult result)
@@ -357,7 +365,7 @@ public static class UpdateDialogService
         string title = loc.GetString("UpdatePopupTitle");
         var vm = new UpdateCenterViewModel(updates);
         vm.PublishResult(result);
-        await ShowAvailableDialogAsync(window, loc, title, vm).ConfigureAwait(false);
+        await ShowAvailableDialogAsync(window, loc, title, vm);
     }
 
     private static async Task ShowAvailableDialogAsync(
@@ -368,6 +376,9 @@ public static class UpdateDialogService
             : vm.PendingVersion;
         string status = loc.GetString("UpdateAvailableVersion", version);
         string? notes = string.IsNullOrWhiteSpace(vm.ReleaseNotes) ? null : vm.ReleaseNotes;
+        // Announce first (toast), decide second (dialog): the toast is the
+        // visible record even if the dialog is dismissed.
+        ToastInfo(title, status);
         ContentDialogResult choice = ContentDialogResult.None;
         ContentDialog? dialog = null;
         try
@@ -387,7 +398,7 @@ public static class UpdateDialogService
         }
         if (choice != ContentDialogResult.Primary)
             return;
-        await DownloadAndPromptAsync(window, loc, title, vm).ConfigureAwait(false);
+        await DownloadAndPromptAsync(window, loc, title, vm);
     }
 
     private static async Task DownloadAndPromptAsync(
@@ -504,9 +515,13 @@ public static class UpdateDialogService
             return;
         }
         AppLog.Information("Update download complete, prompting restart");
+        string readyVersion = string.IsNullOrWhiteSpace(vm.PendingVersion)
+            ? AppInfo.Current.VersionDisplay
+            : vm.PendingVersion;
+        ToastSuccess(title, loc.GetString("UpdateRestartTitle", readyVersion));
         await ShowReadyCoreAsync(
             string.IsNullOrWhiteSpace(vm.PendingVersion) ? null : vm.PendingVersion,
-            string.IsNullOrWhiteSpace(vm.ReleaseNotes) ? null : vm.ReleaseNotes).ConfigureAwait(false);
+            string.IsNullOrWhiteSpace(vm.ReleaseNotes) ? null : vm.ReleaseNotes);
     }
 
     private static Task ShowReadyCoreAsync(string? version, string? notes)
@@ -586,7 +601,7 @@ public static class UpdateDialogService
             UntrackDialog(dialog);
         }
         if (choice == ContentDialogResult.Primary)
-            await ShowCheckCoreAsync().ConfigureAwait(false);
+            await ShowCheckCoreAsync();
     }
 
     /// <summary>

@@ -119,10 +119,17 @@ $packIcon = Join-Path $ProjectRoot "Assets\app.ico"
 if (Test-Path $packIcon) {
     $packArgs += @("--icon", $packIcon)
 }
-# Branded splash shown by Setup.exe while it installs (app logo, 256px).
-$splashImage = Join-Path $ProjectRoot "Assets\Logo.png"
-if (Test-Path $splashImage) {
+# Branded splash shown by Setup.exe while it installs: SetupSplash art
+# (logo + name on a brand gradient) with a Windows-accent progress bar
+# instead of Velopack's default green. Falls back to Logo.png when the
+# branded art is missing (e.g. a fresh scaffold before art replacement).
+$splashImage = Join-Path $ProjectRoot "Assets\SetupSplash.png"
+if (-not (Test-Path -LiteralPath $splashImage)) {
+    $splashImage = Join-Path $ProjectRoot "Assets\Logo.png"
+}
+if (Test-Path -LiteralPath $splashImage) {
     $packArgs += @("--splashImage", $splashImage)
+    $packArgs += @("--splashProgressColor", "#0078D4")
 }
 if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
     if (-not (Test-Path $ReleaseNotes)) { throw "Release notes file not found: $ReleaseNotes" }

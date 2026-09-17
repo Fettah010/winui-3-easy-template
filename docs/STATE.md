@@ -5,10 +5,10 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** all green. `v0.0.15-beta` (update-test target for the fixed flow; 0.0.14 diet verified: 4m43s run).
-- **Version:** app `0.0.15-beta`; template package `0.3.6`.
-- **Tags:** `v0.0.15-beta` (release.yml → beta channel); `templates-v0.3.6` (templates-publish success → NuGet).
-- **Branches:** `main` pushed; `beta` tracks `v0.0.15-beta` (to verify).
+- **Goal:** all green. `v0.0.16-beta` (thread-affinity + toast fixes, setup branding) then `v0.0.17-beta` (update-test target), back-to-back.
+- **Version:** app `0.0.16-beta`; template package `0.3.6`.
+- **Tags:** `v0.0.16-beta`, `v0.0.17-beta` (release.yml → beta channel); `templates-v0.3.6` (templates-publish success → NuGet).
+- **Branches:** `main` pushed; `beta` tracks latest (to verify).
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).
 - **Check-now fix (v0.0.14):** per-service deferred-init guards (one throw can't half-wire the app), busy check button (disabled + "Checking…" until the flow resolves), AppLog breadcrumbs on every update stage + dropped-toast/host warnings. If a check is ever silent again, `Logs/applog-*.log` names the cause.
 - **Tree:** clean (pending this STATE refresh).
