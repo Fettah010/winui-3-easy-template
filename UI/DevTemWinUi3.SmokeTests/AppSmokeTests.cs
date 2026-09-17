@@ -202,8 +202,9 @@ public sealed class AppSmokeTests
     {
         var window = RequireWindow();
         DismissFirstRunDialogIfPresent(RecheckTimeout);
-        // Fresh machines land on the first-run wizard, not Home: drive it
-        // to completion (no-op when already completed) before asserting.
+        // First run shows only the welcome dialog (the setup wizard never
+        // auto-opens — the installer owns setup): complete the wizard only
+        // if it is somehow showing, a no-op otherwise.
         CompleteSetupWizardIfPresent(NavigateTimeout);
 
         Assert.AreEqual(AppWindowTitle, window.Title);
@@ -225,59 +226,31 @@ public sealed class AppSmokeTests
     }
 
     [TestMethod]
-    public void UpdatePopup_Opens_From_Settings()
+    public void UpdateCheck_FromSettings_Resolves()
     {
-        // The Update Center page is retired: the animated popup is the
-        // single update surface (Settings check button opens it). The
-        // card Border itself is not a UIA element, so the test keys off
-        // the title text + action buttons.
+        // The update surface is toasts + native dialogs (no custom
+        // overlay): a manual check must always resolve — toast on
+        // up-to-date / not-installed, a native dialog when an update is
+        // pending — and leave Settings alive. Regression test for the
+        // "checking forever" hang: the check button must come back.
         RequireWindow();
         DismissFirstRunDialogIfPresent(RecheckTimeout);
         ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
 
-        const int attempts = 3;
-        for (int i = 1; i <= attempts; i++)
-        {
-            ForegroundWindow();
-            var check = RequireElement("CheckUpdatesButton", "Check-for-updates button");
-            InvokeOrClick(check);
-            var popup = WaitForElement("UpdatePopupTitle", NavigateTimeout);
-            if (popup is not null)
-            {
-                // Close it again so later tests start from a clean window.
-                // Buttons appear per state (checking hides them), so poll
-                // for a clickable one instead of assuming the first hit.
-                bool closed = false;
-                var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-                while (!closed && DateTime.UtcNow < deadline)
-                {
-                    var candidate = WaitForElement("UpdatePopupPrimary", TimeSpan.FromSeconds(1))
-                        ?? WaitForElement("UpdatePopupSecondary", TimeSpan.FromSeconds(1));
-                    if (candidate is null)
-                    {
-                        Task.Delay(500).Wait();
-                        continue;
-                    }
-                    try
-                    {
-                        if (!candidate.IsEnabled)
-                        {
-                            Task.Delay(500).Wait();
-                            continue;
-                        }
-                        InvokeOrClick(candidate);
-                        closed = true;
-                    }
-                    catch
-                    {
-                        Task.Delay(500).Wait();
-                    }
-                }
-                Assert.IsTrue(closed, "Update popup showed no clickable button.");
-                return;
-            }
-        }
-        Assert.Fail($"Update popup did not appear after clicking check ({attempts} attempts).");
+        ForegroundWindow();
+        var check = RequireElement("CheckUpdatesButton", "Check-for-updates button");
+        InvokeOrClick(check);
+
+        // Dismiss whatever the check raised (native dialog buttons or the
+        // legacy popup), then require the page to still be alive. Toasts
+        // need no dismissal: the loop exits once the page is responsive
+        // with no dialog in front of it.
+        DismissUpdateUiIfPresent(TimeSpan.FromSeconds(35));
+
+        var settings = WaitForElement("SettingsTitleText", NavigateTimeout);
+        Assert.IsNotNull(settings, "Settings page did not stay alive after update check.");
+        var button = WaitForElement("CheckUpdatesButton", RecheckTimeout);
+        Assert.IsNotNull(button, "Check button missing after update check.");
     }
 
     [TestMethod]
@@ -654,6 +627,93 @@ public sealed class AppSmokeTests
             timeout,
             TimeSpan.FromMilliseconds(500)).Result;
         try { found?.Click(); } catch { }
+    }
+
+    /// <summary>
+    /// Dismisses any update UI the check raised and returns once the app is
+    /// responsive again: clicks safe-dismiss buttons only (Close / Later /
+    /// Cancel / OK, all languages, plus the legacy popup buttons) — never
+    /// Install / Restart / Retry, which would advance the flow instead of
+    /// closing it. The name search is scoped to modal dialogs: an unscoped
+    /// "Close" would match the window-chrome caption button and close the
+    /// app. Toasts need no dismissal: the loop also exits once the Settings
+    /// page is responsive with no dialog in front of it.
+    /// </summary>
+    private static void DismissUpdateUiIfPresent(TimeSpan timeout)
+    {
+        var window = _window;
+        if (window is null)
+            return;
+        string[] safeNames =
+        [
+            "Close", "Fermer", "Cerrar",
+            "Later", "Plus tard", "Más tarde",
+            "Cancel", "Annuler", "Cancelar",
+            "OK",
+        ];
+        var deadline = DateTime.UtcNow + timeout;
+        var settledSince = DateTime.UtcNow;
+        while (DateTime.UtcNow < deadline)
+        {
+            ForegroundWindow();
+            // Legacy overlay buttons first (AutomationId, fastest path).
+            var legacy = WaitForElement("UpdatePopupPrimary", TimeSpan.FromMilliseconds(250))
+                ?? WaitForElement("UpdatePopupSecondary", TimeSpan.FromMilliseconds(250));
+            if (legacy is not null)
+            {
+                try
+                {
+                    if (legacy.IsEnabled)
+                        InvokeOrClick(legacy);
+                }
+                catch { }
+                settledSince = DateTime.UtcNow;
+                Task.Delay(500).Wait();
+                continue;
+            }
+            var safe = FindModalDialogButton(window, safeNames);
+            if (safe is not null)
+            {
+                try { InvokeOrClick(safe); } catch { }
+                settledSince = DateTime.UtcNow;
+                Task.Delay(500).Wait();
+                continue;
+            }
+            // No dialog in front and the page answers: resolved. Require a
+            // short quiet period so a slow-appearing dialog still gets seen.
+            var alive = WaitForElement("SettingsTitleText", TimeSpan.FromMilliseconds(250));
+            if (alive is not null && DateTime.UtcNow - settledSince > TimeSpan.FromSeconds(3))
+                return;
+            Task.Delay(500).Wait();
+        }
+    }
+
+    /// <summary>
+    /// Finds a safe-dismiss button inside modal dialogs only (never window
+    /// chrome). Null when no modal dialog is open.
+    /// </summary>
+    private static AutomationElement? FindModalDialogButton(Window window, string[] names)
+    {
+        try
+        {
+            foreach (var modal in window.ModalWindows)
+            {
+                foreach (var name in names)
+                {
+                    AutomationElement? found = null;
+                    try
+                    {
+                        found = modal.FindFirstDescendant(cf =>
+                            cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button).And(cf.ByName(name)));
+                    }
+                    catch { found = null; }
+                    if (found is not null)
+                        return found;
+                }
+            }
+        }
+        catch { }
+        return null;
     }
 
     /// <summary>

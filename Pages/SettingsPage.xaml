@@ -114,9 +114,9 @@
                     Description="{loc:Loc Key=SettingsCheckDesc}"
                     Visibility="{x:Bind ViewModel.UpdateCheckCardVisibility, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                        <!-- The animated update popup owns the whole flow
-                             (checking animation, progress, restart); this
-                             button only opens it, so it is always enabled. -->
+                        <!-- The update flow (toasts + native dialogs, owned by
+                             UpdateDialogService) starts here; this button
+                             only starts it, so it is always enabled. -->
                         <Button
                             x:Name="CheckUpdatesButton"
                             AutomationProperties.AutomationId="CheckUpdatesButton"

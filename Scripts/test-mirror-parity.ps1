@@ -129,7 +129,7 @@ $requiredGuards = @{
     "Services\LocalizationService.cs"          = @("(localization)", "(localization)")
     "Services\LoggingService.cs"               = @("(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(health)", "(logging == 'mel')", "(logging == 'none')", "(health)", "(logging == 'serilog')", "(logging == 'mel')", "(health)", "(logging == 'none')")
     "Services\CrashReportingService.cs"        = @("(crash)")
-    "Services\FirstRunDialogService.cs"        = @("(setup)", "(setup)")
+    "Services\FirstRunDialogService.cs"        = @()
     "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(setup)", "(health)", "(http)")
     "Services\SystemTrayService.cs"            = @()
     "Tests\Services\ServiceLocatorTests.cs"    = @("(http)", "(database)", "(http)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(health)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)")

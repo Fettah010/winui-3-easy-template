@@ -10,6 +10,28 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.12-beta] - 2026-09-17
+
+### Changed
+
+- Setup wizard no longer auto-opens in the app: install-time choices
+  (location, shortcuts, launch) belong to the installer — the MSIX
+  package on packaged runs, Velopack setup on portable runs. First run
+  lands on Home with a welcome dialog.
+- Update experience rebuilt around toasts + native WinUI 3 dialogs:
+  checking / up-to-date / not-installed report via the app's
+  notification toasts; update-available and restart prompts are native
+  `ContentDialog`s instead of the custom overlay.
+- Manual update checks always terminate: unpackaged runs short-circuit
+  with "updates are only available for installed apps" and feed checks
+  race a 30s timeout (fixes checking forever on no-update).
+
+### Fixed
+
+- MSIX path re-validated (`build-msix -Validate` + `-DryRun` with the
+  `.appinstaller` feed); portable Velopack defaults unchanged.
+
 ## [0.0.11-beta] - 2026-09-17
 
 ### Fixed

@@ -16,6 +16,11 @@ public static class FirstRunDialogService
     /// an update, then records the version as shown. No-op otherwise.
     /// P0-1: no fixed settle delay — the caller (MainWindow) already defers
     /// this past the first frame, so waiting again only taxes launch.
+    /// The setup wizard never auto-opens: install-time choices (location,
+    /// shortcuts, launch) belong to the installer — the MSIX package owns
+    /// them on packaged runs and Velopack's setup owns them on portable
+    /// runs — so first run lands on Home with a welcome dialog, never a
+    /// Next/Back stepper inside the app.
     /// </summary>
     public static async Task ShowIfNeededAsync(Window window)
     {
@@ -26,18 +31,6 @@ public static class FirstRunDialogService
 
         if (firstRun.IsFirstRun)
         {
-            // Portable + setup wizard: route to the wizard page instead of
-            // the welcome dialog (packaged runs skip it — Windows owns
-            // location and shortcuts there; completed wizards never return).
-            if (ShouldShowSetupWizard())
-            {
-                try
-                {
-                    if (NavigationService.Current.NavigateTo("setupwizard"))
-                        return;
-                }
-                catch { }
-            }
             await ShowWelcomeAsync(window);
             firstRun.MarkAsShown();
         }
@@ -50,20 +43,10 @@ public static class FirstRunDialogService
 
     internal static bool ShouldShowSetupWizard()
     {
-        try
-        {
-            if (AppInfo.IsPackaged)
-                return false;
-            if (!AppFeatures.SetupWizard)
-                return false;
-            if (ViewModels.SetupWizardViewModel.IsCompleted)
-                return false;
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        // Retired: the in-app wizard no longer auto-opens on any track.
+        // Kept (returning false) so the setup feature flag still compiles
+        // out the page via --setup false without touching callers.
+        return false;
     }
 
     private static async Task ShowWelcomeAsync(Window window)

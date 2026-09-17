@@ -114,8 +114,8 @@
             Margin="0,0,0,16"
             Spacing="8"/>
 
-        <!-- Update popup overlay: full-window, above everything. Owned by
-             UpdateDialogService (shown from Settings, tray, background). -->
+        <!-- Legacy update overlay (kept wired, stays hidden): the update
+             flow now uses toasts + native dialogs via UpdateDialogService. -->
         <ctrl:UpdatePopup
             x:Name="UpdatePopupControl"
             Grid.Row="0"
