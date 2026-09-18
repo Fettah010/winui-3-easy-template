@@ -17,6 +17,16 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.19-beta] - 2026-09-18
+
+### Changed
+
+- Second half of the back-to-back update test: no app behavior changes
+  besides the version itself. With `v0.0.18-beta` installed, this
+  version proves steady-state updating on the instrumented flow — and
+  the new Settings → Notifications test toast proves the cards render.
+
 ## [0.0.18-beta] - 2026-09-18
 
 ### Fixed
