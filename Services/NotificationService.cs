@@ -117,6 +117,24 @@ public sealed class NotificationService
     {
         if (_host is null) return;
 
+        try
+        {
+            await ShowCardCoreAsync(item, durationMs);
+        }
+        catch (Exception ex)
+        {
+            // A fault here used to vanish into an unobserved fire-and-forget
+            // task (the helpers discard the Task): no toast, no trace. Log
+            // it so a broken toast pipeline names itself in Logs/.
+            try { AppLog.Error(ex, "Toast failed to show: {Title}", item.Title); } catch { }
+        }
+    }
+
+    private async Task ShowCardCoreAsync(NotificationItem item, int durationMs)
+    {
+        if (_host is null) return;
+        try { AppLog.Debug("Toast showing: {Title}", item.Title); } catch { }
+
         var card = new NotificationCard { Notification = item };
         var lifetime = new CancellationTokenSource();
         card.DismissRequested += (_, _) =>

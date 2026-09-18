@@ -172,6 +172,25 @@
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
+                    Text="{loc:Loc Key=SettingsNotifications}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    FontWeight="SemiBold"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+
+                <ctk:SettingsCard
+                    Header="{loc:Loc Key=SettingsNotifyTestHeader}"
+                    Description="{loc:Loc Key=SettingsNotifyTestDesc}">
+                    <Button
+                        x:Name="SendTestToastButton"
+                        AutomationProperties.AutomationId="SendTestToastButton"
+                        Content="{loc:Loc Key=SettingsNotifyTestButton}"
+                        Click="SendTestToastButton_Click"
+                        HorizontalAlignment="Right"/>
+                </ctk:SettingsCard>
+            </StackPanel>
+
+            <StackPanel Spacing="8" Margin="0,8,0,0">
+                <TextBlock
                     Text="{loc:Loc Key=SettingsSystemTray}"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"

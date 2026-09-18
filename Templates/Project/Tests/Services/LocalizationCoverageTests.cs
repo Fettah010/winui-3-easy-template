@@ -91,6 +91,28 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void NewNotificationKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("NOTIFICACIONES", loc.GetString("SettingsNotifications"));
+        Assert.AreEqual("Notificación de prueba", loc.GetString("SettingsNotifyTestHeader"));
+        Assert.AreEqual("Mostrar aviso de prueba", loc.GetString("SettingsNotifyTestButton"));
+        Assert.AreEqual("Notificaciones", loc.GetString("SettingsNotifyTestTitle"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("NOTIFICATIONS", loc.GetString("SettingsNotifications"));
+        Assert.AreEqual("Notification de test", loc.GetString("SettingsNotifyTestHeader"));
+        Assert.AreEqual("Afficher un toast de test", loc.GetString("SettingsNotifyTestButton"));
+        Assert.AreEqual("Notifications", loc.GetString("SettingsNotifyTestTitle"));
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("NOTIFICATIONS", loc.GetString("SettingsNotifications"));
+        Assert.AreEqual("Test notification", loc.GetString("SettingsNotifyTestHeader"));
+    }
+
+    [TestMethod]
     public void NewDiagnosticsKeys_AreTranslated()
     {
         var loc = LocalizationService.Current;

@@ -16,6 +16,25 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.18-beta] - 2026-09-18
+
+### Fixed
+
+- Toast pipeline forensics: toast faults now log with the exception
+  (they used to die silently in fire-and-forget tasks), and a
+  **Show test toast** button in Settings → Notifications proves the
+  in-app cards render on any machine independent of updates.
+- No-update checks now always produce visible feedback: disabled
+  "Checking…" button for the whole check plus the latest-version
+  toast, both on the UI thread.
+
+### Changed
+
+- Setup.exe splash is rendered per release with the version pill,
+  channel, payload size, and an "Installing…" caption on a Windows 11
+  light card, with a Windows-accent progress bar.
+
 ## [0.0.17-beta] - 2026-09-17
 
 ### Changed

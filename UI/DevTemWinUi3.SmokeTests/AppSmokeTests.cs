@@ -226,6 +226,29 @@ public sealed class AppSmokeTests
     }
 
     [TestMethod]
+    public void HomeCheck_TriggersSettingsCheck()
+    {
+        // Home's "Check for updates" navigates to Settings with the check
+        // parameter, which auto-runs the check there: the page must arrive
+        // and the check must resolve (toast or dialog), same contract as
+        // the Settings button.
+        RequireWindow();
+        DismissFirstRunDialogIfPresent(RecheckTimeout);
+        ClickNavAndWaitForPage("NavHomeItem", "HomeTitleText");
+
+        ForegroundWindow();
+        var quick = RequireElement("HomeCheckUpdatesButton", "Home check-for-updates button");
+        InvokeOrClick(quick);
+
+        var settings = WaitForElement("SettingsTitleText", NavigateTimeout);
+        Assert.IsNotNull(settings, "Home check did not navigate to Settings.");
+        DismissUpdateUiIfPresent(TimeSpan.FromSeconds(35));
+
+        var alive = WaitForElement("SettingsTitleText", NavigateTimeout);
+        Assert.IsNotNull(alive, "Settings page did not stay alive after home-triggered check.");
+    }
+
+    [TestMethod]
     public void UpdateCheck_FromSettings_Resolves()
     {
         // The update surface is toasts + native dialogs (no custom

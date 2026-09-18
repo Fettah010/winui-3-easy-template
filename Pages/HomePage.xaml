@@ -78,6 +78,7 @@
                         <wrap:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
                             <Button
                                 Content="{loc:Loc Key=HomeCheckUpdates}"
+                                AutomationProperties.AutomationId="HomeCheckUpdatesButton"
                                 Style="{ThemeResource AccentButtonStyle}"
                                 Click="CheckUpdatesQuickButton_Click"/>
                             <Button

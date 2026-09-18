@@ -119,12 +119,34 @@ $packIcon = Join-Path $ProjectRoot "Assets\app.ico"
 if (Test-Path $packIcon) {
     $packArgs += @("--icon", $packIcon)
 }
-# Branded splash shown by Setup.exe while it installs: SetupSplash art
-# (logo + name on a brand gradient) with a Windows-accent progress bar
-# instead of Velopack's default green. Falls back to Logo.png when the
-# branded art is missing (e.g. a fresh scaffold before art replacement).
+# Per-release Setup.exe splash: version pill, channel, and payload size
+# baked into Win11-light card art by new-setup-splash.ps1 (Velopack's
+# installer exposes image + progress color only — no live text). Rendered
+# BEFORE $packStart below so the png itself is never uploaded. Any
+# failure falls back to the committed Assets/SetupSplash.png; the bar is
+# always the Windows accent, never Velopack's default green.
+$generatedSplash = Join-Path $ReleasesDir "setup-splash.png"
+try {
+    $payloadBytes = (Get-ChildItem -LiteralPath $PublishDir -Recurse -File -ErrorAction Stop |
+        Measure-Object -Property Length -Sum).Sum
+    $splashArgs = @{
+        Version = $Version
+        Channel = $Channel
+        SizeMB = $payloadBytes / 1MB
+        Output = $generatedSplash
+    }
+    & (Join-Path $PSScriptRoot "new-setup-splash.ps1") @splashArgs
+    if ($LASTEXITCODE -ne 0) { throw "new-setup-splash exited with $LASTEXITCODE." }
+}
+catch {
+    Write-Warning "Per-release splash failed, using committed art: $_"
+    $generatedSplash = ""
+}
 $splashImage = Join-Path $ProjectRoot "Assets\SetupSplash.png"
-if (-not (Test-Path -LiteralPath $splashImage)) {
+if (-not [string]::IsNullOrWhiteSpace($generatedSplash) -and (Test-Path -LiteralPath $generatedSplash)) {
+    $splashImage = $generatedSplash
+}
+elseif (-not (Test-Path -LiteralPath $splashImage)) {
     $splashImage = Join-Path $ProjectRoot "Assets\Logo.png"
 }
 if (Test-Path -LiteralPath $splashImage) {
@@ -153,7 +175,7 @@ if ([string]::IsNullOrWhiteSpace($GithubToken)) {
 $env:GITHUB_TOKEN = $GithubToken
 if ([string]::IsNullOrWhiteSpace($Tag)) { $Tag = "v$Version" }
 $produced = @(Get-ChildItem -LiteralPath $ReleasesDir -Recurse -File -ErrorAction SilentlyContinue |
-    Where-Object { $_.LastWriteTime -ge $packStart })
+    Where-Object { $_.LastWriteTime -ge $packStart -and $_.Name -ne "setup-splash.png" })
 if ($produced.Count -eq 0) { throw "vpk pack produced no files under $ReleasesDir." }
 if (-not $IncludePortableZip) {
     $dropped = @($produced | Where-Object { $_.Name -like "*-Portable.zip" })

@@ -221,6 +221,21 @@ public sealed partial class SettingsPage : Page, INavigationAware
         _ = ViewModel.OpenExternalUpdateSourceAsync();
     }
 
+    private void SendTestToastButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Manual toast trigger: proves the in-app notification pipeline
+        // (host, card, animation) renders on this machine, independent of
+        // any update flow. Never throws (the service is never-throw).
+        try
+        {
+            var loc = LocalizationService.Current;
+            NotificationService.Current.Info(
+                loc.GetString("SettingsNotifyTestTitle"),
+                loc.GetString("SettingsNotifyTestMessage"));
+        }
+        catch { }
+    }
+
     private async void ImportSettingsButton_Click(object sender, RoutedEventArgs e)
     {
         await ViewModel.ImportSettingsCommand.ExecuteAsync(null);
