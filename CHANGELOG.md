@@ -19,6 +19,16 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.21-beta] - 2026-09-18
+
+### Changed
+
+- Second half of the back-to-back update test: no app behavior changes
+  besides the version itself. With `v0.0.20-beta` installed, this
+  version proves updating on the fixed pipeline — visible toasts at
+  every stage, and the Settings test toast as the render proof.
+
 ## [0.0.20-beta] - 2026-09-18
 
 ### Fixed
