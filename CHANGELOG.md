@@ -18,6 +18,25 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.20-beta] - 2026-09-18
+
+### Fixed
+
+- Invisible toasts (the actual root cause of every "nothing happens"
+  report): the toast card Border carried `Opacity="0"` while the
+  entrance animation drives the card itself, so opacity multiplied to
+  zero forever — no toast ever rendered on any machine. Removed, with
+  a comment guarding the invariant.
+- Startup identity log (version + binary path + packaged flag): the
+  data dir and log file are shared between installed and dev runs, so
+  "not installed" lines are now attributable to the right binary.
+
+### Changed
+
+- Setup splash goes dark mode: dark Win11 card art with a light-blue
+  progress bar (`#4CC2FF`); generator takes `-Theme Dark|Light`.
+
 ## [0.0.19-beta] - 2026-09-18
 
 ### Changed

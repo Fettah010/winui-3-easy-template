@@ -20,7 +20,9 @@ param(
     [string]$Channel = "beta",
     [double]$SizeMB = 0,
     [string]$Output = "",
-    [switch]$Static
+    [switch]$Static,
+    [ValidateSet("Dark", "Light")]
+    [string]$Theme = "Dark"
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,7 +61,27 @@ if ($PSCmdlet.ShouldProcess($Output, "Render setup splash ($Version)")) {
         New-Item -ItemType Directory -Path $outDir -Force | Out-Null
     }
 
+    # Win11 palettes: Dark is the default (matches the app's dark title
+    # bar and feels native next to it); Light kept via -Theme Light.
+    # (Assembly first: the palette below already needs System.Drawing.)
     Add-Type -AssemblyName System.Drawing
+    $cBackTop = [System.Drawing.Color]::FromArgb(27, 32, 43)
+    $cBackBottom = [System.Drawing.Color]::FromArgb(13, 17, 23)
+    $cCard = [System.Drawing.Color]::FromArgb(43, 43, 43)
+    $cCardEdge = [System.Drawing.Color]::FromArgb(70, 70, 70)
+    $cInk = [System.Drawing.Color]::FromArgb(255, 255, 255)
+    $cMuted = [System.Drawing.Color]::FromArgb(173, 173, 173)
+    $barColor = "#4CC2FF"
+    if ($Theme -eq "Light") {
+        $cBackTop = [System.Drawing.Color]::FromArgb(251, 252, 254)
+        $cBackBottom = [System.Drawing.Color]::FromArgb(230, 238, 247)
+        $cCard = [System.Drawing.Color]::FromArgb(255, 255, 255)
+        $cCardEdge = [System.Drawing.Color]::FromArgb(220, 228, 238)
+        $cInk = [System.Drawing.Color]::FromArgb(27, 27, 27)
+        $cMuted = [System.Drawing.Color]::FromArgb(97, 97, 97)
+        $barColor = "#0078D4"
+    }
+
     $w = 640
     $h = 400
     $bmp = New-Object System.Drawing.Bitmap($w, $h)
@@ -70,12 +92,10 @@ if ($PSCmdlet.ShouldProcess($Output, "Render setup splash ($Version)")) {
             $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
             $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::ClearTypeGridFit
 
-            # Soft Win11-light backdrop.
+            # Soft Win11 backdrop.
             $backRect = New-Object System.Drawing.Rectangle(0, 0, $w, $h)
             $back = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-                $backRect,
-                [System.Drawing.Color]::FromArgb(251, 252, 254),
-                [System.Drawing.Color]::FromArgb(230, 238, 247), 90)
+                $backRect, $cBackTop, $cBackBottom, 90)
             try { $g.FillRectangle($back, $backRect) } finally { $back.Dispose() }
 
             # Inset rounded card + soft drop shadow.
@@ -87,8 +107,10 @@ if ($PSCmdlet.ShouldProcess($Output, "Render setup splash ($Version)")) {
                     try { $g.FillPath($shadow, $shadowPath) } finally { $shadow.Dispose() }
                 }
                 finally { $shadowPath.Dispose() }
-                $cardFill = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 255))
+                $cardFill = New-Object System.Drawing.SolidBrush($cCard)
                 try { $g.FillPath($cardFill, $cardPath) } finally { $cardFill.Dispose() }
+                $edge = New-Object System.Drawing.Pen($cCardEdge, 1)
+                try { $g.DrawPath($edge, $cardPath) } finally { $edge.Dispose() }
             }
             finally { $cardPath.Dispose() }
 
@@ -104,8 +126,8 @@ if ($PSCmdlet.ShouldProcess($Output, "Render setup splash ($Version)")) {
             try {
                 $fmt.Alignment = [System.Drawing.StringAlignment]::Center
                 $fmt.LineAlignment = [System.Drawing.StringAlignment]::Center
-                $ink = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(27, 27, 27))
-                $muted = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(97, 97, 97))
+                $ink = New-Object System.Drawing.SolidBrush($cInk)
+                $muted = New-Object System.Drawing.SolidBrush($cMuted)
                 $accent = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(0, 120, 212))
                 $paper = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 255))
                 $nameFont = New-Object System.Drawing.Font("Segoe UI Semibold", 27)

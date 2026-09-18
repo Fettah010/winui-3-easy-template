@@ -226,6 +226,26 @@ public sealed class AppSmokeTests
     }
 
     [TestMethod]
+    public void TestToast_ProducesCard()
+    {
+        // Proves the in-app toast pipeline end to end: the Settings test
+        // button must produce a toast card carrying the title. (Pipeline
+        // proof: host init, card creation, insertion, animation storm —
+        // regressions here used to fail silently.)
+        RequireWindow();
+        DismissFirstRunDialogIfPresent(RecheckTimeout);
+        ClickNavAndWaitForPage("NavSettingsItem", "SettingsTitleText");
+
+        ForegroundWindow();
+        var test = RequireElement("SendTestToastButton", "Test-toast button");
+        InvokeOrClick(test);
+
+        var toast = WaitForElement("ToastCardTitle", NavigateTimeout);
+        Assert.IsNotNull(toast, "Test toast card did not appear after clicking the test button.");
+        Assert.IsFalse(string.IsNullOrWhiteSpace(toast.Name), "Toast card title is empty.");
+    }
+
+    [TestMethod]
     public void HomeCheck_TriggersSettingsCheck()
     {
         // Home's "Check for updates" navigates to Settings with the check

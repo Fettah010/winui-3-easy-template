@@ -151,7 +151,9 @@ elseif (-not (Test-Path -LiteralPath $splashImage)) {
 }
 if (Test-Path -LiteralPath $splashImage) {
     $packArgs += @("--splashImage", $splashImage)
-    $packArgs += @("--splashProgressColor", "#0078D4")
+    # Dark-art bar (light blue reads on the dark card; Velopack default
+    # green is never used). new-setup-splash.ps1 defaults to Dark to match.
+    $packArgs += @("--splashProgressColor", "#4CC2FF")
 }
 if (-not [string]::IsNullOrWhiteSpace($ReleaseNotes)) {
     if (-not (Test-Path $ReleaseNotes)) { throw "Release notes file not found: $ReleaseNotes" }

@@ -139,6 +139,19 @@ public static class Program
             .Run();
 
         AppLog.Information("{AppName} starting", AppMetadata.AppName);
+        try
+        {
+            // Identity line: version + binary path + packaged state. The
+            // data dir and log file are shared between installed and dev
+            // runs, so a bare log cannot say which binary wrote it — this
+            // line can (e.g. "not installed" from a dev exe is correct).
+            AppLog.Information(
+                "Identity: v{Version} at {ExePath} (packaged={IsPackaged})",
+                AppInfo.Current.Version,
+                Environment.ProcessPath ?? string.Empty,
+                AppInfo.IsPackaged);
+        }
+        catch { }
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Application.Start(p =>

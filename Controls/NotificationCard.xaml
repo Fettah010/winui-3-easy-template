@@ -6,7 +6,10 @@
 
     <!-- Toast card layout (data applied once in code-behind: toasts are
          immutable). Fixed width: the host measures with unbounded width,
-         where Star columns collapse and the card can measure to zero. -->
+         where Star columns collapse and the card can measure to zero.
+         NOTE: no Opacity here — NotificationService drives entrance/exit
+         on the card itself; an Opacity="0" on this Border multiplies to
+         invisible forever (every toast silently never rendered). -->
     <Border
         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -14,8 +17,7 @@
         CornerRadius="8"
         Padding="14,12,10,12"
         Margin="0,0,16,8"
-        Width="360"
-        Opacity="0">
+        Width="360">
         <Grid ColumnSpacing="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -45,6 +47,7 @@
                 MaxWidth="300">
                 <TextBlock
                     x:Name="TitleBlock"
+                    AutomationProperties.AutomationId="ToastCardTitle"
                     Text="{x:Bind Notification.Title, Mode=OneTime}"
                     FontSize="13"
                     FontWeight="SemiBold"
