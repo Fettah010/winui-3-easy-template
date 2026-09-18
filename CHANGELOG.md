@@ -23,6 +23,16 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.25-beta] - 2026-09-18
+
+### Changed
+
+- Second half of the back-to-back update test: no app behavior changes
+  besides the version itself. With `v0.0.24-beta` installed, this
+  version proves single-flow tray checks and the file-clearing
+  Diagnostics button.
+
 ## [0.0.24-beta] - 2026-09-18
 
 ### Fixed
