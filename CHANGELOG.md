@@ -21,6 +21,15 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.23-beta] - 2026-09-18
+
+### Changed
+
+- Second half of the back-to-back update test: no app behavior changes
+  besides the version itself. With `v0.0.22-beta` installed, this
+  version proves steady-state updating on the trimmed UI.
+
 ## [0.0.22-beta] - 2026-09-18
 
 ### Fixed

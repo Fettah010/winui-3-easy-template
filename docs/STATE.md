@@ -6,7 +6,7 @@
 > this file holds only **current facts**.
 
 - **Goal:** all green. `v0.0.22-beta` (status-ring fix, glance/ship trim, trimmability markers+guide) then `v0.0.23-beta` (update-test target) + `templates-v0.3.9`, back-to-back.
-- **Version:** app `0.0.22-beta`; template package `0.3.9`.
+- **Version:** app `0.0.23-beta`; template package `0.3.9`.
 - **Tags:** `v0.0.22-beta`, `v0.0.23-beta` (release.yml → beta channel); `templates-v0.3.9` (templates-publish → NuGet).
 - **Branches:** `main` pushed; `beta` tracks latest (to verify).
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
