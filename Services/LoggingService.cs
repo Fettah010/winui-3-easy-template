@@ -234,6 +234,36 @@ public static class LoggingService
         catch { }
     }
 
+    /// <summary>
+    /// Truncates today's log file so the Diagnostics Clear button empties
+    /// the file-tail view too (the buffer clear alone left the text).
+    /// Safe: the file sink runs <c>shared: true</c> (re-opened per batch),
+    /// so no handle holds the old length. Only today's file is touched;
+    /// archives stay. Returns false when nothing was cleared. Never throws.
+    /// </summary>
+    public static bool ClearCurrentLogFile(string? directory = null)
+    {
+        try
+        {
+            string dir = string.IsNullOrWhiteSpace(directory)
+                ? CurrentLogDirectory
+                : directory;
+            string file = Path.Combine(
+                dir, $"applog-{DateTime.Now:yyyyMMdd}.log");
+            if (!File.Exists(file))
+                return true;
+            using var stream = new FileStream(
+                file, FileMode.Open, FileAccess.Write, FileShare.ReadWrite);
+            stream.SetLength(0);
+            AppLog.Information("Log file cleared by user");
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static void ApplyLevel(bool verbose)
     {
         _levelSwitch.MinimumLevel = verbose ? LogEventLevel.Verbose : DefaultSerilogLevel;

@@ -362,8 +362,12 @@ public sealed partial class MainWindow : Window
     private void OnTrayNavigationRequested(object? sender, TrayNavigationRequest request)
     {
         WindowActivator.ShowAndActivate(this);
-        _nav.NavigateTo(request.Target, request.ToParameter());
-        // The tray "check updates" entry opens the update popup over the
+        // Single trigger: the explicit check below is the whole flow.
+        // (Passing the check parameter too would arm the Settings page's
+        // Loaded auto-check as a SECOND concurrent flow; the superseded
+        // loser used to surface a bogus "check failed" toast.)
+        _nav.NavigateTo(request.Target);
+        // The tray "check updates" entry runs the update flow over the
         // target page (the Update Center page is retired).
         if (request.AutoCheckUpdates)
         {

@@ -22,6 +22,22 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.24-beta] - 2026-09-18
+
+### Fixed
+
+- Tray "check for updates" no longer fires two concurrent checks: the
+  superseded loser used to land in the timeout branch and emit bogus
+  "check failed" toasts. Cancellation is now classified before timeout,
+  and the tray runs a single explicit check.
+- Diagnostics Clear now truncates today's log file too (buffer-only
+  clear left the file-tail text on screen); archives untouched.
+
+### Changed
+
+- README refresh (update flow, FAQ, screenshots); template README matches.
+
 ## [0.0.23-beta] - 2026-09-18
 
 ### Changed

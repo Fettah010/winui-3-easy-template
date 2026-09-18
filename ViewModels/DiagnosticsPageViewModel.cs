@@ -389,10 +389,10 @@ public partial class DiagnosticsPageViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Clears the live event buffer and every filter, then refreshes the
-    /// current view — the Clear button actually clears now (previously it
-    /// only reset the search boxes). File logs on disk are untouched.
-    /// Never throws.
+    /// Clears the live event buffer, truncates today's log file, and resets
+    /// every filter, then refreshes the current view — the Clear button
+    /// empties both views (the buffer clear alone left the file-tail text
+    /// on screen). Only today's file is touched; archives stay. Never throws.
     /// </summary>
     [RelayCommand]
     public void ClearLogs()
@@ -400,6 +400,7 @@ public partial class DiagnosticsPageViewModel : ObservableObject
         try
         {
             try { LoggingService.EventBuffer.Clear(); } catch { }
+            try { LoggingService.ClearCurrentLogFile(); } catch { }
             ClearSearch();
             try
             {

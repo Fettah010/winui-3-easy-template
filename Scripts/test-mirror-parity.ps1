@@ -127,7 +127,7 @@ $requiredGuards = @{
     "Services\BackgroundUpdateService.cs"      = @("(updates == 'velopack')", "(updates == 'basic')")
     "Services\AppFeatures.cs"                    = @()
     "Services\LocalizationService.cs"          = @("(localization)", "(localization)")
-    "Services\LoggingService.cs"               = @("(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(health)", "(logging == 'mel')", "(logging == 'none')", "(health)", "(logging == 'serilog')", "(logging == 'mel')", "(health)", "(logging == 'none')")
+    "Services\LoggingService.cs"               = @("(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(health)", "(logging == 'mel')", "(logging == 'none')", "(health)", "(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(health)", "(logging == 'none')")
     "Services\CrashReportingService.cs"        = @("(crash)")
     "Services\FirstRunDialogService.cs"        = @()
     "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(setup)", "(health)", "(http)")

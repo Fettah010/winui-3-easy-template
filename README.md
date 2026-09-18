@@ -50,7 +50,7 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 - Mica-based desktop shell with native title bar behavior
 - System tray support with single-instance activation
 - Auto-updates (Velopack installer + deltas by default; zero-dependency checker or none at scaffold time; native AppInstaller / Store updates for packaged MSIX)
-- First-run setup wizard (install location, shortcuts, launch options; portable only)
+- First-run welcome (installers own setup choices; wizard page available but never auto-opens)
 - Packaged MSIX distribution with runtime-adaptive paths, autostart, and protocol (`--distribution msix`)
 - 3-language runtime localization (en-US, es-ES, fr-FR; English-only at scaffold time)
 - Logging through one facade (Serilog console + file by default; MEL or none at scaffold time)
@@ -62,6 +62,22 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
 the flags, and `docs/FEATURES.md` records what each scaffold picked.
+
+## What's new in 0.0.24-beta
+
+- Update flow states report through in-app toast cards; install/restart
+  decisions use native WinUI 3 dialogs (no custom overlay, no silent hangs)
+- Check-now feedback: the button disables with "Checking…" for the whole
+  check, and every stage is logged (`%LocalAppData%\DevTemWinUi3\Logs`)
+- Verify toasts render on any machine: Settings → Notifications → test toast
+- Trimmed sample UI (About glance, Home runbook) + `devtem:optional`
+  markers and a removal guide (`docs/TEMPLATE-GUIDE.md` §2d) for the rest
+
+## Screenshots
+
+![Home page](docs/screenshots/home.png)
+![Settings page with the notification test trigger](docs/screenshots/settings.png)
+![In-app toast card](docs/screenshots/toast.png)
 
 ## What's new in 0.0.11-beta
 
@@ -122,8 +138,8 @@ This repo is both a full sample app and the source of the project template. It d
 App shell
 ├── Home page
 ├── Settings page
-├── Animated update popup (check → download → restart)
-├── First-run setup wizard (portable)
+├── Toasts + native update dialogs (check → download → restart)
+├── First-run welcome (installers own setup)
 ├── Tray + toast behavior
 ├── Update checks + restart prompt
 ├── Localization + theme persistence
@@ -131,6 +147,14 @@ App shell
 ```
 
 ## FAQ
+
+### Why does Check for updates say "only available for installed apps"?
+
+That message is correct when the app runs unpackaged (`dotnet run` or a
+loose exe): Velopack can only apply updates to an installed app. Run the
+installed build (Start menu entry or `setup.exe` install) for real update
+checks. If an *installed* build says it, check
+`%LocalAppData%\DevTemWinUi3\Logs` — every check stage is logged there.
 
 ### Is this a good WinUI 3 starter template?
 

@@ -337,6 +337,13 @@ public static class UpdateDialogService
             // Plain awaits (UI thread): see the thread-affinity rule on the
             // class — every toast/dialog below is thread-affine.
             var finished = await Task.WhenAny(checkTask, timeoutTask);
+            // Cancellation FIRST: a superseded flow (a newer check started,
+            // e.g. tray navigate + explicit call racing) must vanish
+            // silently. The delay task cancels instantly while the network
+            // call continues, so without this the loser always lands in the
+            // timeout branch below and emits a bogus "check failed" toast.
+            if (token.IsCancellationRequested)
+                return;
             if (finished != checkTask)
             {
                 AppLog.Warning("Update check timed out after {Timeout}s", timeout.TotalSeconds);

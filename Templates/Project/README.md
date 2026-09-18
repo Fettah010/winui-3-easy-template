@@ -64,10 +64,11 @@ explicit feature flags remain the authoritative customization surface.
 #### Auto-updates — updates choice (`velopack`/`basic`/`none`/`appinstaller`/`store`)
 
 The app checks GitHub Releases on startup. When a new version is found, it
-downloads with a live progress bar and prompts the user to restart once the
-download finishes, then applies the update and restarts smoothly.
-The animated update popup (`Controls/UpdatePopup`) carries the same flow
-with release notes; Settings links to it.
+downloads with a live progress dialog and prompts the user to restart once
+the download finishes, then applies the update and restarts smoothly.
+Transient states (checking, up-to-date, errors) report through in-app
+toast cards; decisions (install, restart) use native WinUI 3 dialogs.
+Settings links into the same flow.
 
 - `velopack` (default): full installer + delta downloads + release pipeline.
 - `basic`: zero-dependency checker — downloads the release's Setup `.exe`
@@ -85,10 +86,12 @@ git push origin v0.0.1-beta
 
 #### First-run setup wizard — setup flag (portable only)
 
-On first launch the app walks through install location, shortcuts, and
-launch options (`Pages/SetupWizardPage`). The choice is persisted, so the
-wizard never returns; `--setup false` drops it. Packaged (MSIX) scaffolds
-skip it — Windows owns location and shortcuts there.
+Install-time choices (location, shortcuts, launch) belong to the
+installer — the MSIX package or Velopack setup — so first launch lands
+on Home with a welcome dialog, never an in-app stepper
+(`Pages/SetupWizardPage` stays available but never auto-opens).
+`--setup false` drops it. Packaged (MSIX) scaffolds skip it — Windows
+owns location and shortcuts there.
 
 #### Notifications
 
@@ -96,7 +99,8 @@ Two complementary channels:
 
 - **In-app toasts** (`NotificationService`) — small animated cards,
   bottom-right, theme-aware WinUI 3 styling. Used for update results,
-  e.g. the "updates need an installed app" notice.
+  e.g. the "updates need an installed app" notice. Verify they render
+  on any machine via Settings → Notifications → test toast.
 - **Desktop toasts** (`DesktopToastService`) — native Action Center
   notifications via the Windows App SDK. Used when the app minimizes to
   the system tray; clicking the toast reopens the app.
