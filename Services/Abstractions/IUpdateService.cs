@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DevTemWinUi3.Services;
@@ -26,6 +27,15 @@ public interface IUpdateService
     string? PendingRestartVersion { get; }
 
     void SetChannel(string channel);
+
+    /// <summary>
+    /// Warms the engine (disk probes, feed client) without checking.
+    /// Synchronous state below (<see cref="IsInstalled"/>) only reads
+    /// truthfully after this ran, so check flows warm first instead of
+    /// racing lazy init and misreporting. Bounded by the token. Never
+    /// throws.
+    /// </summary>
+    Task EnsureInitializedAsync(CancellationToken cancellationToken = default);
 
     Task<UpdateCheckResult> CheckAsync();
 

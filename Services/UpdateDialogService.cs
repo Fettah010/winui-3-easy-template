@@ -255,6 +255,11 @@ public static class UpdateDialogService
         try { NotificationService.Current.Error(title, message); } catch { }
     }
 
+    private static void ToastUpdate(string title, string message)
+    {
+        try { NotificationService.Current.Update(title, message); } catch { }
+    }
+
     private static async Task ShowCheckCoreAsync()
     {
         var snap = Snapshot();
@@ -290,6 +295,21 @@ public static class UpdateDialogService
             timeout = CheckTimeout;
         }
 
+        if (token.IsCancellationRequested)
+            return;
+
+        // Warm the engine before reading IsInstalled: the flag only reads
+        // truthfully after init, and without this a lazily-uninitialized
+        // engine misreports "not installed" on a properly installed app.
+        // Bounded by the check timeout; backends without init return
+        // immediately.
+        try
+        {
+            using var initCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            initCts.CancelAfter(timeout);
+            try { await updates.EnsureInitializedAsync(initCts.Token); } catch { }
+        }
+        catch { }
         if (token.IsCancellationRequested)
             return;
 
@@ -378,7 +398,7 @@ public static class UpdateDialogService
         string? notes = string.IsNullOrWhiteSpace(vm.ReleaseNotes) ? null : vm.ReleaseNotes;
         // Announce first (toast), decide second (dialog): the toast is the
         // visible record even if the dialog is dismissed.
-        ToastInfo(title, status);
+        ToastUpdate(title, status);
         ContentDialogResult choice = ContentDialogResult.None;
         ContentDialog? dialog = null;
         try

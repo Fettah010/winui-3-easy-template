@@ -5,9 +5,9 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** all green. `v0.0.20-beta` (invisible-toast root cause + identity log, dark setup) then `v0.0.21-beta` (update-test target) + `templates-v0.3.8`, back-to-back.
-- **Version:** app `0.0.21-beta`; template package `0.3.8`.
-- **Tags:** `v0.0.20-beta`, `v0.0.21-beta` (release.yml → beta channel); `templates-v0.3.8` (templates-publish → NuGet).
+- **Goal:** all green. `v0.0.22-beta` (status-ring fix, glance/ship trim, trimmability markers+guide) then `v0.0.23-beta` (update-test target) + `templates-v0.3.9`, back-to-back.
+- **Version:** app `0.0.22-beta`; template package `0.3.9`.
+- **Tags:** `v0.0.22-beta`, `v0.0.23-beta` (release.yml → beta channel); `templates-v0.3.9` (templates-publish → NuGet).
 - **Branches:** `main` pushed; `beta` tracks latest (to verify).
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).

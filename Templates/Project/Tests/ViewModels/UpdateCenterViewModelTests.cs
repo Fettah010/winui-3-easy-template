@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.ViewModels;
@@ -26,6 +27,9 @@ public class UpdateCenterViewModelTests
         public int CheckCalls;
 
         public void SetChannel(string channel) { }
+
+        public Task EnsureInitializedAsync(CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
 
         public async Task<UpdateCheckResult> CheckAsync()
         {

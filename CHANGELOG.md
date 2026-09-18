@@ -20,6 +20,25 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.22-beta] - 2026-09-18
+
+### Fixed
+
+- Status-ring icon on the Home operational card: rounded-Border
+  circle swapped for a vector Ellipse (same jagged-edge class as the
+  toast disc).
+
+### Changed
+
+- Home and About trimmed for template duty: the duplicate "At a
+  glance" card and the in-app release runbook card are gone (their
+  content already lives in the app-info cards and `docs/`, respectively).
+- Template trimmability: `devtem:optional:<id>` markers bracket every
+  deletable sample block (Home features, About tech/links, Settings
+  test toast, Diagnostics page checklist), and `docs/TEMPLATE-GUIDE.md`
+  §2d documents exact removal checklists per block and per page.
+
 ## [0.0.21-beta] - 2026-09-18
 
 ### Changed

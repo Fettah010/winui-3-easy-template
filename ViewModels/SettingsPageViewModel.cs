@@ -312,6 +312,12 @@ public partial class SettingsPageViewModel : ObservableObject
 
     partial void OnSelectedChannelIndexChanged(int value)
     {
+        // Construction (and programmatic resets) push the default index
+        // through here: ignore everything until load completes, or every
+        // Settings visit needlessly re-seeds the engine — Velopack drops
+        // its manager on a channel change, so a spurious push turns the
+        // next check into a false "not installed".
+        if (!_loaded) return;
         // Only Stable (0) and Beta (1) exist; anything else falls back to stable.
         var channel = value == 1 ? ChannelResolver.Beta : ChannelResolver.Stable;
         try { SettingsService.Current.Channel = channel; } catch { }

@@ -46,11 +46,9 @@ public class LocalizationCoverageTests
         var loc = LocalizationService.Current;
 
         loc.SetLanguage("es-ES");
-        Assert.AreEqual("DE UN VISTAZO", loc.GetString("AboutGlance"));
         Assert.AreEqual("Ver licencia", loc.GetString("AboutViewLicense"));
 
         loc.SetLanguage("fr-FR");
-        Assert.AreEqual("EN UN COUP D'ŒIL", loc.GetString("AboutGlance"));
         Assert.AreEqual("Voir la licence", loc.GetString("AboutViewLicense"));
     }
 
@@ -280,18 +278,6 @@ public class LocalizationCoverageTests
         // A fresh read (as Initialize does on next launch) sees the choice.
         string? persisted = LocalSettingsStore.Shared.Get<string?>("AppLanguage", null);
         Assert.AreEqual("fr-FR", persisted);
-    }
-
-    [TestMethod]
-    public void ShipBody_FormatsCurrentVersion_ThroughSlot()
-    {
-        var loc = LocalizationService.Current;
-        loc.SetLanguage("en-US");
-        // ShipBody must flow through the {0} slot — never a hardcoded string.
-        Assert.AreEqual(
-            loc.GetString("HomeShipBody", AppInfo.Current.Version),
-            loc.ShipBody);
-        Assert.Contains(AppInfo.Current.Version, loc.ShipBody);
     }
 
     [TestMethod]

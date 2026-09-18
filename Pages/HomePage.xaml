@@ -133,21 +133,23 @@
                                        TextWrapping="Wrap"/>
                         </StackPanel>
 
-                        <!-- Fixed-size circle: InfoBadge auto-sizes to its icon and
-                             renders as an egg/capsule, so use an explicit ring. -->
-                        <Border
+                        <!-- Status ring: a real Ellipse (a rounded Border
+                             rasterizes its curve jagged at small sizes;
+                             the vector ellipse stays smooth), glyph on top. -->
+                        <Grid
                             Grid.Column="2"
                             Width="22" Height="22"
-                            CornerRadius="11"
-                            Background="{ThemeResource SystemFillColorSuccessBrush}"
                             VerticalAlignment="Center">
+                            <Ellipse
+                                Width="22" Height="22"
+                                Fill="{ThemeResource SystemFillColorSuccessBrush}"/>
                             <FontIcon
                                 Glyph="&#xE73E;"
                                 FontSize="12"
                                 Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"/>
-                        </Border>
+                        </Grid>
                     </Grid>
                 </Border>
 
@@ -173,6 +175,11 @@
                 </Border>
             </Grid>
 
+            <!-- devtem:optional:home-features — sample feature cards. Delete
+                 from HERE through devtem:end:home-features for a blank
+                 home (also delete FeatureCol1/FeatureCard2-4 handling in
+                 HomePage.xaml.cs UpdateResponsiveLayout, and the
+                 HomeFeat* keys in Services/Localization/*Strings.cs). -->
             <!-- Feature grid -->
             <StackPanel Spacing="8">
                 <TextBlock
@@ -269,32 +276,7 @@
                     </Border>
                 </Grid>
             </StackPanel>
-
-            <!-- Ship it -->
-            <Border
-                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock
-                        Text="{loc:Loc Key=HomeShipTitle}"
-                        Style="{ThemeResource CaptionTextBlockStyle}"
-                        FontWeight="SemiBold"
-                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
-                    <TextBlock
-                        Text="{loc:Loc Property=ShipBody}"
-                        Style="{ThemeResource BodyTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        TextWrapping="Wrap"/>
-                    <TextBlock
-                        Style="{ThemeResource CaptionTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                        TextWrapping="Wrap"
-                        Text="{loc:Loc Key=HomeShipNote}"/>
-                </StackPanel>
-            </Border>
+            <!-- devtem:end:home-features -->
 
         </StackPanel>
         </Grid>

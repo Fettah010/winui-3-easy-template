@@ -205,6 +205,32 @@ Uninstall when done: `dotnet new uninstall .\Templates\Page`.
    stacking (spanned children join Auto sizing and blow the grid past the
    card); button rows go in `Controls/WrapPanel`.
 
+## 2d. Removing sample content
+
+Sample blocks carry `devtem:optional:<id>` markers (XAML comments bracketing
+the deletable range through `devtem:end:<id>`). Deleting a block is three
+moves: cut the XAML range, cut the companions the marker names
+(code-behind layout lines, `Services/Localization/*Strings.cs` keys), and
+run build + tests. Current markers:
+
+| Marker | What | Companions |
+| --- | --- | --- |
+| `home-features` | Home feature-cards grid | `FeatureCol1`/`FeatureCard2-4` lines in `HomePage.xaml.cs`, `HomeFeat*` loc keys |
+| `about-tech` | About technology panel | `TechCol`/`TechPanel` lines in `AboutPage.xaml.cs`, `AboutCardUpdates/Logging/Mvvm/Ui*` loc keys |
+| `about-links` | About links panel | `LinksCol`/`LinksPanel` lines in `AboutPage.xaml.cs`, `AboutCardSource/Releases/Issues*` loc keys |
+| `settings-notify-test` | Settings test-toast card (dev scaffolding) | `SendTestToastButton_Click` in `SettingsPage.xaml.cs`, `SettingsNotifyTest*` loc keys |
+| `diagnostics-page` | Whole Diagnostics page (header comment only) | Checklist in `Pages/DiagnosticsPage.xaml`: route, nav item, page + VM + test files, `ServiceLocator` registration, `Diagnostics*` loc keys |
+
+Whole-page removal (any page) follows the Diagnostics checklist: route in
+`MainWindow.xaml.cs`, nav item (+ `OnNavigated` selection case) in
+`MainWindow.xaml`, page files, ViewModel (+ `ServiceLocator`
+registration), view-model tests, loc keys. Features you scaffolded out
+are already gone (files absent, UI runtime-gated in
+`Services/AppFeatures.cs`) — the checklist above only concerns pages you
+can see. Settings sections work the same way without markers: each
+`StackPanel` section (appearance, language, updates, tray, backup)
+deletes independently.
+
 ## 3. Add a setting
 
 1. Key + property in `Services/SettingsService.cs` (backed by

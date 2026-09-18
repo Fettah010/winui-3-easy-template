@@ -25,20 +25,25 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Border
-                x:Name="IconDisc"
+            <!-- Icon disc: a real Ellipse (a rounded Border rasterizes its
+                 curve jagged at small sizes; the vector ellipse stays
+                 smooth) with the glyph centered on top. -->
+            <Grid
                 Grid.Column="0"
-                CornerRadius="15"
                 Width="30"
                 Height="30"
                 VerticalAlignment="Center">
+                <Ellipse
+                    x:Name="IconDisc"
+                    Width="30"
+                    Height="30"/>
                 <FontIcon
                     x:Name="IconBlock"
                     FontSize="14"
                     Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"/>
-            </Border>
+            </Grid>
 
             <StackPanel
                 Grid.Column="1"
@@ -72,8 +77,8 @@
                 Background="Transparent"
                 BorderThickness="0"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                Padding="6,4,6,4"
-                Margin="8,0,0,0"
+                Padding="8,4,8,4"
+                Margin="8,-6,-4,0"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Right"
                 MinWidth="0"

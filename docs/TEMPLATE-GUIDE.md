@@ -334,6 +334,33 @@ dotnet new update --check-only        # what's new
 dotnet new update                     # update all template packages
 ```
 
+## 2d. Removing sample content
+
+Sample blocks carry `devtem:optional:<id>` markers (XAML comments bracketing
+the deletable range through `devtem:end:<id>`). Deleting a block is three
+moves: cut the XAML range, cut the companions the marker names
+(code-behind layout lines, `Services/Localization/*Strings.cs` keys), and
+run build + tests. Current markers:
+
+| Marker | What | Companions |
+| --- | --- | --- |
+| `home-features` | Home feature-cards grid | `FeatureCol1`/`FeatureCard2-4` lines in `HomePage.xaml.cs`, `HomeFeat*` loc keys |
+| `about-tech` | About technology panel | `TechCol`/`TechPanel` lines in `AboutPage.xaml.cs`, `AboutCardUpdates/Logging/Mvvm/Ui*` loc keys |
+| `about-links` | About links panel | `LinksCol`/`LinksPanel` lines in `AboutPage.xaml.cs`, `AboutCardSource/Releases/Issues*` loc keys |
+| `settings-notify-test` | Settings test-toast card (dev scaffolding) | `SendTestToastButton_Click` in `SettingsPage.xaml.cs`, `SettingsNotifyTest*` loc keys |
+| `diagnostics-page` | Whole Diagnostics page (header comment only) | Checklist in `Pages/DiagnosticsPage.xaml`: route, nav item, page + VM + test files, `ServiceLocator` registration, `Diagnostics*` loc keys |
+
+Whole-page removal (any page, e.g. About) follows the Diagnostics
+checklist: route in `MainWindow.xaml.cs`, nav item (+ `OnNavigated`
+selection case) in `MainWindow.xaml`, page files, ViewModel (+
+`ServiceLocator` registration), view-model tests, loc keys. Unused loc
+keys are harmless at runtime, but remove them anyway — the coverage
+tests assert exact translations per key. Settings sections work the same
+way without markers: each `StackPanel` section (appearance, language,
+updates, tray, backup) deletes independently; the updates section
+additionally needs `--updates none` semantics (no engine registered →
+status card reports the mode, check button hidden).
+
 ## 3. Add a setting
 
 1. Key + property in `Services/SettingsService.cs` (backed by

@@ -10,7 +10,7 @@ using DevTemWinUi3.Controls;
 
 namespace DevTemWinUi3.Services;
 
-public enum NotificationType { Info, Success, Warning, Error }
+public enum NotificationType { Info, Success, Warning, Error, Update }
 
 /// <summary>
 /// One toast: immutable data. Layout lives in <c>Controls/NotificationCard</c>.
@@ -32,10 +32,13 @@ public sealed class NotificationItem
 /// <summary>
 /// Small animated in-app toasts (bottom-right card host), styled like modern
 /// WinUI 3 / CommunityToolkit toasts: theme-aware card, tinted icon disc,
-/// title + wrapping message, dismiss button, slide-and-fade motion. Card
-/// layout lives in <see cref="NotificationCard"/>; this class owns host
+/// title + wrapping message, dismiss button, slide-in entrance and a
+/// fade-drift-collapse exit that glides the remaining cards into place.
+/// Card layout lives in <see cref="NotificationCard"/>; this class owns host
 /// lifetime and motion. For events the user must see while the window is
 /// hidden, use <see cref="DesktopToastService"/> (OS Action Center) instead.
+/// Thread-safe: background threads are marshalled to the UI thread, since
+/// host children are thread-affine.
 /// </summary>
 public sealed class NotificationService
 {
@@ -64,6 +67,9 @@ public sealed class NotificationService
 
     public void Error(string title, string message, int durationMs = 6000)
         => _ = Show(title, message, NotificationType.Error, durationMs);
+
+    public void Update(string title, string message, int durationMs = 4500)
+        => _ = Show(title, message, NotificationType.Update, durationMs);
 
     /// <summary>
     /// Shows a toast card. Returns a Task (fire-and-forget via the helpers
@@ -182,34 +188,59 @@ public sealed class NotificationService
         }
         catch { }
 
-        // Slide via RenderTransform (panel-agnostic): the old Canvas.Left
-        // animation assumed a Canvas host.
+        // Win11-style exit: quick fade with a slight downward drift while
+        // the card collapses in layout, so the cards below glide up into
+        // place instead of jumping. The Height collapse is a dependent
+        // animation (layout pass per frame for ~220ms) — the only way to
+        // animate reflow without the Toolkit's implicit animations.
+        double height = double.NaN;
+        try { height = card.ActualHeight; } catch { }
+        if (double.IsNaN(height) || height <= 0)
+        {
+            try { host.Children.Remove(card); } catch { }
+            PumpQueue();
+            return;
+        }
+
         var transform = card.RenderTransform as TranslateTransform ?? new TranslateTransform();
         card.RenderTransform = transform;
+        card.IsHitTestVisible = false;
+        try { card.Height = height; } catch { }
 
         var fadeOut = new DoubleAnimation
         {
             From = 1.0,
             To = 0.0,
-            Duration = new Duration(TimeSpan.FromMilliseconds(250)),
+            Duration = new Duration(TimeSpan.FromMilliseconds(180)),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
         };
-        var slideOut = new DoubleAnimation
+        var drift = new DoubleAnimation
         {
             From = 0,
-            To = 400,
-            Duration = new Duration(TimeSpan.FromMilliseconds(250)),
+            To = 14,
+            Duration = new Duration(TimeSpan.FromMilliseconds(220)),
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn }
+        };
+        var collapse = new DoubleAnimation
+        {
+            From = height,
+            To = 0,
+            Duration = new Duration(TimeSpan.FromMilliseconds(220)),
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+            EnableDependentAnimation = true
         };
 
         Storyboard.SetTarget(fadeOut, card);
-        Storyboard.SetTarget(slideOut, transform);
+        Storyboard.SetTarget(drift, transform);
+        Storyboard.SetTarget(collapse, card);
         Storyboard.SetTargetProperty(fadeOut, "Opacity");
-        Storyboard.SetTargetProperty(slideOut, "X");
+        Storyboard.SetTargetProperty(drift, "Y");
+        Storyboard.SetTargetProperty(collapse, "Height");
 
         var sb = new Storyboard();
         sb.Children.Add(fadeOut);
-        sb.Children.Add(slideOut);
+        sb.Children.Add(drift);
+        sb.Children.Add(collapse);
         sb.Completed += (_, _) =>
         {
             try { host.Children.Remove(card); } catch { }

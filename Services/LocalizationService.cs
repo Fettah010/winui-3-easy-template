@@ -71,12 +71,6 @@ public sealed class LocalizationService : INotifyPropertyChanged
     public string this[string key] => GetString(key);
 
     /// <summary>
-    /// Release runbook line with the current version baked in, so the
-    /// dictionaries never hardcode a version (bumps must not touch loc files).
-    /// </summary>
-    public string ShipBody => GetString("HomeShipBody", AppInfo.Current.Version);
-
-    /// <summary>
     /// Initializes the localization service. Call once at startup.
     /// Prefers our own persisted choice (reliable for unpackaged apps, where
     /// the OS language override does not stick across restarts), then the OS
@@ -173,7 +167,6 @@ public sealed class LocalizationService : INotifyPropertyChanged
         // "Item[]" is the indexer-change name binding engines listen for:
         // every {loc:Loc Key=…} binding refreshes from one notification.
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShipBody)));
     }
 
     /// <summary>

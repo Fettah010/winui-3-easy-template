@@ -11,8 +11,8 @@ namespace DevTemWinUi3.Controls;
 /// indexer that refreshes on every language switch — no code-behind string
 /// mapping needed. Classic <c>Binding</c> (not <c>x:Bind</c>) because
 /// compiled bindings cannot index by string literal.
-/// For the version-formatted runbook line use <c>Property=ShipBody</c>,
-/// which binds the property instead of the indexer.
+/// <c>Property=…</c> binds a service property by name instead of the
+/// indexer (for version-formatted lines the dictionaries must not hardcode).
 /// </summary>
 public sealed class LocExtension : MarkupExtension
 {
@@ -20,7 +20,7 @@ public sealed class LocExtension : MarkupExtension
     public string? Key { get; set; }
 
     /// <summary>
-    /// Service property name instead of a key (only <c>ShipBody</c> today).
+    /// Service property name instead of a key.
     /// </summary>
     public string? Property { get; set; }
 

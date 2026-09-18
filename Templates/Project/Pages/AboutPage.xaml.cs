@@ -50,10 +50,7 @@ public sealed partial class AboutPage : Page, INavigationAware
             ? new Thickness(16, 16, 16, 24)
             : new Thickness(32, 24, 32, 32);
 
-        HeroMainCol.Width = narrow ? new GridLength(1, GridUnitType.Star) : new GridLength(2, GridUnitType.Star);
-        HeroSideCol.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
-        Grid.SetRow(GlanceCard, narrow ? 1 : 0);
-        Grid.SetColumn(GlanceCard, narrow ? 0 : 1);
+        HeroMainCol.Width = new GridLength(1, GridUnitType.Star);
 
         AppCol.Width = new GridLength(1, GridUnitType.Star);
         TechCol.Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);

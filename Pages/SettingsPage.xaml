@@ -170,6 +170,11 @@
                 </ctk:SettingsCard>
             </StackPanel>
 
+            <!-- devtem:optional:settings-notify-test — dev scaffolding for the
+                 toast pipeline. Delete from HERE through
+                 devtem:end:settings-notify-test to drop it (also delete
+                 SendTestToastButton_Click in SettingsPage.xaml.cs and the
+                 SettingsNotifyTest* keys in Services/Localization/*Strings.cs). -->
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsNotifications}"
@@ -188,6 +193,7 @@
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
             </StackPanel>
+            <!-- devtem:end:settings-notify-test -->
 
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock

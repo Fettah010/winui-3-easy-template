@@ -48,11 +48,12 @@ public sealed partial class NotificationCard : UserControl
             NotificationType.Success => ("\uE73E", "SystemFillColorSuccessBrush", Colors.MediumSeaGreen),
             NotificationType.Warning => ("\uE7BA", "SystemFillColorCautionBrush", Colors.Goldenrod),
             NotificationType.Error => ("\uEA39", "SystemFillColorCriticalBrush", Colors.Firebrick),
+            NotificationType.Update => ("\uE72C", "SystemFillColorAttentionBrush", Colors.SteelBlue),
             _ => ("\uE946", "AccentFillColorDefaultBrush", Colors.DodgerBlue),
         };
 
         IconBlock.Glyph = glyph;
-        IconDisc.Background = ThemeBrush(accentKey, new SolidColorBrush(accentFallback));
+        IconDisc.Fill = ThemeBrush(accentKey, new SolidColorBrush(accentFallback));
     }
 
     private static Brush ThemeBrush(string key, Brush fallback)
