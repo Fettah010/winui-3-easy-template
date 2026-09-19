@@ -7,7 +7,7 @@
 
 - **Goal:** ship `v0.0.26-beta` (nav overlay + selection fix, template-first cleanup) + `templates-v0.3.11`, back-to-back.
 - **Version:** app `0.0.26-beta`; template package `0.3.11` (via tag).
-- **Tags:** `v0.0.24-beta`, `v0.0.25-beta` (release.yml → beta channel); `templates-v0.3.10` (templates-publish → NuGet).
+- **Tags:** `v0.0.26-beta` (release.yml → beta channel, published with assets); `templates-v0.3.11` (templates-publish → NuGet, pushed); `beta` branch moved to `v0.0.26-beta`. Main-push CI: msix + ui-tests green; templates matrix still running at last check.
 - **Branches:** `main` pushed; `beta` tracks latest (to verify).
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).
