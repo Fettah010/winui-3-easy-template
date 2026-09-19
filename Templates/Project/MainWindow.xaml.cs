@@ -39,10 +39,6 @@ public sealed partial class MainWindow : Window
         RootNavigationView.Loaded += (_, _) => ApplyNavLocalization();
         LocalizationService.Current.LanguageChanged += (_, _) => ApplyNavLocalization();
 
-        // Responsive navigation pane (page-level breakpoints live in XAML).
-        this.SizeChanged += MainWindow_SizeChanged;
-        UpdateNavigationPaneMode(this.AppWindow.Size.Width);
-
         // Register routes
         // <devtem:routes>
         // Register application-owned routes here; keep the built-in routes
@@ -173,27 +169,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
-    {
-        UpdateNavigationPaneMode(args.Size.Width);
-    }
-
-    /// <summary>
-    /// Switches the nav pane between full and compact based on window width,
-    /// mirroring the page-level <c>AdaptiveTrigger</c> breakpoint so content
-    /// never gets squeezed into clipping.
-    /// </summary>
-    private void UpdateNavigationPaneMode(double windowWidth)
-    {
-        try
-        {
-            RootNavigationView.PaneDisplayMode = ResponsiveLayout.ShouldUseCompactPane(windowWidth)
-                ? NavigationViewPaneDisplayMode.LeftCompact
-                : NavigationViewPaneDisplayMode.Left;
-        }
-        catch { }
-    }
-
     private void RestoreWindowState()
     {
         try
@@ -281,6 +256,8 @@ public sealed partial class MainWindow : Window
             {
                 settingsItem.Content = LocalizationService.Current.GetString("NavSettings");
                 AutomationProperties.SetAutomationId(settingsItem, "NavSettingsItem");
+                // Native selection stays enabled (default True) so the
+                // settings pill shows like every other item.
             }
         }
         catch { }
@@ -310,11 +287,18 @@ public sealed partial class MainWindow : Window
 
     private void OnNavigated(object? sender, string tag)
     {
+        // Native selection is enabled, so clicks already selected the item
+        // before this runs. Only re-sync when the navigation did NOT come
+        // from a click (back, tray, deep link, initial navigate): setting
+        // the same item again is a harmless no-op, setting a different one
+        // moves the pill. Never clear the selection — a cleared pill reads
+        // as "no current page".
         // The built-in settings item lives outside MenuItems/FooterMenuItems,
         // so sync it explicitly — otherwise the previous item stays highlighted.
         if (string.Equals(tag, "settings", StringComparison.OrdinalIgnoreCase))
         {
-            RootNavigationView.SelectedItem = RootNavigationView.SettingsItem;
+            if (!ReferenceEquals(RootNavigationView.SelectedItem, RootNavigationView.SettingsItem))
+                RootNavigationView.SelectedItem = RootNavigationView.SettingsItem;
             return;
         }
 
@@ -323,7 +307,8 @@ public sealed partial class MainWindow : Window
         {
             if (item is NavigationViewItem navItem && navItem.Tag is string t && t == tag)
             {
-                RootNavigationView.SelectedItem = item;
+                if (!ReferenceEquals(RootNavigationView.SelectedItem, item))
+                    RootNavigationView.SelectedItem = item;
                 return;
             }
         }
@@ -333,7 +318,8 @@ public sealed partial class MainWindow : Window
         {
             if (item is NavigationViewItem navItem && navItem.Tag is string t && t == tag)
             {
-                RootNavigationView.SelectedItem = item;
+                if (!ReferenceEquals(RootNavigationView.SelectedItem, item))
+                    RootNavigationView.SelectedItem = item;
                 return;
             }
         }
@@ -341,6 +327,9 @@ public sealed partial class MainWindow : Window
 
     private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
+        // Native selection (SelectsOnInvoked=True): the click selects the
+        // item and this handler navigates. The overlay pane auto-closes on
+        // selection (standard drawer behavior) — no decoupling needed.
         // Settings is handled by NavigationView internally (IsSettingsVisible=true)
         if (args.IsSettingsInvoked)
         {

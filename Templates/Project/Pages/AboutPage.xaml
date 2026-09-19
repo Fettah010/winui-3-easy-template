@@ -18,9 +18,11 @@
          Grid columns/rows, which used to leave half-applied layouts. -->
     <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <!-- Grid wrapper: forces viewport-width measure so the inner panel is
-             always exactly min(viewport, MaxWidth), positioned identically in
-             every language (a bare StackPanel sizes to its longest line). -->
+        <!-- Viewport wrapper: the panel fills min(viewport, 980) and centers
+             above the cap by design. The overlay pane never resizes the
+             content, so toggles move nothing — width only changes on window
+             resizes. A bare StackPanel would size to its longest line, so
+             translations would shift the layout instead of wrapping. -->
         <Grid>
         <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
 

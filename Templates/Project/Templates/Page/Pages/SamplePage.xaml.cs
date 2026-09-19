@@ -9,6 +9,11 @@ public sealed partial class SamplePage : Page, INavigationAware
 {
     public SamplePageViewModel ViewModel { get; }
 
+    // Window resize drags fire SizeChanged on every tick: the guard below makes
+    // same-breakpoint ticks a no-op (no Grid churn mid-resize). Complex pages
+    // additionally coalesce ticks through LayoutDebouncer (see HomePage).
+    private bool? _isNarrow;
+
     public SamplePage()
     {
         this.InitializeComponent();
@@ -26,7 +31,7 @@ public sealed partial class SamplePage : Page, INavigationAware
         // Services/Localization/{En,Es,Fr}Strings.cs, then delete the
         // snippet. The generated test stub fails until you do (or run
         // Scripts/add-page.ps1, which does every step for you).
-        UpdateResponsiveLayout();
+        UpdateResponsiveLayout(ResponsiveLayout.ShouldUseNarrowPage(ActualWidth));
     }
 
     public void OnNavigatedFrom()
@@ -34,18 +39,23 @@ public sealed partial class SamplePage : Page, INavigationAware
         // Nothing to tear down on leave.
     }
 
-    private void SamplePage_Loaded(object sender, RoutedEventArgs e) => UpdateResponsiveLayout();
+    private void SamplePage_Loaded(object sender, RoutedEventArgs e) =>
+        UpdateResponsiveLayout(ResponsiveLayout.ShouldUseNarrowPage(ActualWidth));
 
-    private void SamplePage_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateResponsiveLayout();
+    private void SamplePage_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        UpdateResponsiveLayout(ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width));
 
     /// <summary>
     /// Page-level responsive switch (padding here; two-column pages also
     /// restack their grids). Driven by the page's own width so the compact
-    /// nav pane is accounted for. Never depends on language.
+    /// nav pane is accounted for. Idempotent: same breakpoint returns without
+    /// touching the visual tree. Never depends on language.
     /// </summary>
-    private void UpdateResponsiveLayout()
+    private void UpdateResponsiveLayout(bool narrow)
     {
-        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+        if (_isNarrow.HasValue && _isNarrow.Value == narrow)
+            return;
+        _isNarrow = narrow;
 
         ContentPanel.Padding = narrow
             ? new Thickness(16, 16, 16, 24)

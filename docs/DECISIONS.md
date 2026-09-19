@@ -350,3 +350,5 @@ in git history; this file saves the next agent the archaeology.
   and `upload-github.ps1`. Payload shrink rejected: R2R stays (startup
   perf), ONNX/DirectML stay (framework closure). Job timeout 45 â†’ 90
   min backstop. Proven live against the 0.0.11-beta draft.
+
+- **2026-09-19 — Nav shell is overlay (LeftCompact) + native selection, template-first.** Frame captures proved the inline push desyncs content for a frame and snaps after (upstream #9370, no fix planned); a width-pinning helper and a left-anchored column were tried and rejected (harsh snaps; centered look required). SelectsOnInvoked stays default-True (False kills programmatic selection, #6511). Nav is a documented extension surface now: <devtem:nav-items> region in MainWindow.xaml (mode/items/selection contract), <devtem:routes> for pages; dead compact-pane API (ShouldUseCompactPane) deleted with its tests. Pane-toggle smoke test asserts rail-first phases strictly.

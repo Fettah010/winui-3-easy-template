@@ -24,6 +24,19 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.26-beta] - 2026-09-19
+
+### Fixed
+
+- Navigation highlight is back: items use native selection again
+  (`SelectsOnInvoked=False` suppressed the current-page pill entirely).
+- Pane toggle no longer shakes the content: the nav shell is an overlay
+  drawer (`LeftCompact`), so toggling resizes nothing — the inline push
+  desynced content for a frame and snapped (upstream, no fix planned).
+- Removed the dead compact-pane sizing API; the nav shell is now a documented
+  extension surface (`<devtem:nav-items>` region + `<devtem:routes>`).
+
 ## [0.0.25-beta] - 2026-09-18
 
 ### Changed

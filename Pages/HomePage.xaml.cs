@@ -8,9 +8,16 @@ public sealed partial class HomePage : Page, INavigationAware
 {
     public AppInfo AppInfo { get; } = AppInfo.Current;
 
+    // Window resize drags fire SizeChanged on every tick. Ticks coalesce in
+    // LayoutDebouncer and only a settled breakpoint FLIP reflows; same-breakpoint
+    // ticks are a no-op. (Pane toggles never resize the content: overlay.)
+    private readonly LayoutDebouncer _layoutDebouncer;
+    private bool? _isNarrow;
+
     public HomePage()
     {
         this.InitializeComponent();
+        _layoutDebouncer = new LayoutDebouncer(DispatcherQueue);
         // P2-3 caching policy: lightweight pages stay cached (no XAML
         // re-parse per nav); heavy pages (Diagnostics log tails) stay
         // transient — the default. See docs/DECISIONS.md.
@@ -21,7 +28,7 @@ public sealed partial class HomePage : Page, INavigationAware
     {
         // The page is cached but every label is a live loc binding now —
         // nothing to refresh on return.
-        UpdateResponsiveLayout();
+        PaintLayout();
     }
 
     public void OnNavigatedFrom()
@@ -29,9 +36,20 @@ public sealed partial class HomePage : Page, INavigationAware
         // Nothing to tear down on leave.
     }
 
-    private void HomePage_Loaded(object sender, RoutedEventArgs e) => UpdateResponsiveLayout();
+    private void HomePage_Loaded(object sender, RoutedEventArgs e) => PaintLayout();
 
-    private void HomePage_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateResponsiveLayout();
+    private void HomePage_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        _layoutDebouncer.RequestSwap(
+            ContentPanel,
+            () => ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width),
+            () => UpdateResponsiveLayout(ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width)));
+
+    /// <summary>Resting paint (no-op when the breakpoint is unchanged).</summary>
+    private void PaintLayout()
+    {
+        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+        _layoutDebouncer.PaintInitial(narrow, () => UpdateResponsiveLayout(narrow));
+    }
 
     /// <summary>
     /// Switches between two-column and stacked layouts based on the page's own
@@ -39,13 +57,17 @@ public sealed partial class HomePage : Page, INavigationAware
     /// Done in code because VisualState setters cannot reliably retarget Grid
     /// columns/rows. Stacking zeroes the unused column and reuses the other
     /// one as Star (never ColumnSpan: spanned children join Auto sizing with
-    /// unbounded measure and blow the grid past the card). Layout depends only
-    /// on width — never on language — so longer translations wrap instead of
-    /// shifting content.
+    /// unbounded measure and blow the grid past the card). Idempotent: same
+    /// breakpoint returns without touching the visual tree, so settled pane
+    /// slides that never cross the threshold cost zero layout. Layout depends
+    /// only on width — never on language — so longer translations wrap
+    /// instead of shifting content.
     /// </summary>
-    private void UpdateResponsiveLayout()
+    private void UpdateResponsiveLayout(bool narrow)
     {
-        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+        if (_isNarrow.HasValue && _isNarrow.Value == narrow)
+            return;
+        _isNarrow = narrow;
 
         ContentPanel.Padding = narrow
             ? new Thickness(16, 16, 16, 24)

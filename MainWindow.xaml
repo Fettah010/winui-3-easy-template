@@ -68,18 +68,47 @@
             </Button>
         </Grid>
 
+        <!-- Overlay pane (LeftCompact): the compact rail stays inline and the
+             expanded pane slides OVER the content instead of resizing it, so
+             toggling never reflows, rewraps, or shifts a single pixel (the
+             inline push desyncs content from the pane for a frame and snaps
+             after the slide — an upstream behavior with no property fix).
+             Content width only changes on real window resizes, where the
+             pages' settled breakpoints apply. -->
         <NavigationView
             x:Name="RootNavigationView"
             Grid.Row="1"
-            PaneDisplayMode="Left"
+            PaneDisplayMode="LeftCompact"
+            IsPaneOpen="False"
             IsSettingsVisible="True"
             IsBackButtonVisible="Collapsed"
             IsTitleBarAutoPaddingEnabled="False"
+            IsPaneToggleButtonVisible="True"
+            CompactPaneLength="48"
             ItemInvoked="NavigationView_ItemInvoked"
             BackRequested="NavigationView_BackRequested"
             OpenPaneLength="240">
 
+            <!-- NAVIGATION SHELL — restyle freely, keep the contract:
+                 - Mode: LeftCompact overlay (rail inline, drawer floats over
+                   content so toggles never resize/reflow anything). Alternatives:
+                   PaneDisplayMode="Left" pushes content (jitters on toggle),
+                   "Top" moves nav into the top bar.
+                 - Items live in the <devtem:nav-items> region below (or run
+                   Scripts/add-page.ps1, which inserts them). One
+                   NavigationViewItem per page: Tag MUST equal the route
+                   registered in MainWindow.xaml.cs (<devtem:routes>); the
+                   highlight syncs in OnNavigated. The built-in Settings item
+                   is labeled in code (ApplyNavLocalization).
+                 - Selection: keep the default SelectsOnInvoked=True, or the
+                   current-page pill silently stops working (#6511). -->
+            <!-- <devtem:nav-items> -->
             <NavigationView.MenuItems>
+                <!-- Native selection (SelectsOnInvoked defaults to True):
+                     clicks select + invoke, so the current-page pill shows.
+                     OnNavigated only re-syncs programmatic navigations
+                     (back, tray, deep link) to the same item — a no-op
+                     for clicks. -->
                 <NavigationViewItem AutomationProperties.AutomationId="NavHomeItem" Content="{loc:Loc Key=NavHome}" Tag="home">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home"/>
@@ -99,8 +128,14 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
+            <!-- </devtem:nav-items> -->
 
-            <Frame x:Name="ContentFrame"/>
+            <!-- Single measure pass: the Frame fills whatever width the rail
+                 leaves. No Width/Margin/Translation bindings — and the overlay
+                 pane never resizes this cell at all, so toggling moves nothing. -->
+            <Frame x:Name="ContentFrame"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"/>
         </NavigationView>
 
         <!-- Toast notification host: bottom-right corner. A content-sized

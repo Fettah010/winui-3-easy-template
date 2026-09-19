@@ -45,9 +45,10 @@
         </VisualStateManager.VisualStateGroups>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <!-- Grid wrapper: forces viewport-width measure so the inner panel is
-             always exactly min(viewport, MaxWidth), positioned identically in
-             every language. -->
+        <!-- Viewport wrapper: the panel fills min(viewport, 820) and centers
+             above the cap by design. The overlay pane never resizes the
+             content, so toggles move nothing — width only changes on window
+             resizes. -->
         <Grid>
         <StackPanel x:Name="DiagnosticsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Stretch">
 

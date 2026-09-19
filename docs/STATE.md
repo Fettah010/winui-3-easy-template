@@ -5,8 +5,8 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** all green. `v0.0.24-beta` (tray double-check + diagnostics clear + README/screenshots) then `v0.0.25-beta` (update-test target) + `templates-v0.3.10`, back-to-back.
-- **Version:** app `0.0.25-beta`; template package `0.3.10`.
+- **Goal:** ship `v0.0.26-beta` (nav overlay + selection fix, template-first cleanup) + `templates-v0.3.11`, back-to-back.
+- **Version:** app `0.0.26-beta`; template package `0.3.11` (via tag).
 - **Tags:** `v0.0.24-beta`, `v0.0.25-beta` (release.yml → beta channel); `templates-v0.3.10` (templates-publish → NuGet).
 - **Branches:** `main` pushed; `beta` tracks latest (to verify).
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
@@ -17,5 +17,12 @@
 - **Release pipeline:** `vpk` packs, `Scripts/Invoke-GithubParallelUpload.ps1` uploads (`gh`, one job per asset, 3x retry, markers). Serial `vpk upload github` topped ~1h at ~2-3 Mbps and tripped timeouts; parallel lands ~11 min. See DECISIONS + AGENTS gotcha 5.
 - **Update UX (v0.0.12):** `UpdateDialogService` = toasts (checking/up-to-date/not-installed/error-via-dialog) + native `ContentDialog` (available/download-progress/ready); 30s check timeout + unpackaged short-circuit (no infinite checking); legacy `UpdatePopup` overlay kept wired but hidden. First-run wizard never auto-opens (installer owns setup); `ShouldShowSetupWizard()` retired to false; parity guard manifest dropped to `@()` for that file.
 - **Next:** packaged proof on a kit machine (WACK still manual).
+- **Nav fix, round 5 — overlay, RELEASING as 0.0.26-beta:** frame captures proved the inline
+  push desyncs (page laid out half-growth off mid-slide, snap + Mica gap after).
+  `MainWindow` now `LeftCompact` + closed rail: toggles resize nothing, content
+  stays centered AND static. Dead compact-pane API deleted; nav is a documented
+  extension surface (`<devtem:nav-items>`); pane-toggle smoke test rewritten for
+  rail-first startup and PASSES live. Open note: drawer-over-Mica background left
+  at default (NavigationViewExpandedPaneBackground is the knob if it reads wrong).
 
 (End of file - total 14 lines)

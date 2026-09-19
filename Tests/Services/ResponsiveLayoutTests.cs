@@ -13,34 +13,12 @@ public class ResponsiveLayoutTests
         // Locals (not consts) so the assertion conditions stay meaningful.
         int minW = ResponsiveLayout.MinWindowWidth;
         int minH = ResponsiveLayout.MinWindowHeight;
-        double threshold = ResponsiveLayout.CompactLayoutThreshold;
+        double threshold = ResponsiveLayout.NarrowPageThreshold;
 
         Assert.IsGreaterThanOrEqualTo(640, minW);
         Assert.IsGreaterThanOrEqualTo(480, minH);
         Assert.IsLessThan(1200, minW);
-        Assert.IsGreaterThan(minW, threshold);
-    }
-
-    [TestMethod]
-    public void ShouldUseCompactPane_NarrowWidth_ReturnsTrue()
-    {
-        Assert.IsTrue(ResponsiveLayout.ShouldUseCompactPane(720));
-        Assert.IsTrue(ResponsiveLayout.ShouldUseCompactPane(859));
-    }
-
-    [TestMethod]
-    public void ShouldUseCompactPane_WideWidth_ReturnsFalse()
-    {
-        Assert.IsFalse(ResponsiveLayout.ShouldUseCompactPane(860));
-        Assert.IsFalse(ResponsiveLayout.ShouldUseCompactPane(1200));
-    }
-
-    [TestMethod]
-    public void ShouldUseCompactPane_InvalidWidth_ReturnsFalse()
-    {
-        Assert.IsFalse(ResponsiveLayout.ShouldUseCompactPane(0));
-        Assert.IsFalse(ResponsiveLayout.ShouldUseCompactPane(-10));
-        Assert.IsFalse(ResponsiveLayout.ShouldUseCompactPane(double.NaN));
+        Assert.IsLessThan(minW, threshold);
     }
 
     [TestMethod]

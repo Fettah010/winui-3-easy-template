@@ -48,6 +48,7 @@ Use the explicit extension markers when adding application code:
 
 - `<devtem:services>` in `Services/ServiceLocator.cs`
 - `<devtem:routes>` in `MainWindow.xaml.cs`
+- `<devtem:nav-items>` in `MainWindow.xaml` (nav shell: mode, items, selection)
 - `Services/SettingsService.cs` for persisted settings
 - all localization dictionaries for new keys (`EnStrings` only in
   English-only scaffolds)
@@ -196,14 +197,16 @@ Uninstall when done: `dotnet new uninstall .\Templates\Page`.
    states, composed status lines) stays in code and refreshes on
    `LanguageChanged` — see `SettingsPage`/`DiagnosticsPage`.
 5. **Route**: `NavigationService.RegisterRoute("orders", typeof(OrdersPage))`
-   in `MainWindow`, plus a `NavigationViewItem` (menu or footer) and a
-   selection-sync case (note: the built-in Settings item needs the explicit
-   branch in `OnNavigated`).
+   in `MainWindow` (`<devtem:routes>`), plus a `NavigationViewItem` (menu or
+   footer, in the `<devtem:nav-items>` region) and a selection-sync case
+   (note: the built-in Settings item needs the explicit branch in `OnNavigated`).
 6. **Responsive**: drive two-column → stacked switching from
-   `ResponsiveLayout.ShouldUseNarrowPage(ActualWidth)` in code-behind
-   (`SizeChanged` + `Loaded` + `OnNavigatedTo`); never `ColumnSpan` for
-   stacking (spanned children join Auto sizing and blow the grid past the
-   card); button rows go in `Controls/WrapPanel`.
+   `ResponsiveLayout.ShouldUseNarrowPage(...)` in code-behind — `e.NewSize.Width`
+   in `SizeChanged`, `ActualWidth` in `Loaded`/`OnNavigatedTo` — and early-out
+   when the breakpoint is unchanged (resize drags fire ticks continuously;
+   re-applying identical Grid lengths mid-resize reads as jitter);
+   never `ColumnSpan` for stacking (spanned children join Auto sizing and blow
+   the grid past the card); button rows go in `Controls/WrapPanel`.
 
 ## 2d. Removing sample content
 
@@ -244,11 +247,14 @@ deletes independently.
 ## 4. Layout rules (learned the hard way)
 
 - Page content width must NEVER depend on content length, or translations
-  shift the layout: viewport `Grid` → `StackPanel` with `MaxWidth`.
+  shift the layout: viewport `Grid` → `Stretch` `StackPanel` with `MaxWidth`
+  (centers above the cap by design; mid-slide calm comes from the idempotent
+  code-behind guard, not from the wrapper).
 - Text always `TextWrapping="Wrap"`; horizontal rows either fit provably or
   use `WrapPanel`; `ScrollViewer` horizontal scrollbar stays `Disabled`.
 - Breakpoints live in `Services/Helpers/ResponsiveLayout.cs` (single source) and are
-  unit-tested; the nav pane compacts below 860px window width.
+  unit-tested; the nav pane is an overlay (`LeftCompact`) that never resizes the
+  content, so toggles reflow nothing — breakpoints only fire on window resizes.
 - Verify with screenshots: switch EN ↔ ES at 900px and at 1920px; card edges
   must be pixel-identical (see `Tests/` ABA approach in git history).
 

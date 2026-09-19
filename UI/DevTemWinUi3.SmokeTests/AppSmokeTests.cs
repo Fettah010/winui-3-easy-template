@@ -246,6 +246,62 @@ public sealed class AppSmokeTests
     }
 
     [TestMethod]
+    public void Pane_Toggles_Rail_WithoutLosingPage()
+    {
+        // The overlay pane starts as a rail and toggles open/closed without
+        // touching the page: open and re-collapse must leave the page alive
+        // and navigable (guards the toggle path against crashes/regressions).
+        RequireWindow();
+        DismissFirstRunDialogIfPresent(RecheckTimeout);
+        ClickNavAndWaitForPage("NavHomeItem", "HomeTitleText");
+
+        ForegroundWindow();
+        Assert.AreEqual(
+            "Open Navigation", WaitForPaneToggleName("Open Navigation", NavigateTimeout),
+            "Pane did not start collapsed on the rail.");
+        var toggle = RequireElement("TogglePaneButton", "Pane toggle");
+        InvokeOrClick(toggle);
+        Assert.AreEqual(
+            "Close Navigation", WaitForPaneToggleName("Close Navigation", NavigateTimeout),
+            "Pane did not expand on hamburger click.");
+
+        InvokeOrClick(RequireElement("TogglePaneButton", "Pane toggle"));
+        Assert.AreEqual(
+            "Open Navigation", WaitForPaneToggleName("Open Navigation", NavigateTimeout),
+            "Pane did not collapse on hamburger click.");
+
+        var home = WaitForElement("HomeTitleText", NavigateTimeout);
+        Assert.IsNotNull(home, "Home page did not survive the pane toggle.");
+    }
+
+    /// <summary>
+    /// Polls the hamburger's accessible name until it matches (pane state)
+    /// or the timeout lapses; returns the last name seen (null when the
+    /// window or button is gone).
+    /// </summary>
+    private static string? WaitForPaneToggleName(string expected, TimeSpan timeout)
+    {
+        var window = _window;
+        if (window is null)
+            return null;
+        string? name = null;
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                var toggle = window.FindFirstDescendant(cf => cf.ByAutomationId("TogglePaneButton"));
+                name = toggle?.Name;
+                if (string.Equals(name, expected, StringComparison.Ordinal))
+                    return name;
+            }
+            catch { }
+            Task.Delay(250).Wait();
+        }
+        return name;
+    }
+
+    [TestMethod]
     public void HomeCheck_TriggersSettingsCheck()
     {
         // Home's "Check for updates" navigates to Settings with the check

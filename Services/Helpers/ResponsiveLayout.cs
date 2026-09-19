@@ -3,9 +3,9 @@ using System;
 namespace DevTemWinUi3.Services;
 
 /// <summary>
-/// Single source of truth for window sizing and responsive-layout breakpoints.
-/// The XAML <c>AdaptiveTrigger</c> thresholds and the code-behind pane-switching
-/// both derive from <see cref="CompactLayoutThreshold"/> so they stay in sync.
+/// Single source of truth for window sizing and the page-level responsive
+/// breakpoint. The nav pane is an overlay (LeftCompact) and never resizes the
+/// content, so no breakpoint tracks it.
 /// </summary>
 public static class ResponsiveLayout
 {
@@ -16,26 +16,12 @@ public static class ResponsiveLayout
     public const int MinWindowHeight = 540;
 
     /// <summary>
-    /// Window widths below this threshold use the compact navigation pane and
-    /// the single-column page layouts. Must match the page code-behind usage
-    /// of <see cref="NarrowPageThreshold"/> so pane and pages switch together.
-    /// </summary>
-    public const double CompactLayoutThreshold = 860;
-
-    /// <summary>
     /// Page (frame) widths below this threshold use the single-column layout.
     /// A frame this narrow cannot fit two comfortable columns plus padding,
     /// so pages stack instead of squeezing (which is what used to clip
     /// longer translations off the right edge).
     /// </summary>
     public const double NarrowPageThreshold = 700;
-
-    /// <summary>
-    /// Whether the given window width should use the compact navigation pane
-    /// (and, by convention, the narrow single-column page layouts).
-    /// </summary>
-    public static bool ShouldUseCompactPane(double windowWidth) =>
-        !double.IsNaN(windowWidth) && windowWidth > 0 && windowWidth < CompactLayoutThreshold;
 
     /// <summary>
     /// Whether the given page width should use the stacked single-column layout.

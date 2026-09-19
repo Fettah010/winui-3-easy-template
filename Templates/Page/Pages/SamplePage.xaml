@@ -13,8 +13,9 @@
 
     <!-- Root Grid -> ScrollViewer (horizontal Disabled) -> viewport Grid ->
          content StackPanel with MaxWidth: the width never depends on content
-         length, so translations wrap instead of shifting the layout
-         (see docs/TEMPLATE-GUIDE.md "Layout rules"). -->
+         length, so translations wrap instead of shifting the layout; the panel
+         centers above the cap by design (see docs/TEMPLATE-GUIDE.md "Layout
+         rules"). -->
     <Grid>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Grid>
