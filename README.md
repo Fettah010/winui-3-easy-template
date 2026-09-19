@@ -14,6 +14,8 @@ Production-ready **WinUI 3 starter template** for Windows desktop apps: a real a
 
 It is built for teams that want a real app shell instead of a blank canvas: **MVVM**, **Mica window**, **system tray**, **Velopack auto-updates**, **localization**, **logging**, **SQLite**, **typed HTTP client**, and a **release pipeline** already wired up.
 
+![Home page — welcome card, status, and feature overview](docs/screenshots/home.png)
+
 ## Install the template
 
 ```powershell
@@ -61,67 +63,20 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 
 Every bullet above except MVVM/Mica is a scaffold-time choice: the repo
 app shows the all-on reference, `dotnet new devtem-winui --help` lists
-the flags, and `docs/FEATURES.md` records what each scaffold picked.
+the flags, and each scaffold records its picks in a generated
+`docs/FEATURES.md` (see `docs/template-features.json` for the schema).
 
-## What's new in 0.0.24-beta
+![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-- Update flow states report through in-app toast cards; install/restart
-  decisions use native WinUI 3 dialogs (no custom overlay, no silent hangs)
-- Check-now feedback: the button disables with "Checking…" for the whole
-  check, and every stage is logged (`%LocalAppData%\DevTemWinUi3\Logs`)
-- Verify toasts render on any machine: Settings → Notifications → test toast
-- Trimmed sample UI (About glance, Home runbook) + `devtem:optional`
-  markers and a removal guide (`docs/TEMPLATE-GUIDE.md` §2d) for the rest
+## What's new in 0.0.26-beta
 
-## Screenshots
+- Navigation highlight is back: items use native selection again
+- Pane toggle no longer shakes the content: the nav shell is an overlay
+  drawer, so toggling resizes nothing
+- Nav is now a documented extension surface (`<devtem:nav-items>` region
+  + `<devtem:routes>`); the dead compact-pane sizing API is gone
 
-![Home page](docs/screenshots/home.png)
-![Settings page with the notification test trigger](docs/screenshots/settings.png)
-![In-app toast card](docs/screenshots/toast.png)
-
-## What's new in 0.0.11-beta
-
-- Update-flow verification release (no behavior changes): watch the
-  0.0.10 popup detect, download, and prompt restart — full notes in
-  [CHANGELOG.md](CHANGELOG.md)
-
-## What's new in 0.0.10-beta
-
-- Updates never block launch (app opens first, then asks), one animated
-  update popup with progress + restart options, diagnostics Clear and
-  live views fixed — full notes in [CHANGELOG.md](CHANGELOG.md)
-
-## What's new in 0.0.9-beta
-
-- Faster launches (no fixed animation waits, deferred tray/toast),
-  smoother updates + diagnostics, capped log growth, data-layer v1
-  (WAL, migrations) — full notes in [CHANGELOG.md](CHANGELOG.md)
-
-## What's new in 0.0.8-beta
-
-- Faster launches with a pending update: visible restart prompt
-  instead of a silent stall, plus an Update Center refresh (status /
-  details sections, version info) — full notes in [CHANGELOG.md](CHANGELOG.md)
-
-## What's new in 0.0.7-beta
-
-- Store upload wrap fixed on PowerShell 7 + smoke hardened for
-  first-run wizard — CI green — full notes in [CHANGELOG.md](CHANGELOG.md)
-
-## What's new in 0.0.6-beta
-
-- Dual-track distribution: one binary serves GitHub (Velopack) and the
-  Store (same MSIX) — packaged runs take the slim update status surface
-- One tag now also packs the Store upload in CI (needs the
-  `DEVTEM_MSIX_PUBLISHER` secret) — full notes in [CHANGELOG.md](CHANGELOG.md)
-
-## What's new in 0.0.5-beta
-
-- Packaged MSIX distribution (`--distribution msix`) with native
-  AppInstaller / Store updates and a documented Store preset
-- First-run setup wizard (portable installs) + animated update popup
-  with download progress and release notes
-- Template package `0.3.0` on NuGet — full notes in [CHANGELOG.md](CHANGELOG.md)
+Earlier releases: full notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Run this repo locally
 
