@@ -1,8 +1,12 @@
 using System;
+using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
+using Windows.UI.Core;
 using DevTemWinUi3.Pages;
 using DevTemWinUi3.Services;
 using DevTemWinUi3.Services.Native;
@@ -60,6 +64,13 @@ public sealed partial class MainWindow : Window
 
         // Navigate to initial page
         _nav.NavigateTo("home");
+
+        // App-wide keyboard support (KeyboardShortcuts owns the reservation
+        // list; this is the thin event wiring). Bubbling: focused controls
+        // keep their own keys (dropdowns, dialogs, text input); unhandled
+        // reserved chords arrive here. Never throws.
+        RootGrid.KeyDown += RootGrid_KeyDown;
+        RootGrid.PointerPressed += RootGrid_PointerPressed;
 
         // Restore window state
         RestoreWindowState();
@@ -346,6 +357,70 @@ public sealed partial class MainWindow : Window
     private void NavigationView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
     {
         _nav.GoBack();
+    }
+
+    /// <summary>
+    /// Reserved-chord handler: Alt+Left/Right (back/forward), Ctrl+,
+    /// (Settings), Escape (dismiss the update flow). Fires only when no
+    /// focused control handled the key; marks handled only when the action
+    /// actually ran (GoBack with an empty stack stays unhandled).
+    /// </summary>
+    private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        try
+        {
+            bool ctrl = IsKeyDown(VirtualKey.Control);
+            bool alt = IsKeyDown(VirtualKey.Menu);
+            switch (KeyboardShortcuts.Resolve(e.Key, ctrl, alt))
+            {
+                case KeyboardAction.GoBack:
+                    if (_nav.GoBack())
+                        e.Handled = true;
+                    break;
+                case KeyboardAction.GoForward:
+                    if (_nav.GoForward())
+                        e.Handled = true;
+                    break;
+                case KeyboardAction.OpenSettings:
+                    _nav.NavigateTo("settings");
+                    e.Handled = true;
+                    break;
+                case KeyboardAction.DismissUpdateFlow:
+                    _ = UpdateDialogService.DismissAsync();
+                    e.Handled = true;
+                    break;
+            }
+        }
+        catch { }
+    }
+
+    private static bool IsKeyDown(VirtualKey key)
+    {
+        try
+        {
+            return InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Mouse back/forward (X1/X2) anywhere in the window, mirroring
+    /// Alt+Left/Right. Thin wiring; the stack guard lives in the service.
+    /// </summary>
+    private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        try
+        {
+            var props = e.GetCurrentPoint(null).Properties;
+            if (props.IsXButton1Pressed && _nav.GoBack())
+                e.Handled = true;
+            else if (props.IsXButton2Pressed && _nav.GoForward())
+                e.Handled = true;
+        }
+        catch { }
     }
 
     private void OnTrayNavigationRequested(object? sender, TrayNavigationRequest request)

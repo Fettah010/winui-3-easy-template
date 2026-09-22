@@ -42,6 +42,17 @@
                             Click="SetupBrowseButton_Click"/>
                     </StackPanel>
                 </ctk:SettingsCard>
+                <!-- Inline validation: Next/Complete cannot leave this step
+                     while the folder is empty or relative (persisted folders
+                     can go stale). Clears live when fixed. -->
+                <TextBlock
+                    x:Name="LocationErrorText"
+                    AutomationProperties.AutomationId="SetupLocationErrorText"
+                    Text="{x:Bind ViewModel.LocationError, Mode=OneWay}"
+                    x:Load="{x:Bind ViewModel.HasLocationError, Mode=OneWay}"
+                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                    Style="{ThemeResource CaptionTextBlockStyle}"
+                    TextWrapping="Wrap"/>
             </StackPanel>
 
             <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.ShortcutsStepVisibility, Mode=OneWay}">

@@ -25,6 +25,7 @@ public class UpdateCenterViewModelTests
         public int ProgressToReport = 100;
         public int ApplyCalls;
         public int CheckCalls;
+        public Exception? DownloadError;
 
         public void SetChannel(string channel) { }
 
@@ -46,6 +47,8 @@ public class UpdateCenterViewModelTests
         {
             progress?.Invoke(0);
             progress?.Invoke(ProgressToReport);
+            if (DownloadError is not null)
+                throw DownloadError;
             return Task.CompletedTask;
         }
 
@@ -58,6 +61,7 @@ public class UpdateCenterViewModelTests
         _storePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
         LocalSettingsStore.SetTestPath(_storePath);
         LocalizationService.Current.SetLanguage("en-US");
+        UpdateCenterViewModel.ResetStickyForTests();
     }
 
     [TestCleanup]
@@ -272,5 +276,60 @@ public class UpdateCenterViewModelTests
         await check;
 
         Assert.IsFalse(vm.IsChecking);
+    }
+
+    [TestMethod]
+    public async Task Check_Failure_RetainsLastGoodAndSetsSticky()
+    {
+        // B9: a failed re-check must not blank the known update (Retry and
+        // the install path stay valid) and must raise the session-sticky
+        // flag the Home status card reads.
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var updates = new FakeUpdates
+        {
+            Result = new UpdateCheckResult(true, "9.9", "Highlights"),
+            CheckError = new InvalidOperationException("boom"),
+        };
+        var vm = new UpdateCenterViewModel(updates);
+        vm.PublishResult(new UpdateCheckResult(true, "9.9", "Highlights"));
+
+        await vm.CheckAsync();
+
+        Assert.IsTrue(vm.LastCheckFailed);
+        Assert.IsTrue(UpdateCenterViewModel.LastCheckFailedSticky);
+        Assert.IsTrue(vm.HasUpdate);
+        Assert.AreEqual("9.9", vm.PendingVersion);
+
+        updates.CheckError = null;
+        updates.Result = new UpdateCheckResult(false, null);
+        await vm.CheckAsync();
+
+        Assert.IsFalse(vm.LastCheckFailed);
+        Assert.IsFalse(UpdateCenterViewModel.LastCheckFailedSticky);
+    }
+
+    [TestMethod]
+    public async Task Download_Failure_RearmsDownload()
+    {
+        // B9: a failed download keeps the staged update and re-arms the
+        // download (Retry without a fresh check); install stays off.
+        if (AppFeatures.IsExternalUpdateMode)
+            Assert.Inconclusive("Engine flow is not scaffolded in external update mode.");
+        var vm = new UpdateCenterViewModel(
+            new FakeUpdates
+            {
+                Result = new UpdateCheckResult(true, "9.9"),
+                DownloadError = new InvalidOperationException("boom"),
+            });
+        vm.PublishResult(new UpdateCheckResult(true, "9.9"));
+
+        await vm.DownloadAsync();
+
+        Assert.IsTrue(vm.HasUpdate);
+        Assert.AreEqual("9.9", vm.PendingVersion);
+        Assert.IsTrue(vm.CanDownload);
+        Assert.IsFalse(vm.CanInstall);
+        Assert.Contains("boom", vm.StatusMessage);
     }
 }

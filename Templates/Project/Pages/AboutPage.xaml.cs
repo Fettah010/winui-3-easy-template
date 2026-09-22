@@ -75,6 +75,20 @@ public sealed partial class AboutPage : Page, INavigationAware
         catch { }
     }
 
+    /// <summary>
+    /// "What's new" recall: re-shows the current version's notes on demand.
+    /// Recall never marks the version (it is already this version's) and
+    /// never throws.
+    /// </summary>
+    private async void ViewWhatsNewButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await FirstRunDialogService.ShowWhatsNewRecallAsync(this.XamlRoot);
+        }
+        catch { }
+    }
+
     private void AboutPage_SizeChanged(object sender, SizeChangedEventArgs e) =>
         _layoutDebouncer.RequestSwap(
             ContentPanel,

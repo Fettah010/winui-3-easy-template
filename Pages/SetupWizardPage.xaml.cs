@@ -34,6 +34,8 @@ public sealed partial class SetupWizardPage : Page, INavigationAware
 
     private void OnLanguageChanged(object? sender, EventArgs e)
     {
+        // Re-render a showing location error in the new language.
+        ViewModel.RefreshLocationError();
     }
 
     private void SetupWizardBackButton_Click(object sender, RoutedEventArgs e) =>
@@ -46,8 +48,10 @@ public sealed partial class SetupWizardPage : Page, INavigationAware
     {
         try
         {
-            ViewModel.Complete();
-            NavigationService.Current.NavigateTo("home");
+            // False = invalid folder: the VM parked on the location step
+            // with the inline error, so there is nowhere to navigate.
+            if (ViewModel.Complete())
+                NavigationService.Current.NavigateTo("home");
         }
         catch { }
     }

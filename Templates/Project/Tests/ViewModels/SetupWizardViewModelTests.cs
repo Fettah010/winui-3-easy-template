@@ -88,4 +88,70 @@ public class SetupWizardViewModelTests
 
         Assert.IsTrue(SetupWizardViewModel.IsCompleted);
     }
+
+    [TestMethod]
+    public void GoNext_BlockedOnEmptyLocation()
+    {
+        var vm = new SetupWizardViewModel { DataFolder = string.Empty };
+        vm.GoNext();
+        Assert.AreEqual(1, vm.SelectedStepIndex);
+
+        vm.GoNext();
+        Assert.AreEqual(1, vm.SelectedStepIndex);
+        Assert.IsTrue(vm.HasLocationError);
+        Assert.AreNotEqual("SetupLocationRequired", vm.LocationError);
+    }
+
+    [TestMethod]
+    public void GoNext_BlockedOnRelativeLocation()
+    {
+        var vm = new SetupWizardViewModel { DataFolder = @"relative\path" };
+        vm.GoNext();
+        Assert.AreEqual(1, vm.SelectedStepIndex);
+
+        vm.GoNext();
+        Assert.AreEqual(1, vm.SelectedStepIndex);
+        Assert.IsTrue(vm.HasLocationError);
+        Assert.AreNotEqual("SetupLocationInvalid", vm.LocationError);
+    }
+
+    [TestMethod]
+    public void GoNext_AdvancesAndClearsErrorOnAbsoluteLocation()
+    {
+        var vm = new SetupWizardViewModel { DataFolder = string.Empty };
+        vm.GoNext();
+        vm.GoNext();
+        Assert.IsTrue(vm.HasLocationError);
+
+        vm.DataFolder = Path.Combine(Path.GetTempPath(), "DevTemWizard");
+        Assert.IsFalse(vm.HasLocationError);
+        vm.GoNext();
+        Assert.AreEqual(2, vm.SelectedStepIndex);
+    }
+
+    [TestMethod]
+    public void Complete_InvalidFolder_ParksOnLocationStep()
+    {
+        var vm = new SetupWizardViewModel { DataFolder = string.Empty };
+
+        Assert.IsFalse(vm.Complete());
+        Assert.AreEqual(1, vm.SelectedStepIndex);
+        Assert.IsTrue(vm.HasLocationError);
+    }
+
+    [TestMethod]
+    public void LocationError_ResolvesInEveryLanguage()
+    {
+        var loc = LocalizationService.Current;
+        foreach (string lang in new[] { "en-US", "es-ES", "fr-FR" })
+        {
+            loc.SetLanguage(lang);
+            var vm = new SetupWizardViewModel { DataFolder = string.Empty };
+            Assert.IsFalse(vm.ValidateLocation());
+            Assert.AreNotEqual("SetupLocationRequired", vm.LocationError, lang);
+            vm.DataFolder = @"relative\path";
+            Assert.IsFalse(vm.ValidateLocation());
+            Assert.AreNotEqual("SetupLocationInvalid", vm.LocationError, lang);
+        }
+    }
 }

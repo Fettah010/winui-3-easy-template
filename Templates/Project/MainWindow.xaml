@@ -140,14 +140,18 @@
 
         <!-- Toast notification host: bottom-right corner. A content-sized
              StackPanel (not Canvas: zero-size Canvases park children
-             off-screen) so toasts always lay out; newest inserts on top. -->
+             off-screen) so toasts always lay out; newest inserts on top.
+             Polite live region: toast arrivals announce to screen readers
+             without interrupting; error cards escalate to Assertive
+             themselves (NotificationCard.ApplyTypeVisuals). -->
         <StackPanel
             x:Name="NotificationHost"
             Grid.Row="1"
             HorizontalAlignment="Right"
             VerticalAlignment="Bottom"
             Margin="0,0,0,16"
-            Spacing="8"/>
+            Spacing="8"
+            AutomationProperties.LiveSetting="Polite"/>
 
         <!-- Legacy update overlay (kept wired, stays hidden): the update
              flow now uses toasts + native dialogs via UpdateDialogService. -->

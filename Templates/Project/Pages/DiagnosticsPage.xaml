@@ -8,12 +8,19 @@
     xmlns:ctk="using:CommunityToolkit.WinUI.Controls"
     xmlns:loc="using:DevTemWinUi3.Controls"
     xmlns:ctrl="using:DevTemWinUi3.Controls"
+    xmlns:svc="using:DevTemWinUi3.Services"
     mc:Ignorable="d"
-    NavigationCacheMode="Disabled">
+    NavigationCacheMode="Disabled"
+    SizeChanged="DiagnosticsPage_SizeChanged">
 
     <!-- DataContext (DiagnosticsPageViewModel) is resolved from the DI container
          in code-behind BEFORE InitializeComponent so compiled bindings
          ({x:Bind ViewModel.…}) see it on first evaluation, never newed up in XAML. -->
+
+    <!-- Responsive padding lives in DiagnosticsPage.xaml.cs
+         UpdateResponsiveLayout (code-behind, like every page): VSM setters
+         cannot retarget Grid rows/columns, so one mechanism covers
+         padding AND grids. -->
 
     <!-- devtem:optional:diagnostics-page — the whole page is droppable.
          Removal checklist: delete this file + DiagnosticsPage.xaml.cs +
@@ -24,25 +31,6 @@
          Services/Localization/*Strings.cs (optional: unused keys are
          harmless, but LocalizationCoverageTests asserts none are
          hardcoded versions). See docs/TEMPLATE-GUIDE.md §2d. -->
-
-    <Grid>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="LayoutStates">
-                <VisualState x:Name="NarrowState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0"/>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="DiagnosticsPanel.Padding" Value="16,16,16,24"/>
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="WideState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="860"/>
-                    </VisualState.StateTriggers>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <!-- Viewport wrapper: the panel fills min(viewport, 820) and centers
@@ -294,17 +282,18 @@
                             FontFamily="Consolas"
                             FontSize="12">
                             <ListView.ItemTemplate>
-                                <!-- Classic Binding (not x:Bind): the item type
-                                     is nested in DiagnosticsService, which
-                                     compiled bindings cannot name. -->
-                                <DataTemplate>
+                                <!-- Compiled bindings (x:DataType): mistyped row
+                                     paths fail the build. BufferedLogEvent is
+                                     top-level in DevTemWinUi3.Services exactly
+                                     so this can name it. -->
+                                <DataTemplate x:DataType="svc:BufferedLogEvent">
                                     <StackPanel Spacing="2" Padding="0,4">
                                         <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Text="{Binding DisplayTime}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
-                                            <TextBlock Text="{Binding Level}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding SourceContext}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                            <TextBlock Text="{x:Bind DisplayTime, Mode=OneTime}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                            <TextBlock Text="{x:Bind Level, Mode=OneTime}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{x:Bind SourceContext, Mode=OneTime}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding Message}" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                        <TextBlock Text="{x:Bind Message, Mode=OneTime}" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
@@ -331,5 +320,4 @@
         </StackPanel>
         </Grid>
     </ScrollViewer>
-    </Grid>
 </Page>

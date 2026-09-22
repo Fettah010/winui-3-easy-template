@@ -163,21 +163,6 @@ public static class DiagnosticsService
         }
     }
 
-    /// <summary>A single in-memory log event for the live tail. Never null members.</summary>
-    public sealed record BufferedLogEvent(
-        DateTimeOffset Timestamp,
-        string Level,
-        string Message,
-        string? SourceContext,
-        bool HasException,
-        string? ExceptionText,
-        IReadOnlyDictionary<string, string> Properties)
-    {
-        /// <summary>Short clock time for list rows (invariant, parseable).</summary>
-        public string DisplayTime =>
-            Timestamp.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
-    }
-
     /// <summary>
     /// Newest buffered events (live tail source), capped at
     /// <paramref name="maxEvents"/>. Empty when nothing is buffered or on

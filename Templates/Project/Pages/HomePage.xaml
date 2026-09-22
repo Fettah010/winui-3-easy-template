@@ -120,6 +120,7 @@
                         </Grid.ColumnDefinitions>
 
                         <FontIcon
+                            x:Name="StatusIcon"
                             Grid.Column="0"
                             Glyph="&#xE930;"
                             FontSize="24"
@@ -127,7 +128,14 @@
                             VerticalAlignment="Center"/>
 
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="{loc:Loc Key=HomeStatusOk}" Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+                            <!-- Text is set in code (ok vs failed-check states);
+                                 refresh with the language, not just layout. -->
+                            <TextBlock
+                                x:Name="StatusTitle"
+                                AutomationProperties.AutomationId="HomeStatusText"
+                                Text="{loc:Loc Key=HomeStatusOk}"
+                                Style="{ThemeResource BodyTextBlockStyle}"
+                                TextWrapping="Wrap"/>
                             <TextBlock
                                        Text="{x:Bind AppInfo.VersionDisplay, Mode=OneTime}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
@@ -143,9 +151,11 @@
                             Width="22" Height="22"
                             VerticalAlignment="Center">
                             <Ellipse
+                                x:Name="StatusRing"
                                 Width="22" Height="22"
                                 Fill="{ThemeResource SystemFillColorSuccessBrush}"/>
                             <FontIcon
+                                x:Name="StatusRingGlyph"
                                 Glyph="&#xE73E;"
                                 FontSize="12"
                                 Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"

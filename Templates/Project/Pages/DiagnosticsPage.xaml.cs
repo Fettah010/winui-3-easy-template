@@ -24,6 +24,12 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
     private bool _liveScrollHooked;
     private int _tickCount;
 
+    // Window resize drags fire SizeChanged on every tick. Ticks coalesce in
+    // LayoutDebouncer and only a settled breakpoint FLIP reflows; same-breakpoint
+    // ticks are a no-op. (Pane toggles never resize the content: overlay.)
+    private readonly LayoutDebouncer _layoutDebouncer;
+    private bool? _isNarrow;
+
     public DiagnosticsPage()
     {
         // Resolve BEFORE InitializeComponent: compiled bindings
@@ -32,6 +38,7 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
         ViewModel = ServiceLocator.GetRequiredService<DiagnosticsPageViewModel>();
         this.InitializeComponent();
         DataContext = ViewModel;
+        _layoutDebouncer = new LayoutDebouncer(DispatcherQueue);
 
         // Composed text below cannot bind: re-render it on language switch.
         // (Unsubscribed in OnNavigatedFrom: this page is not cached, so a
@@ -46,6 +53,7 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
     {
         ViewModel.Refresh();
         RenderAll();
+        PaintLayout();
         HookLiveScroll();
         _liveTimer.Start();
     }
@@ -64,6 +72,36 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e) => RenderAll();
+
+    private void DiagnosticsPage_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        _layoutDebouncer.RequestSwap(
+            DiagnosticsPanel,
+            () => ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width),
+            () => UpdateResponsiveLayout(ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width)));
+
+    /// <summary>Resting paint (no-op when the breakpoint is unchanged).</summary>
+    private void PaintLayout()
+    {
+        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+        _layoutDebouncer.PaintInitial(narrow, () => UpdateResponsiveLayout(narrow));
+    }
+
+    /// <summary>
+    /// Narrow windows get tighter page padding so cards keep breathing room.
+    /// Code-behind (like every page — VSM was retired because its setters
+    /// cannot retarget Grid rows/columns). Idempotent: same breakpoint
+    /// returns without touching the visual tree.
+    /// </summary>
+    private void UpdateResponsiveLayout(bool narrow)
+    {
+        if (_isNarrow.HasValue && _isNarrow.Value == narrow)
+            return;
+        _isNarrow = narrow;
+
+        DiagnosticsPanel.Padding = narrow
+            ? new Thickness(16, 16, 16, 24)
+            : new Thickness(32, 24, 32, 32);
+    }
 
     private void LiveTimer_Tick(object? sender, object e)
     {

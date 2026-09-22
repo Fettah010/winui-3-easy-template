@@ -40,19 +40,25 @@ public class FirstRunServiceTests
     }
 
     [TestMethod]
-    public void GetChangelog_ContainsVersion()
+    public void GetChangelog_IsCappedWithChangelogLink()
     {
         var fr = FirstRunService.Current;
-        var changelog = fr.GetChangelog();
+        string changelog = fr.GetChangelog();
         Assert.IsFalse(string.IsNullOrWhiteSpace(changelog));
-        Assert.Contains("What's New", changelog);
+        // Capped so long releases cannot flood the modal (body cap + link).
+        Assert.IsLessThanOrEqualTo(
+            FirstRunService.MaxChangelogLength + 256, changelog.Length);
+        Assert.Contains("/releases", changelog);
     }
 
     [TestMethod]
-    public void MarkAsShown_DoesNotThrow()
+    public void MarkAsShown_SuppressesWhatsNewForCurrentVersion()
     {
+        // At most once per version: marking shown clears HasBeenUpdated,
+        // so the whats-new dialog cannot reappear on the next launch.
         var fr = FirstRunService.Current;
         fr.MarkAsShown();
         Assert.IsFalse(fr.IsFirstRun);
+        Assert.IsFalse(fr.HasBeenUpdated);
     }
 }

@@ -111,6 +111,10 @@
                             <HyperlinkButton
                                 x:Name="ReportIssueButton"
                                 Content="{loc:Loc Key=AboutReportIssue}"/>
+                            <HyperlinkButton
+                                x:Name="ViewWhatsNewButton"
+                                Content="{loc:Loc Key=AboutViewWhatsNew}"
+                                Click="ViewWhatsNewButton_Click"/>
                         </wrap:WrapPanel>
                     </StackPanel>
                 </Grid>

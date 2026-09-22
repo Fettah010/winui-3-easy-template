@@ -105,7 +105,7 @@ severity as found 2026-09-22.
 Findings from reading every page/shell/dialog 2026-09-22. Nothing here
 is broken; everything here is what separates "works" from "polished".
 
-- [ ] **B1. Unify the responsive-layout mechanism.**
+- [x] **B1. Unify the responsive-layout mechanism.**
   `Pages/SettingsPage.xaml` drives padding from `VisualStateManager`
   + `AdaptiveTrigger`, while Home/About/Diagnostics drive everything
   from code-behind (`UpdateResponsiveLayout`, because VSM setters cannot
@@ -113,7 +113,7 @@ is broken; everything here is what separates "works" from "polished".
   page author copies the wrong one. Decide: code-behind everywhere
   (recommend - it already handles the hard cases) and convert Settings;
   delete the VSM block; note the decision in TEMPLATE-GUIDE section 2.
-- [ ] **B2. Keyboard support.**
+- [x] **B2. Keyboard support.**
   Zero `KeyboardAccelerators` repo-wide. Ship at minimum: Back
   (Alt+Left / BrowserBack -> `NavigationService.GoBack`), Ctrl+, ->
   Settings (Windows convention), Escape dismisses the update popup
@@ -121,46 +121,50 @@ is broken; everything here is what separates "works" from "polished".
   by default (avoid collisions) - document the reservation list.
   (Peers: Template Studio MenuBar project type exists for exactly this
   crowding problem; we stay rail-first, accelerators fill the gap.)
-- [ ] **B3. Screen-reader announcements for status.**
+- [x] **B3. Screen-reader announcements for status.**
   Zero `AutomationProperties.LiveSetting` repo-wide: update-check
   results, toast cards, and the Diagnostics tail are silent to Narrator.
   Ship: `LiveSetting="Polite"` on the in-app toast host + the Settings
   update-status card; assertive only for failures. Verify with Narrator
   (Live UI tier), not just automation IDs.
-- [ ] **B4. Compile-time bindings in item templates.**
+- [x] **B4. Compile-time bindings in item templates.**
   Repo XAML is 58 `x:Bind` vs 4 `{Binding}`; the 4 live in
   `Pages/DiagnosticsPage.xaml` log-line `DataTemplate`s (lines ~302-307).
   Add `x:DataType` so mistyped paths fail the build (same class as the
   `Symbol="X"` runtime crash we now audit). Do the same in the
   `devtem-page` item template's list content.
 - [ ] **B5. High-contrast + text-scaling pass.**
+  Blocker 2026-09-22: static half shipped (fixed-height/hardcoded-color
+  audit found no defects; `TextScalingAuditTests` pins the invariants).
+  The screenshot matrix (200%, all four HC themes, EN/ES, 900px/1920px)
+  needs a Live-UI desktop and stays manual.
   Fixed heights abound (48px title bar, rail metrics, 22px status ring,
   `MaxWidth` caps). Ship a measured pass: 200% text scaling + all four
   high-contrast themes, screenshots EN/ES at 900px and 1920px (the
   existing ABA discipline), filed as the layout proof in the PR.
   Known risks: custom title-bar content clipping, drawer-over-Mica
   background (open note since 0.0.26-beta), tray-button hit target.
-- [ ] **B6. More item-template shapes.**
+- [x] **B6. More item-template shapes.**
   Peers ship ListDetails/ContentGrid/DataGrid/Settings page templates;
   we ship one generic page. Add `devtem-listpage` (list/details with
   selection + empty state) and `devtem-settingspage-section` guidance?
   Cheaper first step: one `devtem-list-details` item template reusing
   the add-page wiring (route + VM + tests + strings). Each new shape
   extends `add-page.ps1` with `-Kind page|list` and the matrix.
-- [ ] **B7. Dialog-button language consistency.**
+- [x] **B7. Dialog-button language consistency.**
   Audit every `ContentDialog` + `UpdatePopup` button row: Primary =
   verb, Close = "Close/Cancel/Later" per state, never two verbs that
   both dismiss. Codify the rule in TEMPLATE-GUIDE (one paragraph) and
   cover the FirstRun/whats-new/update trio with a headless content test
   (titles + button labels per language, like `LocalizationCoverageTests`).
-- [ ] **B8. FirstRun/whats-new UX.**
+- [x] **B8. FirstRun/whats-new UX.**
   A version bump triggers the modal whats-new (harness-dismissed in
   tests; real users hit it). Ship: whats-new shows at most once per
   version, "What's new" entry in About for recall, and release notes
   capped in length with a "full changelog" link (long notes in a modal
   are the current behavior). Respect quiet hours? No (decided: security
   updates prompt regardless) - keep, just link the decision.
-- [ ] **B9. Empty/error/loading states audit.**
+- [x] **B9. Empty/error/loading states audit.**
   Diagnostics has them (`DiagnosticsNoLogs`, `DiagnosticsNoMatch` -
   good). Extend the pattern: Home offline/error card states, Settings
   check-failure retention (keep last-good status, don't blank it),

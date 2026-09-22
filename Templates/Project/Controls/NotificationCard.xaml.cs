@@ -1,5 +1,7 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using DevTemWinUi3.Services;
@@ -54,6 +56,13 @@ public sealed partial class NotificationCard : UserControl
 
         IconBlock.Glyph = glyph;
         IconDisc.Fill = ThemeBrush(accentKey, new SolidColorBrush(accentFallback));
+
+        // Screen-reader urgency: errors interrupt (Assertive), everything
+        // else queues politely behind the host's Polite region. Set on the
+        // card (not the host) so only the failing toast escalates.
+        AutomationProperties.SetLiveSetting(
+            this,
+            type == NotificationType.Error ? AutomationLiveSetting.Assertive : AutomationLiveSetting.Polite);
     }
 
     private static Brush ThemeBrush(string key, Brush fallback)

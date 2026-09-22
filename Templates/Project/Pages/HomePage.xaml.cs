@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using DevTemWinUi3.Services;
+using DevTemWinUi3.ViewModels;
 
 namespace DevTemWinUi3.Pages;
 
@@ -27,20 +28,28 @@ public sealed partial class HomePage : Page, INavigationAware
     public void OnNavigatedTo(object? parameter)
     {
         // The page is cached but every label is a live loc binding now —
-        // nothing to refresh on return.
+        // nothing to refresh on return except the update-health status
+        // (code-set, not bound) below.
         ApplyProductLinks();
         PaintLayout();
+        ApplyUpdateStatus();
+        LocalizationService.Current.LanguageChanged += OnLanguageChanged;
     }
 
     public void OnNavigatedFrom()
     {
-        // Nothing to tear down on leave.
+        // Cached page: drop the static subscription on leave or every
+        // visit leaks another handler.
+        try { LocalizationService.Current.LanguageChanged -= OnLanguageChanged; } catch { }
     }
+
+    private void OnLanguageChanged(object? sender, EventArgs e) => ApplyUpdateStatus();
 
     private void HomePage_Loaded(object sender, RoutedEventArgs e)
     {
         ApplyProductLinks();
         PaintLayout();
+        ApplyUpdateStatus();
     }
 
     /// <summary>
@@ -119,6 +128,36 @@ public sealed partial class HomePage : Page, INavigationAware
     {
         // Jump to Settings and auto-run the update check (same as the tray menu).
         NavigationService.Current.NavigateTo("settings", TrayNavigationRequest.CheckUpdatesParameter);
+    }
+
+    /// <summary>
+    /// Paints the status card from session update health: a failed check
+    /// flips the card to the warning state (text + icon + ring), a success
+    /// flips it back. The card is display-only; the QuickCard "check"
+    /// action next to it is the retry path. Never throws.
+    /// </summary>
+    private void ApplyUpdateStatus()
+    {
+        try
+        {
+            var loc = LocalizationService.Current;
+            bool failed = ViewModels.UpdateCenterViewModel.LastCheckFailedSticky;
+            StatusTitle.Text = failed
+                ? loc.GetString("HomeStatusError")
+                : loc.GetString("HomeStatusOk");
+            string glyph = failed ? "\uE7BA" : "\uE930";
+            string brushKey = failed
+                ? "SystemFillColorCautionBrush"
+                : "SystemFillColorSuccessBrush";
+            Microsoft.UI.Xaml.Media.Brush brush;
+            try { brush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[brushKey]; }
+            catch { brush = StatusRing.Fill; }
+            StatusIcon.Glyph = glyph;
+            StatusIcon.Foreground = brush;
+            StatusRing.Fill = brush;
+            StatusRingGlyph.Glyph = failed ? "\uE7BA" : "\uE73E";
+        }
+        catch { }
     }
 
     private void OpenSettingsQuickButton_Click(object sender, RoutedEventArgs e)

@@ -1,9 +1,12 @@
-# Adds a page in one command: scaffolds devtem-page, wires strings, DI,
-# route + nav, then builds and tests. Either everything lands green or the
-# tree is rolled back to where it started.
+# Adds a page in one command: scaffolds devtem-page (or devtem-list-details
+# with -Kind list), wires strings, DI, route + nav, then builds and tests.
+# Either everything lands green or the tree is rolled back to where it started.
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File Scripts\add-page.ps1 -Name Orders -Route orders -Title "Order History" -Icon Shop
+#   powershell -NoProfile -ExecutionPolicy Bypass -File Scripts\add-page.ps1 -Kind list -Name Products -Route products -Title "Products" -Icon Shop
 #
+# -Kind  page (hero-card content) or list (list/details with selection +
+#         empty state). Default page.
 # -Name   PascalCase page name (single word recommended: Orders, not OrderHistory).
 # -Title  Page title + nav label. Defaults to -Name. Seeds the en-US strings
 #         (XAML binds live via {loc:Loc}; es/fr land as TODO-translate).
@@ -30,6 +33,9 @@ param(
     [ValidateSet("Home", "Document", "Shop", "Mail", "Calendar", "People", "Globe", "Pictures", "Video", "Camera", "Map", "Phone")]
     [string]$Icon = "Document",
 
+    [ValidateSet("page", "list")]
+    [string]$Kind = "page",
+
     # NOTE: $PSScriptRoot is NOT visible in parameter defaults (they evaluate
     # in the caller's scope), so path defaults resolve in the body below.
     [string]$RepoRoot = "",
@@ -44,12 +50,14 @@ if ($RepoRoot -eq "") { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")
 if ($Title -eq "") { $Title = $Name }
 $tag = $Name.ToLowerInvariant()
 if ($Route -eq "") { $Route = $tag }
-if ($TemplateSource -eq "") { $TemplateSource = Join-Path $RepoRoot "Templates\Page" }
+$shortName = if ($Kind -eq "list") { "devtem-list-details" } else { "devtem-page" }
+$defaultTemplateDir = if ($Kind -eq "list") { "Templates\ListDetails" } else { "Templates\Page" }
+if ($TemplateSource -eq "") { $TemplateSource = Join-Path $RepoRoot $defaultTemplateDir }
 $RepoRoot = (Resolve-Path $RepoRoot).Path
 
 if ($WhatIfPreference) {
-    Write-Host "WhatIf: would add page '$Name' with route '$Route' and icon '$Icon' to $RepoRoot."
-    Write-Host "WhatIf: would create page, ViewModel, test, three localization entries, DI registration, route, and navigation item."
+    Write-Host "WhatIf: would add $Kind page '$Name' with route '$Route' and icon '$Icon' to $RepoRoot."
+    Write-Host "WhatIf: would create page, ViewModel, test, localization entries, DI registration, route, and navigation item."
     return
 }
 
@@ -175,10 +183,10 @@ try {
             $installSource = $activationDir
             Write-Host "Activated dormant page template via temp copy." -ForegroundColor Yellow
         }
-        # Reinstall for hermeticity (an older devtem-page may be installed).
+        # Reinstall for hermeticity (an older item template may be installed).
         # Uninstalls fail when nothing is installed - expected, ignored.
         # NOTE: uninstall/install by path only touches that path's entry. A
-        # stale devtem-page installed from ANOTHER path (older checkout,
+        # stale item template installed from ANOTHER path (older checkout,
         # previous NuGet) keeps shadowing short-name resolution and fails
         # the scaffold below with "Invalid option(s)" (e.g. no --route) —
         # the probe after install catches exactly that.
@@ -190,9 +198,9 @@ try {
         # scaffold must accept --route. A stale global install from another
         # path shadows the fresh one here — fail loudly with remediation
         # instead of dying at the scaffold step.
-        $helpText = (& dotnet new devtem-page --help 2>&1 | Out-String)
+        $helpText = (& dotnet new $shortName --help 2>&1 | Out-String)
         if ($helpText -notmatch "--route") {
-            Fail "The resolved devtem-page has no --route option (a stale install from another path is shadowing $installSource). Run 'dotnet new uninstall' with no args to list installs, uninstall every stale devtem-page entry, then retry."
+            Fail "The resolved $shortName has no --route option (a stale install from another path is shadowing $installSource). Run 'dotnet new uninstall' with no args to list installs, uninstall every stale $shortName entry, then retry."
         }
         # The temp activation served its purpose at install time (the engine
         # snapshots content on install): uninstall it now so no dangling
@@ -208,9 +216,9 @@ try {
     }
 
     $scaffoldDir = Join-Path ([System.IO.Path]::GetTempPath()) ("add-page-scaffold-" + [System.Guid]::NewGuid().ToString("N"))
-    Write-Host "`n==> scaffold $Name ($Title, $Icon)" -ForegroundColor Cyan
-    & dotnet new devtem-page -n $Name --route $Route --title $Title --icon $Icon --output $scaffoldDir 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { Fail "dotnet new devtem-page failed" }
+    Write-Host "`n==> scaffold $Name ($Kind, $Title, $Icon)" -ForegroundColor Cyan
+    & dotnet new $shortName -n $Name --route $Route --title $Title --icon $Icon --output $scaffoldDir 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { Fail "dotnet new $shortName failed" }
 
     # Consume the strings snippet: the single source of truth for the three
     # dictionaries (en-US real, es/fr TODO-translate).
@@ -226,6 +234,10 @@ try {
         $sections[$m.Groups[1].Value] = $pairs
     }
     $wantKeys = @("Nav$Name", "$($Name)Title", "$($Name)Description")
+    if ($Kind -eq "list") {
+        # List/details pages carry their empty-state + select-prompt labels.
+        $wantKeys += @("$($Name)EmptyTitle", "$($Name)EmptyMessage", "$($Name)SelectPrompt")
+    }
     foreach ($lang in @("en-US", "es-ES", "fr-FR")) {
         if (-not $sections.ContainsKey($lang)) { Fail "Snippet has no $lang section" }
         foreach ($key in $wantKeys) {
@@ -276,11 +288,9 @@ try {
         if (-not $m.Success) { Fail "NavSettings anchor missing in $($entry.Path)" }
         $indent = $m.Groups[1].Value
         $lang = $entry.Lang
-        $insertLines = @(
-            ('{0}["Nav{1}"] = "{2}",' -f $indent, $Name, (Escape-CSharp $sections[$lang]["Nav$Name"])),
-            ('{0}["{1}Title"] = "{2}",' -f $indent, $Name, (Escape-CSharp $sections[$lang]["$($Name)Title"])),
-            ('{0}["{1}Description"] = "{2}",' -f $indent, $Name, (Escape-CSharp $sections[$lang]["$($Name)Description"]))
-        )
+        $insertLines = foreach ($key in $wantKeys) {
+            '{0}["{1}"] = "{2}",' -f $indent, $key, (Escape-CSharp $sections[$lang][$key])
+        }
         $insert = "`r`n" + ($insertLines -join "`r`n")
         $anchorLine = $m.Value
         $idx = $text.IndexOf($anchorLine, [System.StringComparison]::Ordinal)

@@ -87,6 +87,16 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
     /// </summary>
     public bool LastCheckFailed { get; private set; }
 
+    /// <summary>
+    /// Session-sticky check health for the Home status card: set on any
+    /// check failure, cleared on any success. Instance flags die with the
+    /// popup; Home needs the signal after the dialog is gone. Reset only
+    /// by a successful check (or tests).
+    /// </summary>
+    public static bool LastCheckFailedSticky { get; private set; }
+
+    internal static void ResetStickyForTests() => LastCheckFailedSticky = false;
+
     public UpdateCenterViewModel(IUpdateService? updates = null)
     {
         _updates = updates;
@@ -164,6 +174,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
             ct.ThrowIfCancellationRequested();
             StampLastChecked(loc);
             PublishResult(result);
+            LastCheckFailedSticky = false;
             if (result.HasUpdate)
                 AppLog.Information("UpdateCenter: v{Version} available", PendingVersion);
         }
@@ -174,6 +185,7 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
         catch (Exception ex)
         {
             LastCheckFailed = true;
+            LastCheckFailedSticky = true;
             StatusMessage = $"{loc.GetString("SettingsCheckFailed")}: {ex.Message}";
             AppLog.Error(ex, "UpdateCenter check failed");
         }
@@ -277,6 +289,10 @@ public sealed partial class UpdateCenterViewModel : ObservableObject
         {
             ProgressVisibility = Visibility.Collapsed;
             StatusMessage = loc.GetString("InstallFailedDetail", ex.Message);
+            // The pending update is still staged (last-good retained):
+            // re-arm the download so Retry works without a fresh check.
+            CanDownload = HasUpdate;
+            CanInstall = false;
             AppLog.Error(ex, "UpdateCenter download failed");
         }
         finally

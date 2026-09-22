@@ -126,7 +126,7 @@ renders them from `Logo.png` at pack time.
 | | `Assets/Logo-16/32/48/64.png` (exact) | Title bar (32), cards |
 | `Assets/Logo.png` at pack time | MSIX tiles (StoreLogo, Square44/150, Wide310, SplashScreen) | Rendered by `build-msix.ps1` — never hand-edit |
 
-## 2. Add a page (6 steps, all required)
+## 2. Add a page (7 steps, all required)
 
 1. **XAML + code-behind** in `Pages/` following `HomePage`: root `Grid` →
    `ScrollViewer` (horizontal scrollbar `Disabled`) → viewport `Grid` →
@@ -148,12 +148,19 @@ renders them from `Logo.png` at pack time.
    footer, in the `<devtem:nav-items>` region) and a selection-sync case
    (note: the built-in Settings item needs the explicit branch in `OnNavigated`).
 6. **Responsive**: drive two-column → stacked switching from
-   `ResponsiveLayout.ShouldUseNarrowPage(...)` in code-behind — `e.NewSize.Width`
-   in `SizeChanged`, `ActualWidth` in `Loaded`/`OnNavigatedTo` — and early-out
-   when the breakpoint is unchanged (resize drags fire ticks continuously;
-   re-applying identical Grid lengths mid-resize reads as jitter);
-   never `ColumnSpan` for stacking (spanned children join Auto sizing and blow
-   the grid past the card); button rows go in `Controls/WrapPanel`.
+    `ResponsiveLayout.ShouldUseNarrowPage(...)` in code-behind — `e.NewSize.Width`
+    in `SizeChanged`, `ActualWidth` in `Loaded`/`OnNavigatedTo` — and early-out
+    when the breakpoint is unchanged (resize drags fire ticks continuously;
+    re-applying identical Grid lengths mid-resize reads as jitter);
+    never `ColumnSpan` for stacking (spanned children join Auto sizing and blow
+    the grid past the card); button rows go in `Controls/WrapPanel`.
+    Padding-only pages (Settings, Diagnostics) use the same mechanism, not
+    `VisualStateManager`/`AdaptiveTrigger` — VSM setters cannot retarget Grid
+    rows/columns, so one mechanism covers padding AND grids; no page uses VSM.
+7. **Keyboard**: new nav items get NO accelerator by default (avoid
+    collisions). The reserved list lives in `Services/KeyboardShortcuts.cs`
+    (Alt+Left/Right back/forward, Ctrl+, Settings, Esc dismisses the update
+    flow) — claim a new chord there first, then wire it.
 
 ## 2b. Scaffold a page (recommended)
 
@@ -164,16 +171,20 @@ when the page needs custom wiring halfway).
 
 ```powershell
 .\Scripts\add-page.ps1 -Name Orders -Title "Order History" -Icon Shop
+.\Scripts\add-page.ps1 -Kind list -Name Products -Title "Products" -Icon Shop
 ```
 
 | Argument | Meaning | Default |
 | --- | --- | --- |
+| `-Kind` | `page` (hero-card content) or `list` (list/details with selection + empty state, `devtem-list-details`) | `page` |
 | `-Name` | PascalCase page name (single word recommended) | (required) |
 | `-Title` | Page title + nav label | `-Name` |
 | `-Icon` | Nav icon (a WinUI `Symbol` member): Home, Document, Shop, Mail, Calendar, People, Globe, Pictures, Video, Camera, Map, Phone | `Document` |
 
-The script scaffolds `devtem-page` with your title/icon, pastes the strings
-(EN + `TODO-translate` es/fr) into `Services/Localization/`, registers the
+The script scaffolds `devtem-page` (or `devtem-list-details` with
+`-Kind list`) with your title/icon, pastes the strings
+(EN + `TODO-translate` es/fr; list pages add empty-state + select-prompt
+keys) into `Services/Localization/`, registers the
 VM, adds route + bound nav item, then builds (0 warnings) and runs the tests. It refuses dirty trees,
 and any failure rolls the tree back. Afterwards: replace the
 `TODO-translate` markers (grep for them), run the app, check the new nav item.
@@ -236,7 +247,13 @@ the route registered under `<devtem:routes>`, selection synced in
   directly — a `Visibility="Collapsed"` declarer no-ops silently (no
   dialog, no exception, no log). Show every dialog through
   `Services/DialogHelper.cs` (uncollapses around the call, restores in
-  `finally`, serializes concurrent shows).
+  `finally`, serializes concurrent shows). Button language: Primary is a
+  verb (Install now, Restart now, Retry, Get Started), the dismiss button
+  is a Close/Cancel/Later word per state (never two verbs that both
+  dismiss); single-button info dialogs use one or the other, never a
+  second verb. `Tests/Services/DialogButtonLanguageTests.cs` pins the
+  FirstRun/whats-new/update trio per language — add new dialogs to its
+  pair table.
 - **Pickers:** never await a native picker unbounded — a wedged shell or
   automation host can stall it forever. `FilePickerService` races every
   call against a 60s timeout and degrades to cancel; UI tests assert the

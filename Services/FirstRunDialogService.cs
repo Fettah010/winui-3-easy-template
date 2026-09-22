@@ -96,12 +96,41 @@ public static class FirstRunDialogService
         try
         {
             var firstRun = FirstRunService.Current;
+            await ShowWhatsNewCoreAsync(window.Content.XamlRoot, firstRun.GetChangelog());
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Re-shows the current version's notes on demand (the About "What's
+    /// new" recall entry). No version bookkeeping: recall never marks, and
+    /// the notes are already this version's. Never throws.
+    /// </summary>
+    internal static Task ShowWhatsNewRecallAsync(Microsoft.UI.Xaml.XamlRoot? root)
+    {
+        try
+        {
+            return ShowWhatsNewCoreAsync(root, FirstRunService.Current.GetChangelog());
+        }
+        catch
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    private static async Task ShowWhatsNewCoreAsync(Microsoft.UI.Xaml.XamlRoot? root, string content)
+    {
+        try
+        {
+            if (root is null)
+                return;
+            var loc = LocalizationService.Current;
             var dialog = new ContentDialog
             {
-                XamlRoot = window.Content.XamlRoot,
-                Title = $"What's New in v{AppInfo.Current.Version}",
-                Content = firstRun.GetChangelog(),
-                PrimaryButtonText = "OK",
+                XamlRoot = root,
+                Title = loc.GetString("WhatsNewTitle", AppInfo.Current.Version),
+                Content = content,
+                PrimaryButtonText = loc.GetString("UpdateClose"),
                 DefaultButton = ContentDialogButton.Primary
             };
             await DialogHelper.ShowAsync(dialog);

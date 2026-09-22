@@ -25,6 +25,17 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     [ObservableProperty]
     private string _dataFolder = string.Empty;
 
+    /// <summary>
+    /// Location-step validation message (empty = valid). Shown inline
+    /// under the folder picker; Next/Complete cannot leave the step while
+    /// set. Cleared live when the folder is fixed.
+    /// </summary>
+    [ObservableProperty]
+    private string _locationError = string.Empty;
+
+    /// <summary>Whether <see cref="LocationError"/> is showing (x:Load).</summary>
+    public bool HasLocationError => !string.IsNullOrEmpty(LocationError);
+
     [ObservableProperty]
     private bool _createDesktopShortcut = true;
 
@@ -94,8 +105,55 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     public void GoNext()
     {
+        // The location step owns the wizard's only validation: an empty
+        // or relative folder cannot be persisted, so Next stays put with
+        // the inline error instead of advancing past it.
+        if (SelectedStepIndex == 1 && !ValidateLocation())
+            return;
         if (SelectedStepIndex < StepCount - 1)
             SelectedStepIndex++;
+    }
+
+    /// <summary>
+    /// Validates the data folder (non-empty, absolute). Sets
+    /// <see cref="LocationError"/> (cleared when valid). Never throws.
+    /// </summary>
+    public bool ValidateLocation()
+    {
+        try
+        {
+            string? key = null;
+            if (string.IsNullOrWhiteSpace(DataFolder))
+                key = "SetupLocationRequired";
+            else if (!System.IO.Path.IsPathFullyQualified(DataFolder))
+                key = "SetupLocationInvalid";
+            if (key is null)
+            {
+                LocationError = string.Empty;
+                return true;
+            }
+            try { LocationError = LocalizationService.Current.GetString(key); }
+            catch { LocationError = key; }
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Re-renders the showing error in the current language (language
+    /// switch while the error is up). No-op when no error is showing.
+    /// </summary>
+    public void RefreshLocationError()
+    {
+        try
+        {
+            if (HasLocationError)
+                ValidateLocation();
+        }
+        catch { }
     }
 
     public void GoBack()
@@ -107,12 +165,18 @@ public sealed partial class SetupWizardViewModel : ObservableObject
     /// <summary>
     /// Persists the choices and applies the OS side effects (best-effort,
     /// never throws). Marks first-run shown so the welcome dialog never
-    /// appears behind the wizard.
+    /// appears behind the wizard. Returns false (staying on the location
+    /// step with the error) when the folder is invalid.
     /// </summary>
-    public void Complete()
+    public bool Complete()
     {
         try
         {
+            if (!ValidateLocation())
+            {
+                SelectedStepIndex = 1;
+                return false;
+            }
             var store = LocalSettingsStore.Shared;
             store.Set(KeyDataFolder, DataFolder);
             store.Set(KeyDesktopShortcut, CreateDesktopShortcut);
@@ -124,6 +188,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         try { SetupWizardService.Current.ApplyChoices(DataFolder, CreateDesktopShortcut, CreateStartShortcut, LaunchAtLogin); } catch { }
         try { FirstRunService.Current.MarkAsShown(); } catch { }
         try { AppLog.Information("Setup wizard completed"); } catch { }
+        return true;
     }
 
     public void Skip()
@@ -143,6 +208,20 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         OnPropertyChanged(nameof(CanGoNext));
         OnPropertyChanged(nameof(IsLastStep));
     }
+
+    partial void OnDataFolderChanged(string value)
+    {
+        // Live-clear the error once the folder is fixed (no re-click).
+        try
+        {
+            if (HasLocationError)
+                ValidateLocation();
+        }
+        catch { }
+    }
+
+    partial void OnLocationErrorChanged(string value) =>
+        OnPropertyChanged(nameof(HasLocationError));
 
     private void UpdateStepVisibility()
     {

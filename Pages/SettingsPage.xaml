@@ -9,30 +9,15 @@
     xmlns:loc="using:DevTemWinUi3.Controls"
     mc:Ignorable="d"
     NavigationCacheMode="Disabled"
-    Loaded="SettingsPage_Loaded">
+    Loaded="SettingsPage_Loaded"
+    SizeChanged="SettingsPage_SizeChanged">
 
     <!-- DataContext (SettingsPageViewModel) is resolved from the DI container
          in code-behind, never newed up in XAML. -->
 
-    <Grid>
-        <!-- Narrow windows get tighter page padding so cards keep breathing room. -->
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="LayoutStates">
-                <VisualState x:Name="NarrowState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0"/>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="SettingsPanel.Padding" Value="16,16,16,24"/>
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="WideState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="860"/>
-                    </VisualState.StateTriggers>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
+    <!-- Responsive padding lives in SettingsPage.xaml.cs UpdateResponsiveLayout
+         (code-behind, like every page): VSM setters cannot retarget Grid
+         rows/columns, so one mechanism covers padding AND grids. -->
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <!-- Viewport wrapper: the panel fills min(viewport, 820) and centers
@@ -160,7 +145,8 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             VerticalAlignment="Center"
                             MaxWidth="200"
-                            TextWrapping="Wrap"/>
+                            TextWrapping="Wrap"
+                            AutomationProperties.LiveSetting="Polite"/>
                         <Button
                             x:Name="InstallUpdateButton"
                             Content="{x:Bind ViewModel.InstallButtonText, Mode=OneWay}"
@@ -274,5 +260,4 @@
         </StackPanel>
         </Grid>
     </ScrollViewer>
-    </Grid>
 </Page>

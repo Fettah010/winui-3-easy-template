@@ -17,6 +17,12 @@ public sealed partial class SettingsPage : Page, INavigationAware
 {
     public SettingsPageViewModel ViewModel { get; }
 
+    // Window resize drags fire SizeChanged on every tick. Ticks coalesce in
+    // LayoutDebouncer and only a settled breakpoint FLIP reflows; same-breakpoint
+    // ticks are a no-op. (Pane toggles never resize the content: overlay.)
+    private readonly LayoutDebouncer _layoutDebouncer;
+    private bool? _isNarrow;
+
     public SettingsPage()
     {
         // Resolve BEFORE InitializeComponent so {x:Bind ViewModel.…}
@@ -24,6 +30,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
         ViewModel = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
         this.InitializeComponent();
         DataContext = ViewModel;
+        _layoutDebouncer = new LayoutDebouncer(DispatcherQueue);
 
         // Static labels and update state bind in XAML (VM-owned); only the
         // packaged-install note and screen-reader names need a refresh on
@@ -122,6 +129,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
     public void OnNavigatedTo(object? parameter)
     {
         RefreshDynamicLabels();
+        PaintLayout();
         if (TrayNavigationRequest.ShouldAutoCheck(parameter))
             _autoCheckArmed = true;
     }
@@ -138,6 +146,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
 
     private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
     {
+        PaintLayout();
         if (!_autoCheckArmed)
             return;
         _autoCheckArmed = false;
@@ -179,6 +188,36 @@ public sealed partial class SettingsPage : Page, INavigationAware
             tcs.TrySetCanceled(ct);
         });
         return tcs.Task;
+    }
+
+    private void SettingsPage_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        _layoutDebouncer.RequestSwap(
+            SettingsPanel,
+            () => ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width),
+            () => UpdateResponsiveLayout(ResponsiveLayout.ShouldUseNarrowPage(e.NewSize.Width)));
+
+    /// <summary>Resting paint (no-op when the breakpoint is unchanged).</summary>
+    private void PaintLayout()
+    {
+        bool narrow = ResponsiveLayout.ShouldUseNarrowPage(ActualWidth);
+        _layoutDebouncer.PaintInitial(narrow, () => UpdateResponsiveLayout(narrow));
+    }
+
+    /// <summary>
+    /// Narrow windows get tighter page padding so cards keep breathing room.
+    /// Code-behind (like every page — VSM was retired because its setters
+    /// cannot retarget Grid rows/columns). Idempotent: same breakpoint
+    /// returns without touching the visual tree.
+    /// </summary>
+    private void UpdateResponsiveLayout(bool narrow)
+    {
+        if (_isNarrow.HasValue && _isNarrow.Value == narrow)
+            return;
+        _isNarrow = narrow;
+
+        SettingsPanel.Padding = narrow
+            ? new Thickness(16, 16, 16, 24)
+            : new Thickness(32, 24, 32, 32);
     }
 
     private bool _checking;

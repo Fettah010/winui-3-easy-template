@@ -418,8 +418,10 @@ try {
     try { & dotnet new uninstall DevTem.Templates 2>&1 | Out-Null } catch { }
     try { & dotnet new uninstall (Join-Path $repoRoot "Templates\Project") 2>&1 | Out-Null } catch { }
     try { & dotnet new uninstall (Join-Path $repoRoot "Templates\Page") 2>&1 | Out-Null } catch { }
+    try { & dotnet new uninstall (Join-Path $repoRoot "Templates\ListDetails") 2>&1 | Out-Null } catch { }
     if (-not (Invoke-Step "install devtem-winui" { & dotnet new install (Join-Path $repoRoot "Templates\Project") })) { throw "install failed" }
     if (-not (Invoke-Step "install devtem-page" { & dotnet new install (Join-Path $repoRoot "Templates\Page") })) { throw "install failed" }
+    if (-not (Invoke-Step "install devtem-list-details" { & dotnet new install (Join-Path $repoRoot "Templates\ListDetails") })) { throw "install failed" }
 
     foreach ($combo in $Combos) {
         if (-not $comboDefs.ContainsKey($combo)) { throw "Unknown combo: $combo (allon/alloff/minimal/desktop/production/notray/noupd/updbasic/logmel/lognone/nocrash/noloc/notests/nohttp/nodiag/nosetup/msixapp/msixstore/msixnone/badupd/badupd2)" }
@@ -460,6 +462,9 @@ try {
                 })) { continue }
             if (-not (Invoke-Step "add second page in allon" {
                     & (Join-Path $repoRoot "Scripts\add-page.ps1") -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\Page") -Name ReportsSmoke -Route smoke-reports -Title "Smoke Reports" -Icon Calendar
+                })) { continue }
+            if (-not (Invoke-Step "add list page in allon" {
+                    & (Join-Path $repoRoot "Scripts\add-page.ps1") -Kind list -RepoRoot $outDir -TemplateSource (Join-Path $repoRoot "Templates\ListDetails") -Name CatalogSmoke -Route smoke-catalog -Title "Smoke Catalog" -Icon Shop
                 })) { continue }
             Write-Host "`n==> duplicate-route rejection" -ForegroundColor Cyan
                 $duplicateOut = ""

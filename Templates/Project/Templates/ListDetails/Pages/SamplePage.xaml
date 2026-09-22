@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DevTemWinUi3.Pages.SamplePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:loc="using:DevTemWinUi3.Controls"
+    xmlns:vm="using:DevTemWinUi3.ViewModels"
+    mc:Ignorable="d"
+    NavigationCacheMode="Enabled"
+    Loaded="SamplePage_Loaded"
+    SizeChanged="SamplePage_SizeChanged">
+
+    <!-- Root Grid -> ScrollViewer (horizontal Disabled) -> viewport Grid ->
+         content StackPanel with MaxWidth: the width never depends on content
+         length, so translations wrap instead of shifting the layout; the panel
+         centers above the cap by design (see docs/TEMPLATE-GUIDE.md "Layout
+         rules"). Wide windows show list + details side by side; narrow
+         windows stack them (SamplePage.xaml.cs UpdateResponsiveLayout). -->
+
+    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid>
+        <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
+
+            <StackPanel Spacing="8">
+                <!-- Labels bind live ({loc:Loc}); the title parameter seeds
+                     the en-US strings in the snippet (wire-up step 2). -->
+                <TextBlock AutomationProperties.AutomationId="SampleTitleText" Text="{loc:Loc Key=SampleTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock Text="{loc:Loc Key=SampleDescription}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <Grid x:Name="ListDetailsGrid" ColumnSpacing="16" RowSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="ListCol" Width="320"/>
+                    <ColumnDefinition x:Name="DetailsCol" Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- List pane: rows bind compiled (x:DataType on the item
+                     type); the empty state swaps in via x:Load. -->
+                <Border
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="12">
+                    <Grid>
+                        <ListView
+                            x:Name="SampleListView"
+                            AutomationProperties.AutomationId="SampleListView"
+                            ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
+                            SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"
+                            SelectionMode="Single"
+                            x:Load="{x:Bind ViewModel.HasItems, Mode=OneWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SampleListItem">
+                                    <StackPanel Spacing="2" Padding="0,4">
+                                        <TextBlock Text="{x:Bind Title, Mode=OneTime}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{x:Bind Detail, Mode=OneTime}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <StackPanel
+                            x:Name="SampleEmptyState"
+                            Spacing="4"
+                            Padding="12"
+                            x:Load="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
+                            <TextBlock Text="{loc:Loc Key=SampleEmptyTitle}" Style="{ThemeResource BodyTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{loc:Loc Key=SampleEmptyMessage}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Details pane: selected row, or the select prompt. -->
+                <Border
+                    x:Name="SampleDetailsCard"
+                    Grid.Column="1"
+                    Grid.Row="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="24">
+                    <Grid>
+                        <StackPanel
+                            x:Name="SampleDetailsContent"
+                            Spacing="8"
+                            x:Load="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind ViewModel.SelectedItem.Title, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{x:Bind ViewModel.SelectedItem.Detail, Mode=OneWay}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <TextBlock
+                            x:Name="SampleSelectPromptText"
+                            Text="{loc:Loc Key=SampleSelectPrompt}"
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap"
+                            VerticalAlignment="Center"
+                            x:Load="{x:Bind ViewModel.HasNoSelection, Mode=OneWay}"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+        </StackPanel>
+        </Grid>
+    </ScrollViewer>
+    </Grid>
+</Page>

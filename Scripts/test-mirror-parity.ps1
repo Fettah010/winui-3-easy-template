@@ -226,26 +226,28 @@ foreach ($rel in ($templateFiles.Keys | Sort-Object)) {
     }
 }
 
-# Nested page template: Templates/Page/X <-> Templates/Project/Templates/Page/X,
-# except the dormant config (config.hold vs .template.config).
+# Nested item templates: Templates/Page|ListDetails/X <->
+# Templates/Project/Templates/Page|ListDetails/X, except the dormant config
+# (config.hold vs .template.config).
 # The dormant config is CONTENT-compared too (not just existence): a stale
 # hold copy (e.g. missing a newer symbol like `route`) passes existence but
 # breaks every scaffolded add-page run with "Invalid option(s)" — proven
 # live 2026-09-22. See docs/DECISIONS.md.
-$pageSrc = Join-Path $repoRoot "Templates\Page"
-$pageDst = Join-Path $templateRoot "Templates\Page"
+foreach ($nested in @("Page", "ListDetails")) {
+$pageSrc = Join-Path $repoRoot "Templates\$nested"
+$pageDst = Join-Path $templateRoot "Templates\$nested"
 $pageSrcFiles = Get-TreeFiles $pageSrc
 $pageDstFiles = Get-TreeFiles $pageDst
 foreach ($rel in ($pageSrcFiles.Keys | Sort-Object)) {
     if ($rel -eq ".template.config\template.json") {
         $holdRel = "config.hold\template.json.hold"
         if (-not $pageDstFiles.ContainsKey($holdRel)) {
-            $failures += "nested page template missing dormant config: config.hold/template.json.hold"
+            $failures += "nested $nested template missing dormant config: config.hold/template.json.hold"
             continue
         }
         $checked++
         if ((Get-FileHash -LiteralPath $pageSrcFiles[$rel]).Hash -ne (Get-FileHash -LiteralPath $pageDstFiles[$holdRel]).Hash) {
-            $failures += "nested page template dormant config drifted: config.hold/template.json.hold differs from Templates/Page/.template.config/template.json (re-copy it)"
+            $failures += "nested $nested template dormant config drifted: config.hold/template.json.hold differs from Templates/$nested/.template.config/template.json (re-copy it)"
         }
         continue
     }
@@ -254,19 +256,20 @@ foreach ($rel in ($pageSrcFiles.Keys | Sort-Object)) {
         $dstRel = "config.hold\icon.png"
     }
     if (-not $pageDstFiles.ContainsKey($dstRel)) {
-        $failures += "nested page template missing: $rel"
+        $failures += "nested $nested template missing: $rel"
         continue
     }
     $checked++
     if ((Get-FileHash -LiteralPath $pageSrcFiles[$rel]).Hash -ne (Get-FileHash -LiteralPath $pageDstFiles[$dstRel]).Hash) {
-        $failures += "nested page template differs: $rel"
+        $failures += "nested $nested template differs: $rel"
     }
 }
 foreach ($rel in ($pageDstFiles.Keys | Sort-Object)) {
     if ($rel.StartsWith("config.hold\")) { continue }
     if (-not $pageSrcFiles.ContainsKey($rel)) {
-        $failures += "nested page template has extra file: $rel"
+        $failures += "nested $nested template has extra file: $rel"
     }
+}
 }
 
 # Version consistency: the csproj pair is structurally conditioned, but the
