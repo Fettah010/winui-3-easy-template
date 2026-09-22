@@ -91,6 +91,7 @@ $conditioned = @(
     "Services\FirstRunDialogService.cs",
     "Services\LocalizationService.cs",
     "Services\LoggingService.cs",
+    "Services\NavigationRegistry.cs",
     "Services\ServiceLocator.cs",
     "Services\SystemTrayService.cs",
     "Tests\Services\ServiceLocatorTests.cs",
@@ -127,10 +128,11 @@ $requiredGuards = @{
     "Services\BackgroundUpdateService.cs"      = @("(updates == 'velopack')", "(updates == 'basic')")
     "Services\AppFeatures.cs"                    = @()
     "Services\LocalizationService.cs"          = @("(localization)", "(localization)")
+    "Services\NavigationRegistry.cs"           = @("(health)")
     "Services\LoggingService.cs"               = @("(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(logging == 'mel')", "(logging == 'none')", "(logging == 'serilog')", "(health)", "(logging == 'mel')", "(logging == 'none')", "(health)", "(logging == 'serilog')", "(logging == 'serilog')", "(logging == 'mel')", "(health)", "(logging == 'none')")
     "Services\CrashReportingService.cs"        = @("(crash)")
     "Services\FirstRunDialogService.cs"        = @()
-    "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(setup)", "(health)", "(http)")
+    "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(setup)", "(health)", "(setup)", "(health)", "(http)")
     "Services\SystemTrayService.cs"            = @()
     "Tests\Services\ServiceLocatorTests.cs"    = @("(http)", "(database)", "(http)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(health)", "(setup)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)")
     "Tests\Services\DesktopToastServiceTests.cs" = @("(localization)")

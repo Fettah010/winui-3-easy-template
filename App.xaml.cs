@@ -88,7 +88,9 @@ public partial class App : Application
             ProtocolService.EnsureRegistered();
         });
 
-        // One-time channel migration (beta builds holding a stale channel).
+        // Live-store schema migrations, then the one-time channel
+        // migration (beta builds holding a stale channel).
+        SettingsService.Current.EnsureSchemaCurrent();
         SettingsService.Current.EnsureChannelForCurrentBuild();
 
         var loc = LocalizationService.Current;

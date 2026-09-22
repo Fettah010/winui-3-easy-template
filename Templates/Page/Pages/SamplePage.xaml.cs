@@ -14,13 +14,15 @@ public sealed partial class SamplePage : Page, INavigationAware
     // additionally coalesce ticks through LayoutDebouncer (see HomePage).
     private bool? _isNarrow;
 
-    public SamplePage()
+    public SamplePage(SamplePageViewModel viewModel)
     {
+        // Constructor-injected (C1): add-page.ps1 registers this route's
+        // factory in ServiceLocator, so navigation builds the page with
+        // the view model — never new, never resolved at click time.
+        // Wire-up step 1: services.AddTransient<SamplePageViewModel>() +
+        // PageFactory.Register("sample", () => new SamplePage(...)).
+        ViewModel = viewModel ?? throw new System.ArgumentNullException(nameof(viewModel));
         this.InitializeComponent();
-        // ViewModel comes from the container (transient per page), never new.
-        // Wire-up step 1: register it in ServiceLocator.Initialize():
-        //     services.AddTransient<SamplePageViewModel>();
-        ViewModel = ServiceLocator.GetRequiredService<SamplePageViewModel>();
         DataContext = ViewModel;
     }
 

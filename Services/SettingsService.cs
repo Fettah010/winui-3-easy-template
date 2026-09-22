@@ -32,11 +32,13 @@ public sealed class SettingsService
 
     /// <summary>
     /// App theme: "System", "Light", or "Dark". Default is "System".
+    /// Normalized on read + write (C4) so legacy garbage self-heals to
+    /// System instead of persisting an unknown value.
     /// </summary>
     public string Theme
     {
-        get => Store.Get(KeyTheme, "System");
-        set => Store.Set(KeyTheme, value);
+        get => SettingsSchema.NormalizeTheme(Store.Get(KeyTheme, "System"));
+        set => Store.Set(KeyTheme, SettingsSchema.NormalizeTheme(value));
     }
 
     /// <summary>
@@ -83,6 +85,16 @@ public sealed class SettingsService
             else
                 Store.Remove(KeyPendingVersion);
         }
+    }
+
+    /// <summary>
+    /// Runs pending live-store schema migrations (C4), then stamps the
+    /// current version. Called once at startup next to
+    /// <see cref="EnsureChannelForCurrentBuild"/>.
+    /// </summary>
+    public void EnsureSchemaCurrent()
+    {
+        try { SettingsSchema.EnsureMigrated(); } catch { }
     }
 
     /// <summary>

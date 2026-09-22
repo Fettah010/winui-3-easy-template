@@ -25,11 +25,11 @@
     <!-- devtem:optional:diagnostics-page — the whole page is droppable.
          Removal checklist: delete this file + DiagnosticsPage.xaml.cs +
          ViewModels/DiagnosticsPageViewModel.cs (+ its test), the
-         "diagnostics" route in MainWindow.xaml.cs, the footer nav item in
-         MainWindow.xaml, the ViewModel registration in
-         Services/ServiceLocator.cs, and the Diagnostics* keys in
-         Services/Localization/*Strings.cs (optional: unused keys are
-         harmless, but LocalizationCoverageTests asserts none are
+         "diagnostics" route in MainWindow.xaml.cs, the footer entry in
+         Services/NavigationRegistry.cs, the ViewModel + PageFactory
+         registrations in Services/ServiceLocator.cs, and the Diagnostics*
+         keys in Services/Localization/*Strings.cs (optional: unused keys
+         are harmless, but LocalizationCoverageTests asserts none are
          hardcoded versions). See docs/TEMPLATE-GUIDE.md §2d. -->
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">

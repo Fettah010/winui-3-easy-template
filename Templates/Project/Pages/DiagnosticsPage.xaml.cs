@@ -30,12 +30,14 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
     private readonly LayoutDebouncer _layoutDebouncer;
     private bool? _isNarrow;
 
-    public DiagnosticsPage()
+    public DiagnosticsPage(DiagnosticsPageViewModel viewModel)
     {
+        // Constructor-injected (C1): PageFactory builds this page with the
+        // view model from the container — never resolved at click time.
         // Resolve BEFORE InitializeComponent: compiled bindings
         // ({x:Bind ViewModel.…}) evaluate during XAML load, so a later
         // assignment would leave the log list/text bound to null.
-        ViewModel = ServiceLocator.GetRequiredService<DiagnosticsPageViewModel>();
+        ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         this.InitializeComponent();
         DataContext = ViewModel;
         _layoutDebouncer = new LayoutDebouncer(DispatcherQueue);

@@ -22,11 +22,11 @@ public sealed class BackgroundUpdateService
 
 #if (updates == 'velopack')
     private static UpdateService Updater => UpdateService.Current;
-    private static TimeSpan CheckInterval => UpdateService.PeriodicCheckInterval;
+    internal static TimeSpan CheckInterval => UpdateService.PeriodicCheckInterval;
 #endif
 #if (updates == 'basic')
     private static BasicGithubUpdateService Updater => BasicGithubUpdateService.Current;
-    private static TimeSpan CheckInterval => BasicGithubUpdateService.PeriodicCheckInterval;
+    internal static TimeSpan CheckInterval => BasicGithubUpdateService.PeriodicCheckInterval;
 #endif
     /// <summary>
     /// Re-checks for updates on the backend's periodic interval
@@ -50,6 +50,7 @@ public sealed class BackgroundUpdateService
     internal async Task RunPeriodicChecksAsync(
         Window? mainWindow, TimeSpan interval, CancellationToken cancellationToken)
     {
+        BackgroundTaskRunner.EnsureDefaultsRegistered();
         if (interval <= TimeSpan.Zero)
             interval = CheckInterval;
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -65,13 +66,9 @@ public sealed class BackgroundUpdateService
         {
             AppLog.Information(
                 "Periodic update checks scheduled every {Interval}", interval);
-            using var timer = new PeriodicTimer(interval);
-            while (await timer.WaitForNextTickAsync(linked.Token).ConfigureAwait(false))
-            {
-                if (linked.Token.IsCancellationRequested)
-                    break;
-                await CheckForUpdatesAsync(mainWindow).ConfigureAwait(false);
-            }
+            await BackgroundTaskRunner.RunPeriodicAsync(
+                new BackgroundTaskContext(mainWindow), interval, linked.Token).ConfigureAwait(false);
+            AppLog.Information("Periodic update checks stopped");
         }
         catch (OperationCanceledException)
         {

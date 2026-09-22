@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace DevTemWinUi3.Services;
 
@@ -22,6 +23,11 @@ public sealed class NavigationService
     private readonly Dictionary<string, object?> _parameters = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stack<NavigationEntry> _backStack = new();
     private readonly Stack<NavigationEntry> _forwardStack = new();
+
+    // Instance cache honoring each page's NavigationCacheMode (the Frame
+    // journal is retired, so the service owns reuse): cached pages resolve
+    // to the same instance, transient pages construct fresh every time.
+    private readonly Dictionary<string, Page> _pageCache = new(StringComparer.OrdinalIgnoreCase);
 
     private Frame? _frame;
     private string _currentTag = string.Empty;
@@ -46,7 +52,50 @@ public sealed class NavigationService
     public void SetFrame(Frame frame)
     {
         _frame = frame;
+        // The service owns history (the stacks below) and content hosting
+        // (ResolvePage): the Frame journal is retired so factory-injected
+        // and legacy Activator pages share one path with no divergence.
+        try { _frame.IsNavigationStackEnabled = false; } catch { }
         _frame.Navigated += OnFrameNavigated;
+    }
+
+    /// <summary>
+    /// Resolves the page for a tag: cached instance, factory construction
+    /// (constructor-injected pages), or legacy <c>Activator</c> fallback.
+    /// UI thread only (page construction is thread-affine). Never throws.
+    /// </summary>
+    private Page? ResolvePage(string tag)
+    {
+        try
+        {
+            if (_pageCache.TryGetValue(tag, out var cached) && cached is not null)
+                return cached;
+            Page? page = null;
+            if (!PageFactory.TryCreate(tag, out var created) || created is null)
+            {
+                if (_routes.TryGetValue(tag, out var pageType))
+                {
+                    try { page = Activator.CreateInstance(pageType) as Page; } catch { page = null; }
+                }
+            }
+            else
+            {
+                page = created;
+            }
+            if (page is null)
+                return null;
+            try
+            {
+                if (page.NavigationCacheMode != NavigationCacheMode.Disabled)
+                    _pageCache[tag] = page;
+            }
+            catch { }
+            return page;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public bool NavigateTo(string tag, object? parameter = null, bool addToHistory = true)
@@ -54,7 +103,7 @@ public sealed class NavigationService
         if (_frame is null || _isNavigating)
             return false;
 
-        if (!_routes.TryGetValue(tag, out var pageType))
+        if (!_routes.TryGetValue(tag, out _))
         {
             NavigationFailed?.Invoke(this, tag);
             return false;
@@ -77,23 +126,26 @@ public sealed class NavigationService
             (_frame.Content as INavigationAware)?.OnNavigatedFrom();
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            var success = _frame.Navigate(pageType, parameter);
-            watch.Stop();
-            if (success)
+            var page = ResolvePage(tag);
+            if (page is null)
             {
-                _currentTag = tag;
-                Navigated?.Invoke(this, tag);
-                (_frame.Content as INavigationAware)?.OnNavigatedTo(parameter);
-                try
-                {
-                    // P2-3: count + time every navigation (last-value per
-                    // page feeds the diagnostics nav-timing display).
-                    Diagnostics.AppMetrics.RecordNavigation(tag, watch.Elapsed.TotalMilliseconds);
-                    CrashReportingService.AddBreadcrumb("Navigate: " + tag, "navigation");
-                }
-                catch { }
+                NavigationFailed?.Invoke(this, tag);
+                return false;
             }
-            return success;
+            _frame.Content = page;
+            watch.Stop();
+            _currentTag = tag;
+            Navigated?.Invoke(this, tag);
+            (page as INavigationAware)?.OnNavigatedTo(parameter);
+            try
+            {
+                // P2-3: count + time every navigation (last-value per
+                // page feeds the diagnostics nav-timing display).
+                Diagnostics.AppMetrics.RecordNavigation(tag, watch.Elapsed.TotalMilliseconds);
+                CrashReportingService.AddBreadcrumb("Navigate: " + tag, "navigation");
+            }
+            catch { }
+            return true;
         }
         catch (Exception ex)
         {
@@ -118,10 +170,14 @@ public sealed class NavigationService
         _isNavigating = true;
         try
         {
-            _frame.GoBack();
+            var page = ResolvePage(entry.Tag);
+            if (page is null)
+                return false;
+            (_frame.Content as INavigationAware)?.OnNavigatedFrom();
+            _frame.Content = page;
             _currentTag = entry.Tag;
             Navigated?.Invoke(this, entry.Tag);
-            (_frame.Content as INavigationAware)?.OnNavigatedTo(null);
+            (page as INavigationAware)?.OnNavigatedTo(null);
             return true;
         }
         finally
@@ -141,10 +197,14 @@ public sealed class NavigationService
         _isNavigating = true;
         try
         {
-            _frame.GoForward();
+            var page = ResolvePage(entry.Tag);
+            if (page is null)
+                return false;
+            (_frame.Content as INavigationAware)?.OnNavigatedFrom();
+            _frame.Content = page;
             _currentTag = entry.Tag;
             Navigated?.Invoke(this, entry.Tag);
-            (_frame.Content as INavigationAware)?.OnNavigatedTo(null);
+            (page as INavigationAware)?.OnNavigatedTo(null);
             return true;
         }
         finally

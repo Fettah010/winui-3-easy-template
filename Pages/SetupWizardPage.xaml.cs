@@ -11,11 +11,13 @@ public sealed partial class SetupWizardPage : Page, INavigationAware
 {
     public SetupWizardViewModel ViewModel { get; }
 
-    public SetupWizardPage()
+    public SetupWizardPage(SetupWizardViewModel viewModel)
     {
+        // Constructor-injected (C1): PageFactory builds this page with the
+        // view model from the container — never resolved at click time.
         // Resolve BEFORE InitializeComponent so {x:Bind ViewModel.…}
-        // bindings evaluate against the real instance on first load.
-        ViewModel = ServiceLocator.GetRequiredService<SetupWizardViewModel>();
+        // bindings evaluate against the real instance on first evaluation.
+        ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         this.InitializeComponent();
         DataContext = ViewModel;
 

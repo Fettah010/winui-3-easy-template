@@ -132,8 +132,11 @@ renders them from `Logo.png` at pack time.
    `ScrollViewer` (horizontal scrollbar `Disabled`) → viewport `Grid` →
    content `StackPanel` with `MaxWidth` (see "Layout" below).
 2. **ViewModel** in `ViewModels/` (transient, `[ObservableProperty]` /
-   `[RelayCommand]`), registered in `ServiceLocator.Initialize()`, resolved
-   in the page via `ServiceLocator.GetRequiredService<T>()` — never `new`.
+    `[RelayCommand]`), registered in `ServiceLocator.Initialize()`, injected
+    into the page constructor — never `new`, never resolved at click time.
+    Register the route's factory next to it (`PageFactory.Register("orders",
+    () => new Pages.OrdersPage(GetRequiredService<OrdersPageViewModel>()))`) so
+    navigation constructs the page with its VM.
 3. **Navigation awareness**: implement `INavigationAware`
    (`Services/NavigationService.cs`) instead of overriding `OnNavigatedTo` —
    the service calls it with the navigation parameter.
@@ -144,9 +147,13 @@ renders them from `Logo.png` at pack time.
    states, composed status lines) stays in code and refreshes on
    `LanguageChanged` — see `SettingsPage`/`DiagnosticsPage`.
 5. **Route**: `NavigationService.RegisterRoute("orders", typeof(OrdersPage))`
-   in `MainWindow` (`<devtem:routes>`), plus a `NavigationViewItem` (menu or
-   footer, in the `<devtem:nav-items>` region) and a selection-sync case
-   (note: the built-in Settings item needs the explicit branch in `OnNavigated`).
+    in `MainWindow` (`<devtem:routes>`), plus one line in
+    `Services/NavigationRegistry.cs` (`_entries.Add(new NavEntry("orders",
+    "NavOrders", Symbol.Shop, null, false, "NavOrdersItem"))` before the
+    `<devtem:nav-entries>` end marker) — the rail builds from the registry,
+    never from XAML. The label binds live via `NavEntry.Label` (no
+    code-behind wiring; note: the built-in Settings item needs the explicit
+    branch in `OnNavigated`).
 6. **Responsive**: drive two-column → stacked switching from
     `ResponsiveLayout.ShouldUseNarrowPage(...)` in code-behind — `e.NewSize.Width`
     in `SizeChanged`, `ActualWidth` in `Loaded`/`OnNavigatedTo` — and early-out
@@ -215,14 +222,23 @@ Wire-up (4 steps):
    fails until every language has the keys). es/fr land as `TODO-translate`
    markers — translate them before release.
 2. **DI** — register the VM in `ServiceLocator.Initialize()`:
-   ```csharp
-   services.AddTransient<OrdersPageViewModel>();
-   ```
+    ```csharp
+    services.AddTransient<OrdersPageViewModel>();
+    ```
+    and its factory next to it (constructor injection — the page takes the
+    VM as a parameter, never resolves it):
+    ```csharp
+    PageFactory.Register("orders", () => new Pages.OrdersPage(GetRequiredService<OrdersPageViewModel>()));
+    ```
 3. **Route + nav** — in `MainWindow`: `RegisterRoute("orders",
-   typeof(OrdersPage))`, add a `NavigationViewItem` (`Tag="orders"`,
-   `Content="{loc:Loc Key=NavOrders}"`, `<SymbolIcon Symbol="Shop"/>`).
-   The label binds — no code-behind wiring (note: the built-in Settings
-   item still needs its explicit branch in `OnNavigated`).
+    typeof(OrdersPage))`, plus one registry line in
+    `Services/NavigationRegistry.cs` (before `// </devtem:nav-entries>`):
+    ```csharp
+    _entries.Add(new NavEntry("orders", "NavOrders", Symbol.Shop, null, false, "NavOrdersItem"));
+    ```
+    The label binds live via `NavEntry.Label` — no XAML, no code-behind
+    wiring (note: the built-in Settings item still needs its explicit
+    branch in `OnNavigated`).
 4. **Verify** — `dotnet build -c Debug -p:Platform=x64` (0 warnings),
    then `dotnet test` (the new `Strings_AreTranslated` +
    `NavSymbol_MatchesChosenIcon` tests prove the keys and icon landed).
@@ -231,15 +247,16 @@ Uninstall when done: `dotnet new uninstall .\Templates\Page`.
 
 ### Restyling the shell (read before replacing NavigationView)
 
-`Scripts/add-page.ps1` wires navigation by inserting one item at the
-`</NavigationView.MenuItems>` anchor, falling back to the
-`<!-- </devtem:nav-items> -->` end marker. A restyle that keeps neither
-anchor breaks the next `add-page` run (after creating files — rollback
-hides it, but the page stays unwired). After any shell restyle, keep one
-of the two anchors and keep the contract: one item per page, `Tag` equals
-the route registered under `<devtem:routes>`, selection synced in
-`OnNavigated` (the built-in Settings item needs its explicit branch).
-`MainWindow.xaml` documents the full contract above `<devtem:nav-items>`.
+`Scripts/add-page.ps1` wires navigation by appending one line to
+`Services/NavigationRegistry.cs` (before `// </devtem:nav-entries>`) — it
+never touches `MainWindow.xaml`, so restyles cannot break page wiring.
+After any shell restyle, bind `NavigationRegistry.MenuEntries` /
+`FooterEntries` (or hand-place items with `Tag` = route) and keep the
+contract: one item per page, `Tag` equals the route registered under
+`<devtem:routes>`, selection synced in `OnNavigated` (the built-in
+Settings item needs its explicit branch). `MainWindow.xaml` documents the
+full contract above `<!-- </devtem:nav-items> -->` (kept as the
+documented fallback region for exotic shells).
 
 ### Hardening patterns (learned from production apps)
 
@@ -428,12 +445,12 @@ range, cut the companions, run build + tests. Current markers:
 | `about-tech` | About technology panel | `TechCol`/`TechPanel` lines in `AboutPage.xaml.cs`, `AboutCardUpdates/Logging/Mvvm/Ui*` loc keys |
 | `about-links` | About links panel | `LinksCol`/`LinksPanel` lines in `AboutPage.xaml.cs`, `AboutCardSource/Releases/Issues*` loc keys |
 | `settings-notify-test` | Settings test-toast card (dev scaffolding) | `SendTestToastButton_Click` in `SettingsPage.xaml.cs`, `SettingsNotifyTest*` loc keys |
-| `diagnostics-page` | Whole Diagnostics page (header comment only) | Checklist in `Pages/DiagnosticsPage.xaml`: route, nav item, page + VM + test files, `ServiceLocator` registration, `Diagnostics*` loc keys |
+| `diagnostics-page` | Whole Diagnostics page (header comment only) | Checklist in `Pages/DiagnosticsPage.xaml`: route, registry entry, page + VM + test files, `ServiceLocator` VM + factory registrations, `Diagnostics*` loc keys |
 
 Whole-page removal (any page, e.g. About) follows the Diagnostics
-checklist: route in `MainWindow.xaml.cs`, nav item (+ `OnNavigated`
-selection case) in `MainWindow.xaml`, page files, ViewModel (+
-`ServiceLocator` registration), view-model tests, loc keys. Unused loc
+checklist: route in `MainWindow.xaml.cs`, registry entry in
+`Services/NavigationRegistry.cs`, page files, ViewModel (+
+`ServiceLocator` VM + factory registrations), view-model tests, loc keys. Unused loc
 keys are harmless at runtime, but remove them anyway — the coverage
 tests assert exact translations per key. Settings sections work the same
 way without markers: each `StackPanel` section (appearance, language,

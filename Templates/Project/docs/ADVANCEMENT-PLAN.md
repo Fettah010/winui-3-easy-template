@@ -178,7 +178,7 @@ is broken; everything here is what separates "works" from "polished".
 Bigger refactors; each must land with its tests + guide updates + matrix.
 Default stance: small, stable seams over rewrites (house precedent).
 
-- [ ] **C1. Constructor injection for pages (retire ServiceLocator-at-click).**
+- [x] **C1. Constructor injection for pages (retire ServiceLocator-at-click).**
   Pages resolve VMs via `ServiceLocator.GetRequiredService<T>()`
   (service-locator pattern; peers inject constructors). WinUI
   instantiates pages via `Activator`, so ship a `PageFactory`
@@ -187,7 +187,19 @@ Default stance: small, stable seams over rewrites (house precedent).
   `[ObservableProperty]`/`[RelayCommand]`. The DI-gate test
   (`ServiceLocatorTests.ViewModels_ResolveTransient`) becomes a
   factory-resolution test. Phase across two betas; never a flag day.
-- [ ] **C2. Data-driven navigation registry (finishes pain-log #15).**
+  Shipped 2026-09-22 in one pass (the planned second beta proved vacuous:
+  Home/About carry no view model, so no VM-bearing page remains on the
+  locator). Frame journal retired; per-page cache honors
+  `NavigationCacheMode`; item templates/add-page emit factories.
+  Pages resolve VMs via `ServiceLocator.GetRequiredService<T>()`
+  (service-locator pattern; peers inject constructors). WinUI
+  instantiates pages via `Activator`, so ship a `PageFactory`
+  (route -> factory registered in `ServiceLocator`, `NavigationService`
+  resolves through it) and migrate pages one by one; VMs keep
+  `[ObservableProperty]`/`[RelayCommand]`. The DI-gate test
+  (`ServiceLocatorTests.ViewModels_ResolveTransient`) becomes a
+  factory-resolution test. Phase across two betas; never a flag day.
+- [x] **C2. Data-driven navigation registry (finishes pain-log #15).**
   `MainWindow.xaml` + `MainWindow.xaml.cs` + `add-page.ps1` currently
   share the nav contract by convention (Tag == route, selection sync).
   Ship `Services/NavigationRegistry.cs`: single list of
@@ -196,7 +208,11 @@ Default stance: small, stable seams over rewrites (house precedent).
   break the script's anchor (there is no anchor). Keep the
   `<devtem:nav-items>` region as the documented fallback for exotic
   shells.
-- [ ] **C3. Revisit IHost once, with measurements, then stop.**
+  Shipped 2026-09-22 with one documented divergence: items are built in
+  code from the list (not `ItemsSource` binding — `x:Bind` cannot reach
+  statics, and per-item Symbol/glyph icons need selectors); the single
+  list is the goal and it holds. `add-page.ps1` never touches XAML.
+- [x] **C3. Revisit IHost once, with measurements, then stop.**
   Peers (Uno Recommended, community Host templates) standardize on
   `Microsoft.Extensions.Hosting` (DI + logging + configuration +
   lifetime). We deliberately use a bare `ServiceCollection` (startup
@@ -205,27 +221,37 @@ Default stance: small, stable seams over rewrites (house precedent).
   machine, published in DECISIONS either way. If adopted: hosted
   services own the background loop + DB init; if not: the spike is the
   permanent answer and the question is closed.
-- [ ] **C4. Settings as validated options.**
+  Spiked 2026-09-22: cold delta ~110ms (~2ms warm), verdict DECLINE
+  (see DECISIONS). Question closed.
+- [x] **C4. Settings as validated options.**
   `SettingsService` is a bespoke JSON store (correct for unpackaged -
   `ApplicationData.LocalSettings` never persists there). Add a thin
   validated-options layer: range/default/schema-version per key,
   migration functions keyed by stored schema version (extends A2's
   `"version"` field to the live store), one test per migration. Do NOT
   pull `Microsoft.Extensions.Options` unless C3 adopts the host.
-- [ ] **C5. Background-work abstraction.**
+  Shipped 2026-09-22: `SettingsSchema` (version 1 + dev-channel
+  migration, theme normalization on read/write, future stores
+  untouched) wired at startup next to the channel migration.
+- [x] **C5. Background-work abstraction.**
   `BackgroundUpdateService` owns a bespoke periodic loop (check
   interval, metered guard, ask-mode). Generalize to a tiny
   `IBackgroundTask` registry (interval, network requirement,
   single-flight + per-task CTS - the shared-slot lesson from the
   Formixa log) with the update check as task #1. Future tasks (feed
   sync, cleanup) plug in without new timers.
-- [ ] **C6. Evaluate an auth template behind a flag.**
+  Shipped 2026-09-22: `BackgroundTaskRunner` (registry, due-sweep,
+  single-flight slots, per-task cancel, offline gate) + the update
+  check as task #1; the service loop delegates with identical timing
+  semantics; per-mode excludes extended to the new files.
+- [x] **C6. Evaluate an auth template behind a flag.**
   Uno ships auth as a template option; we have none. This is a
   deliberate deferral candidate (identity providers vary; MSAL adds
   packaging/entitlement questions). Ship the evaluation only: MSAL +
   broker vs embedded, token-cache location per distribution, what a
   `--auth` flag would exclude/include. No code until a real consumer
   asks (same rule as the deferred MVVM-toolkit choice).
+  Evaluated 2026-09-22, verdict DEFER (see DECISIONS). No code.
 
 ---
 

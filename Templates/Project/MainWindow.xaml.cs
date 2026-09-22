@@ -62,6 +62,12 @@ public sealed partial class MainWindow : Window
         _nav.SetFrame(ContentFrame);
         _nav.Navigated += OnNavigated;
 
+        // Rail items come from the single nav contract
+        // (Services/NavigationRegistry): no XAML anchor for page wiring to
+        // break. Built before the initial navigation so the highlight sync
+        // in OnNavigated finds its item.
+        BuildNavItems();
+
         // Navigate to initial page
         _nav.NavigateTo("home");
 
@@ -253,16 +259,17 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// Applies the localized label to the built-in settings item (which
-    /// otherwise keeps the OS language label). Declared nav items bind in
-    /// XAML; this one has no XAML declaration, so it is set here — at
-    /// startup, once the pane materializes (Loaded), and on every language
-    /// change — alongside its stable AutomationId for the FlaUI smoke tests
-    /// (UI/): names localize, Ids don't.
+    /// otherwise keeps the OS language label) and re-reads every registry
+    /// item label — declared nav items bind to NavEntry.Label, not XAML, so
+    /// they refresh here: at startup, once the pane materializes (Loaded),
+    /// and on every language change — alongside stable AutomationIds for
+    /// the FlaUI smoke tests (UI/): names localize, Ids don't.
     /// </summary>
     private void ApplyNavLocalization()
     {
         try
         {
+            try { NavigationRegistry.RefreshLabels(); } catch { }
             if (RootNavigationView.SettingsItem is NavigationViewItem settingsItem)
             {
                 settingsItem.Content = LocalizationService.Current.GetString("NavSettings");
@@ -334,6 +341,41 @@ public sealed partial class MainWindow : Window
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// Builds the rail + footer items from <see cref="NavigationRegistry"/>
+    /// (the single nav contract). Idempotent: clears first, so a second
+    /// call (tests, re-init) never duplicates items. Never throws.
+    /// </summary>
+    private void BuildNavItems()
+    {
+        try
+        {
+            RootNavigationView.MenuItems.Clear();
+            foreach (var entry in NavigationRegistry.MenuEntries)
+            {
+                try
+                {
+                    var item = entry.CreateItem();
+                    if (item is not null)
+                        RootNavigationView.MenuItems.Add(item);
+                }
+                catch { }
+            }
+            RootNavigationView.FooterMenuItems.Clear();
+            foreach (var entry in NavigationRegistry.FooterEntries)
+            {
+                try
+                {
+                    var item = entry.CreateItem();
+                    if (item is not null)
+                        RootNavigationView.FooterMenuItems.Add(item);
+                }
+                catch { }
+            }
+        }
+        catch { }
     }
 
     private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)

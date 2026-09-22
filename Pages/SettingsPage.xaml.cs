@@ -23,11 +23,13 @@ public sealed partial class SettingsPage : Page, INavigationAware
     private readonly LayoutDebouncer _layoutDebouncer;
     private bool? _isNarrow;
 
-    public SettingsPage()
+    public SettingsPage(SettingsPageViewModel viewModel)
     {
-        // Resolve BEFORE InitializeComponent so {x:Bind ViewModel.…}
+        // Constructor-injected (C1): PageFactory builds this page with the
+        // view model from the container — never resolved at click time.
+        // Assign BEFORE InitializeComponent so {x:Bind ViewModel.…}
         // bindings evaluate against the real instance on first load.
-        ViewModel = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
+        ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         this.InitializeComponent();
         DataContext = ViewModel;
         _layoutDebouncer = new LayoutDebouncer(DispatcherQueue);

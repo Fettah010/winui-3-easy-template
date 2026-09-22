@@ -267,19 +267,25 @@
         {
           "condition": "(updates == 'none')",
           "exclude": [
-            "Services/BackgroundUpdateService.cs"
+            "Services/BackgroundUpdateService.cs",
+            "Services/BackgroundTaskRunner.cs",
+            "Tests/Services/BackgroundTaskRunnerTests.cs"
           ]
         },
         {
           "condition": "(updates == 'appinstaller')",
           "exclude": [
-            "Services/BackgroundUpdateService.cs"
+            "Services/BackgroundUpdateService.cs",
+            "Services/BackgroundTaskRunner.cs",
+            "Tests/Services/BackgroundTaskRunnerTests.cs"
           ]
         },
         {
           "condition": "(updates == 'store')",
           "exclude": [
-            "Services/BackgroundUpdateService.cs"
+            "Services/BackgroundUpdateService.cs",
+            "Services/BackgroundTaskRunner.cs",
+            "Tests/Services/BackgroundTaskRunnerTests.cs"
           ]
         },
         {

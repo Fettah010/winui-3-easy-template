@@ -94,40 +94,22 @@
                    content so toggles never resize/reflow anything). Alternatives:
                    PaneDisplayMode="Left" pushes content (jitters on toggle),
                    "Top" moves nav into the top bar.
-                 - Items live in the <devtem:nav-items> region below (or run
-                   Scripts/add-page.ps1, which inserts them). One
-                   NavigationViewItem per page: Tag MUST equal the route
+                 - Items come from Services/NavigationRegistry.cs (one list of
+                   route/loc-key/icon/footer; Scripts/add-page.ps1 appends
+                   there) and are built in MainWindow.xaml.cs BuildNavItems —
+                   this file carries NO nav items, so restyles cannot break
+                   page wiring. One item per page: Tag equals the route
                    registered in MainWindow.xaml.cs (<devtem:routes>); the
                    highlight syncs in OnNavigated. The built-in Settings item
                    is labeled in code (ApplyNavLocalization).
                  - Selection: keep the default SelectsOnInvoked=True, or the
                    current-page pill silently stops working (#6511). -->
             <!-- <devtem:nav-items> -->
-            <NavigationView.MenuItems>
-                <!-- Native selection (SelectsOnInvoked defaults to True):
-                     clicks select + invoke, so the current-page pill shows.
-                     OnNavigated only re-syncs programmatic navigations
-                     (back, tray, deep link) to the same item — a no-op
-                     for clicks. -->
-                <NavigationViewItem AutomationProperties.AutomationId="NavHomeItem" Content="{loc:Loc Key=NavHome}" Tag="home">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Home"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
-
-            <NavigationView.FooterMenuItems>
-                <NavigationViewItem AutomationProperties.AutomationId="NavAboutItem" Content="{loc:Loc Key=NavAbout}" Tag="about">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE946;"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem AutomationProperties.AutomationId="NavDiagnosticsItem" Content="{loc:Loc Key=NavDiagnostics}" Tag="diagnostics">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Repair"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.FooterMenuItems>
+            <!-- Exotic-shell fallback: shells that replace the NavigationView
+                 bind Services/NavigationRegistry.MenuEntries/FooterEntries
+                 themselves (or hand-place items); add-page still appends to
+                 the registry, and warns when this stock NavigationView is
+                 gone. This region intentionally holds no items. -->
             <!-- </devtem:nav-items> -->
 
             <!-- Single measure pass: the Frame fills whatever width the rail

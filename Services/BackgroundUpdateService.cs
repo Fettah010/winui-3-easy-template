@@ -21,6 +21,12 @@ public sealed class BackgroundUpdateService
     private BackgroundUpdateService() { }
 
     /// <summary>
+    /// The backend's periodic interval (the update-check task tracks this
+    /// live, so flavor changes apply without re-registration).
+    /// </summary>
+    internal static TimeSpan CheckInterval => UpdateService.PeriodicCheckInterval;
+
+    /// <summary>
     /// Re-checks for updates on <see cref="UpdateService.PeriodicCheckInterval"/>
     /// while the app stays running. <see cref="CheckForUpdatesAsync"/> itself
     /// honors the auto-check setting and the installed-app guard, so this loop
@@ -42,6 +48,7 @@ public sealed class BackgroundUpdateService
     internal async Task RunPeriodicChecksAsync(
         Window? mainWindow, TimeSpan interval, CancellationToken cancellationToken)
     {
+        BackgroundTaskRunner.EnsureDefaultsRegistered();
         if (interval <= TimeSpan.Zero)
             interval = UpdateService.PeriodicCheckInterval;
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -57,13 +64,9 @@ public sealed class BackgroundUpdateService
         {
             AppLog.Information(
                 "Periodic update checks scheduled every {Interval}", interval);
-            using var timer = new PeriodicTimer(interval);
-            while (await timer.WaitForNextTickAsync(linked.Token).ConfigureAwait(false))
-            {
-                if (linked.Token.IsCancellationRequested)
-                    break;
-                await CheckForUpdatesAsync(mainWindow).ConfigureAwait(false);
-            }
+            await BackgroundTaskRunner.RunPeriodicAsync(
+                new BackgroundTaskContext(mainWindow), interval, linked.Token).ConfigureAwait(false);
+            AppLog.Information("Periodic update checks stopped");
         }
         catch (OperationCanceledException)
         {

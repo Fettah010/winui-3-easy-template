@@ -8,8 +8,8 @@ namespace DevTemWinUi3.Services;
 /// Provides dependency injection for the application.
 /// Register services here and resolve them via GetService or GetRequiredService.
 /// Uses a bare <see cref="ServiceCollection"/> on purpose: the generic host
-/// (CreateDefaultBuilder) costs seconds at startup for configuration/logging
-/// plumbing this app never uses.
+/// adds ~110ms cold (~2ms warm) for configuration/logging plumbing this app
+/// never uses — measured 2026-09-22, see docs/DECISIONS.md (C3 spike).
 /// </summary>
 public static class ServiceLocator
 {
@@ -115,6 +115,20 @@ public static class ServiceLocator
 #endif
 #if (health)
         services.AddTransient<ViewModels.DiagnosticsPageViewModel>();
+#endif
+
+        // Page factories (C1): migrated routes construct with their view
+        // model injected. Unregistered routes keep the legacy Activator
+        // path; add a factory here when migrating a page.
+        PageFactory.Register("settings", () =>
+            new Pages.SettingsPage(GetRequiredService<ViewModels.SettingsPageViewModel>()));
+#if (setup)
+        PageFactory.Register("setupwizard", () =>
+            new Pages.SetupWizardPage(GetRequiredService<ViewModels.SetupWizardViewModel>()));
+#endif
+#if (health)
+        PageFactory.Register("diagnostics", () =>
+            new Pages.DiagnosticsPage(GetRequiredService<ViewModels.DiagnosticsPageViewModel>()));
 #endif
     }
 

@@ -298,37 +298,40 @@ try {
         [System.IO.File]::WriteAllText($entry.Path, $newText, $utf8NoBom)
     }
 
-    # DI registration.
+    # DI registration (ViewModel + page factory for constructor
+    # injection; NavigationService resolves the route through it).
     Write-Host "`n==> register ViewModel" -ForegroundColor Cyan
     $slPath = Join-Path $RepoRoot "Services\ServiceLocator.cs"
     Snapshot-File $slPath
     Insert-Unique $slPath "services.AddTransient<ViewModels.SettingsPageViewModel>();" "`r`n            services.AddTransient<ViewModels.$($Name)PageViewModel>();"
+    Insert-Unique $slPath "services.AddTransient<ViewModels.$($Name)PageViewModel>();" "`r`n            PageFactory.Register(`"$Route`", () => new Pages.$($Name)Page(GetRequiredService<ViewModels.$($Name)PageViewModel>()));"
 
-    # Route + nav item. The label needs no code: nav items bind
-    # (Content="{loc:Loc Key=Nav<Name>}"), so only the XAML item is added.
+    # Route + registry entry. The label needs no code: rail items bind to
+    # NavEntry.Label (refreshed on language switch), so only the registry
+    # line is added — MainWindow.xaml is never touched (C2: restyles cannot
+    # break page wiring; there is no XAML anchor).
     Write-Host "`n==> wire route + nav" -ForegroundColor Cyan
     $mwPath = Join-Path $RepoRoot "MainWindow.xaml.cs"
     Snapshot-File $mwPath
     Assert-RouteAvailable $mwPath $Route
     Insert-Unique $mwPath '_nav.RegisterRoute("home", typeof(HomePage));' "`r`n        _nav.RegisterRoute(`"$Route`", typeof($($Name)Page));"
 
+    $regPath = Join-Path $RepoRoot "Services\NavigationRegistry.cs"
+    Snapshot-File $regPath
+    $regText = [System.IO.File]::ReadAllText($regPath, [System.Text.Encoding]::UTF8)
+    if ($regText -match [regex]::Escape("`"$Route`"")) {
+        Fail "Route '$Route' already has a registry entry in $regPath. Choose a unique route; no duplicate registration was made."
+    }
+    Insert-Unique $regPath "// </devtem:nav-entries>" "        _entries.Add(new NavEntry(`"$Route`", `"Nav$Name`", Symbol.$Icon, null, false, `"Nav$($Name)Item`"));`r`n"
+
+    # Exotic shells (custom rail, no stock NavigationView) do not render
+    # the registry: warn instead of failing — the route + factory + strings
+    # below still land, and the owner binds the entry by hand (see the
+    # <devtem:nav-items> fallback note in MainWindow.xaml).
     $xamlPath = Join-Path $RepoRoot "MainWindow.xaml"
-    Snapshot-File $xamlPath
-    $navItem = "`r`n                <NavigationViewItem AutomationProperties.AutomationId=`"Nav$($Name)Item`" Content=`"{loc:Loc Key=Nav$Name}`" Tag=`"$Route`">`r`n                    <NavigationViewItem.Icon>`r`n                        <SymbolIcon Symbol=`"$Icon`"/>`r`n                    </NavigationViewItem.Icon>`r`n                </NavigationViewItem>`r`n            "
-    # Stock shell anchor. Restyled shells (custom rail, no NavigationView)
-    # fall back to the documented <devtem:nav-items> end marker: after any
-    # shell restyle, keep one of the two anchors, or add-page cannot wire
-    # navigation (see docs/TEMPLATE-GUIDE.md, nav shell contract).
     $xamlText = [System.IO.File]::ReadAllText($xamlPath, [System.Text.Encoding]::UTF8)
-    $menuAnchorCount = ([regex]::Matches($xamlText, [regex]::Escape("</NavigationView.MenuItems>"))).Count
-    if ($menuAnchorCount -eq 1) {
-        Insert-Unique $xamlPath "</NavigationView.MenuItems>" $navItem -Before
-    }
-    elseif (([regex]::Matches($xamlText, [regex]::Escape("<!-- </devtem:nav-items> -->"))).Count -eq 1) {
-        Insert-Unique $xamlPath "<!-- </devtem:nav-items> -->" $navItem -Before
-    }
-    else {
-        Fail "No nav anchor found in $xamlPath (expected </NavigationView.MenuItems> or <!-- </devtem:nav-items> --> exactly once). Restyle kept neither anchor."
+    if ($xamlText -notmatch "RootNavigationView") {
+        Write-Host "No stock NavigationView in MainWindow.xaml: the '$Route' entry is in the registry but nothing renders it. Bind NavigationRegistry.MenuEntries by hand (see MainWindow.xaml fallback note)." -ForegroundColor Yellow
     }
 
     # Prove it: full build (warnings are errors) + full test suite.
