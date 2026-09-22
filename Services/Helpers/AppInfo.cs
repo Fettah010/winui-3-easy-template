@@ -26,6 +26,44 @@ public sealed class AppInfo
     /// <summary>Update channel fresh installs of this build should track.</summary>
     public string DefaultChannel => IsBetaBuild ? ChannelResolver.Beta : ChannelResolver.Stable;
 
+    /// <summary>
+    /// Source commit the binary was built from (pain-log #18: stale desktop
+    /// shortcuts can launch an old binary where new routes do not exist —
+    /// the click "does nothing"). Baked in via the
+    /// <c>DEVTEM_BUILD_COMMIT</c> environment value at build time
+    /// (CI sets it to the tag/commit); "dev" for local builds.
+    /// About/Diagnostics surfaces include it so a bug report names the
+    /// exact binary. Never throws.
+    /// </summary>
+    public static string BuildCommit
+    {
+        get
+        {
+            try
+            {
+                string? env = System.Environment.GetEnvironmentVariable("DEVTEM_BUILD_COMMIT");
+                if (!string.IsNullOrWhiteSpace(env))
+                    return env.Trim();
+                var asm = Assembly.GetExecutingAssembly()
+                    .GetCustomAttribute<AssemblyMetadataAttribute>();
+                if (asm is not null && asm.Key == "BuildCommit" && !string.IsNullOrWhiteSpace(asm.Value))
+                    return asm.Value;
+            }
+            catch { }
+            return "dev";
+        }
+    }
+
+    /// <summary>Version plus build commit when known (About/Diagnostics).</summary>
+    public string VersionWithCommit
+    {
+        get
+        {
+            string commit = BuildCommit;
+            return commit == "dev" ? Version : Version + " (" + commit + ")";
+        }
+    }
+
     private const int AppmodelErrorNoPackage = 15700;
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]

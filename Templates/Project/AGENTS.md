@@ -111,8 +111,8 @@ main          ← Development branch (latest code)
 | Branch | Points to | Purpose |
 |--------|-----------|---------|
 | `main` | Latest commit | Development |
-| `beta` | v0.0.1-beta release | Beta channel |
-| `stable` | v0.0.2 release | Stable channel |
+| `beta` | Latest `v*-beta` tag | Beta channel |
+| `stable` | Latest plain `v*` tag | Stable channel |
 
 ### How releases work
 
@@ -190,10 +190,13 @@ desktop first instead of asking):
 
 ## Versioning
 
-Current version: **0.0.11-beta** (see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
-in `DevTemWinUi3.csproj` — keep all three in sync, plus `<InformationalVersion>`:
-beta releases carry the `-beta` suffix (e.g. `0.0.1-beta`) so fresh installs
-default to the beta channel; stable releases use the plain version).
+Current version: see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
+in the scaffolded `.csproj` — keep all four in sync, plus
+`<InformationalVersion>`: beta releases carry the `-beta` suffix
+(e.g. `0.0.1-beta`) so fresh installs default to the beta channel;
+stable releases use the plain version. Fresh scaffolds start from the
+template's version: run `Scripts/bump-version.ps1 -Version 0.0.1` first
+(dotnet-new runs no post-actions, so the reset is one command).
 
 ## Known gotchas
 

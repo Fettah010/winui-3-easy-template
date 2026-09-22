@@ -28,6 +28,7 @@ public sealed partial class HomePage : Page, INavigationAware
     {
         // The page is cached but every label is a live loc binding now —
         // nothing to refresh on return.
+        ApplyProductLinks();
         PaintLayout();
     }
 
@@ -36,7 +37,29 @@ public sealed partial class HomePage : Page, INavigationAware
         // Nothing to tear down on leave.
     }
 
-    private void HomePage_Loaded(object sender, RoutedEventArgs e) => PaintLayout();
+    private void HomePage_Loaded(object sender, RoutedEventArgs e)
+    {
+        ApplyProductLinks();
+        PaintLayout();
+    }
+
+    /// <summary>
+    /// Resolves the releases link from <see cref="AppMetadata"/> at runtime
+    /// (see AboutPage.ApplyProductLinks): XAML carries no hardcoded repo.
+    /// </summary>
+    private void ApplyProductLinks()
+    {
+        try
+        {
+            if (ReleasesLinkButton is not null)
+            {
+                string repo = AppMetadata.RepoUrl.TrimEnd('/');
+                if (!string.IsNullOrWhiteSpace(repo))
+                    ReleasesLinkButton.NavigateUri = new System.Uri(repo + "/releases", System.UriKind.Absolute);
+            }
+        }
+        catch { }
+    }
 
     private void HomePage_SizeChanged(object sender, SizeChangedEventArgs e) =>
         _layoutDebouncer.RequestSwap(

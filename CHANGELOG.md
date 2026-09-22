@@ -25,6 +25,56 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.27-beta] - 2026-09-22
+
+### Added
+
+- `Scripts/remove-sample-content.ps1`: the inverse of `add-page.ps1`
+  (dirty-tree guard + rollback, cuts XAML ranges + code-behind companions
+  + 3-language keys, then builds and tests). Proven live: fresh scaffold
+  strips home-features/about-tech/about-links and stays green.
+- Template hardening kit: `Services/DialogHelper.cs` (uncollapse-around-
+  `ShowAsync` + reentrancy gate), 60s picker timeout degrading to cancel,
+  `XamlSymbolAuditTests` (every `Symbol="..."` pinned to known members),
+  `UnitConversion` + `ChangeEpoch` helpers with A4-pinned tests.
+- Per-update-mode first-run notes (`FirstRunUpdates*` keys in 3
+  languages): store-mode scaffolds never advertise GitHub auto-updates.
+- `AppInfo.BuildCommit` (`DEVTEM_BUILD_COMMIT` in CI) shown in About;
+  `run-app.ps1` prints binary time vs repo HEAD (stale-shortcut guard).
+
+### Fixed
+
+- `add-page.ps1` dormant-template path: activates the scaffold's dormant
+  nested copy via a temp dir (repo stays clean), probes the resolved
+  template for `--route` with remediation, and falls back to the
+  `<devtem:nav-items>` end marker on restyled shells. Root-caused live:
+  the nested `template.json.hold` had drifted (no `route` symbol) and
+  parity only checked its existence — parity now hash-compares it.
+- About/Home repo links resolve at runtime from `ProductConfiguration`
+  via `AppMetadata` (no hardcoded repo in XAML); `init-template.ps1`
+  gains `-LicenseName/-LicenseUrl`. User strings neutralized (zero
+  "template" prose in shipped dictionaries).
+- Sample markers restructured: about-tech/about-links wrap column +
+  panel as two ranges, so removal leaves a valid single-column grid.
+- `ServiceLocatorTests` resolves EVERY registered VM (missing
+  registrations fail the test, not a user click).
+- Reconstructed `Templates/Project/__SafeName__.csproj` (had grown to
+  148MB and blocked push): `bump-version.ps1` read UTF-8 as the system
+  codepage and saved as UTF-8, doubling an em-dash mojibake on every
+  release. Release scripts now use explicit UTF-8 IO throughout
+  (`bump-version`, `add-page`), the comment is ASCII, and
+  `RepoHygieneTests` (no U+FFFD + csproj size cap) fails the build on
+  any recurrence.
+
+### Changed
+
+- Scaffold README is a minimal app README (version-reset + rebrand +
+  sample-removal first steps); template docs stay online.
+- `AGENTS.md` version/branch sections generated-from-csproj wording
+  (no more hardcoded stale versions); release notes recorded in
+  `docs/DECISIONS.md`.
+
 ## [0.0.26-beta] - 2026-09-19
 
 ### Fixed

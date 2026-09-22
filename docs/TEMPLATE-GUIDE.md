@@ -218,6 +218,56 @@ Wire-up (4 steps):
 
 Uninstall when done: `dotnet new uninstall .\Templates\Page`.
 
+### Restyling the shell (read before replacing NavigationView)
+
+`Scripts/add-page.ps1` wires navigation by inserting one item at the
+`</NavigationView.MenuItems>` anchor, falling back to the
+`<!-- </devtem:nav-items> -->` end marker. A restyle that keeps neither
+anchor breaks the next `add-page` run (after creating files — rollback
+hides it, but the page stays unwired). After any shell restyle, keep one
+of the two anchors and keep the contract: one item per page, `Tag` equals
+the route registered under `<devtem:routes>`, selection synced in
+`OnNavigated` (the built-in Settings item needs its explicit branch).
+`MainWindow.xaml` documents the full contract above `<devtem:nav-items>`.
+
+### Hardening patterns (learned from production apps)
+
+- **Dialogs:** never `ShowAsync()` a XAML-declared `ContentDialog`
+  directly — a `Visibility="Collapsed"` declarer no-ops silently (no
+  dialog, no exception, no log). Show every dialog through
+  `Services/DialogHelper.cs` (uncollapses around the call, restores in
+  `finally`, serializes concurrent shows).
+- **Pickers:** never await a native picker unbounded — a wedged shell or
+  automation host can stall it forever. `FilePickerService` races every
+  call against a 60s timeout and degrades to cancel; UI tests assert the
+  app *survives* picker attempts, not dialog pixels.
+- **Icons:** every `Symbol="X"` string must be a real `Symbol` member —
+  bad values compile green and throw `XamlParseException` on first
+  navigation. `Tests/Services/XamlSymbolAuditTests.cs` audits all XAML
+  against the known-good set (mirrors the item template's `--icon`
+  choices); decorative icons should be `FontIcon` glyphs (bad glyph
+  shows tofu, never throws).
+- **Overlay math:** convert units once at the boundary through
+  `Services/Helpers/UnitConversion.cs` (96-DPI pixels vs points) —
+  `HardeningHelpersTests` pins A4 in both systems so a 75% shrink fails
+  the build instead of landing highlights on empty lines.
+- **Mutation repaints:** after merge/rotate/delete-style ops, bump a
+  `Services/Helpers/ChangeEpoch` counter and have the view watch it —
+  property-change notification is not change detection.
+- **Cancellation scope must match the concurrency model:** per-call
+  tokens for concurrent loads (one shared slot cancels siblings);
+  reserve a shared slot for superseding single-canvas renders only.
+  Review every shared `CancellationTokenSource` on sight.
+- **DI gate:** a dropped `AddTransient` compiles green and explodes on
+  user click. `Tests/Services/ServiceLocatorTests.cs`
+  (`ViewModels_ResolveTransient`) resolves EVERY registered VM — adding
+  a service touches one module plus that list.
+- **Stale binaries:** the desktop shortcut targets the built exe, so it
+  can launch an old binary where new routes do not exist.
+  `Scripts/run-app.ps1` prints binary time vs repo HEAD at launch, and
+  About shows the build commit (`AppInfo.BuildCommit`, baked from
+  `DEVTEM_BUILD_COMMIT` in CI).
+
 ## 2c. Scaffold a whole app (dotnet new project template)
 
 `Templates/Project/` is the full app as a project template with identity
@@ -339,11 +389,21 @@ dotnet new update                     # update all template packages
 
 ## 2d. Removing sample content
 
+One command (the inverse of `add-page.ps1` — same dirty-tree guard and
+rollback semantics):
+
+```powershell
+.\Scripts\remove-sample-content.ps1 -WhatIf   # preview
+.\Scripts\remove-sample-content.ps1           # home-features + about-tech + about-links
+.\Scripts\remove-sample-content.ps1 -Blocks home-features   # one block only
+```
+
 Sample blocks carry `devtem:optional:<id>` markers (XAML comments bracketing
-the deletable range through `devtem:end:<id>`). Deleting a block is three
-moves: cut the XAML range, cut the companions the marker names
-(code-behind layout lines, `Services/Localization/*Strings.cs` keys), and
-run build + tests. Current markers:
+the deletable range through `devtem:end:<id>`). The script cuts the XAML
+range, the companions the marker names (code-behind layout lines,
+`Services/Localization/*Strings.cs` keys), then builds (0 warnings) and
+runs the tests. Manual fallback is the same three moves: cut the XAML
+range, cut the companions, run build + tests. Current markers:
 
 | Marker | What | Companions |
 | --- | --- | --- |

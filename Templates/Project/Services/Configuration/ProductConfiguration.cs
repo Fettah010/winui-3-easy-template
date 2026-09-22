@@ -14,6 +14,23 @@ public static class ProductConfiguration
     public const string SentryDsn = "";
     public const string SentryEnvironment = "";
     public const string SentryRelease = "";
+
+    /// <summary>
+    /// Canonical repository URL (releases, issues, license pages).
+    /// Rewritten by Scripts/init-template.ps1 (-RepoUrl) and by the
+    /// dotnet-new `repo` symbol at scaffold time. XAML never hardcodes
+    /// repo URLs: About/Home resolve them from here via AppMetadata.
+    /// </summary>
+    public const string RepoUrl = "https://github.com/Fettah010/winui-3-easy-template";
+
+    /// <summary>License display name (e.g. "MIT License").</summary>
+    public const string LicenseName = "MIT License";
+
+    /// <summary>
+    /// License URL. Empty derives to RepoUrl + "/blob/main/LICENSE".
+    /// Rewritten by init-template -LicenseUrl.
+    /// </summary>
+    public const string LicenseUrl = "";
 }
 
 /// <summary>
@@ -28,6 +45,19 @@ public static class DeploymentConfiguration
     public static string SentryDsn => Read("DEVTEM_SENTRY_DSN", ProductConfiguration.SentryDsn);
     public static string SentryEnvironment => Read("DEVTEM_SENTRY_ENVIRONMENT", ProductConfiguration.SentryEnvironment);
     public static string SentryRelease => Read("DEVTEM_SENTRY_RELEASE", ProductConfiguration.SentryRelease);
+    public static string RepoUrl => Read("DEVTEM_REPO_URL", ProductConfiguration.RepoUrl);
+    public static string LicenseName => Read("DEVTEM_LICENSE_NAME", ProductConfiguration.LicenseName);
+    public static string LicenseUrl
+    {
+        get
+        {
+            string configured = Read("DEVTEM_LICENSE_URL", ProductConfiguration.LicenseUrl);
+            if (!string.IsNullOrWhiteSpace(configured))
+                return configured;
+            string repo = RepoUrl.TrimEnd('/');
+            return string.IsNullOrWhiteSpace(repo) ? string.Empty : repo + "/blob/main/LICENSE";
+        }
+    }
 
     private static string Read(string name, string fallback)
     {

@@ -41,7 +41,11 @@ function Get-WinExeProjects {
     foreach ($root in $roots) {
         foreach ($csproj in (Get-ChildItem -LiteralPath $root -Filter "*.csproj" -File -ErrorAction SilentlyContinue)) {
             try {
-                [xml]$xml = Get-Content -LiteralPath $csproj.FullName
+                # .NET UTF-8 IO (BOM-aware) on purpose: bare Get-Content
+                # decodes with the system codepage and a later Save re-encodes
+                # as UTF-8, doubling any non-ASCII on every run (this once
+                # grew the template csproj 5KB -> 148MB across releases).
+                [xml]$xml = [System.IO.File]::ReadAllText($csproj.FullName)
                 $outputType = $xml.Project.PropertyGroup |
                     Where-Object { -not [string]::IsNullOrWhiteSpace($_.OutputType) } |
                     Select-Object -First 1 -ExpandProperty OutputType
@@ -65,7 +69,7 @@ $csprojs = @(Get-WinExeProjects)
 if ($csprojs.Count -eq 0) { throw "No WinExe csproj found under $projectRoot." }
 foreach ($path in $csprojs) {
     if ($PSCmdlet.ShouldProcess($path, "Set version $Version")) {
-        [xml]$xml = Get-Content -LiteralPath $path
+        [xml]$xml = [System.IO.File]::ReadAllText($path)
         $touched = @()
         foreach ($pair in @( @("Version", $plain), @("AssemblyVersion", $assemblyQuad), @("FileVersion", $assemblyQuad), @("InformationalVersion", $Version) )) {
             if (Set-XmlProp $xml $pair[0] $pair[1]) { $touched += $pair[0] }
@@ -78,10 +82,12 @@ foreach ($path in $csprojs) {
 $citation = Join-Path $projectRoot "CITATION.cff"
 if (Test-Path -LiteralPath $citation) {
     if ($PSCmdlet.ShouldProcess($citation, "Set version/date")) {
-        $text = Get-Content -LiteralPath $citation -Raw
+        # Same UTF-8 rule as above: bare Set-Content writes ANSI here.
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+        $text = [System.IO.File]::ReadAllText($citation, [System.Text.Encoding]::UTF8)
         $text = [regex]::Replace($text, '(?m)^version:.*$', 'version: "' + $Version + '"')
         $text = [regex]::Replace($text, '(?m)^date-released:.*$', 'date-released: "' + $Date + '"')
-        Set-Content -LiteralPath $citation -Value $text
+        [System.IO.File]::WriteAllText($citation, $text, $utf8NoBom)
         Write-Host "Bumped $citation"
     }
 }
@@ -89,7 +95,7 @@ else { Write-Host "No CITATION.cff, skipping." }
 
 $changelog = Join-Path $projectRoot "CHANGELOG.md"
 if (Test-Path -LiteralPath $changelog) {
-    $lines = Get-Content -LiteralPath $changelog
+    $lines = @([System.IO.File]::ReadAllLines($changelog, [System.Text.Encoding]::UTF8))
     $escaped = [regex]::Escape($Version)
     if ($lines -match ('^## \[' + $escaped + '\]')) {
         Write-Host "CHANGELOG already has [$Version], leaving it."
@@ -103,7 +109,7 @@ if (Test-Path -LiteralPath $changelog) {
         if ($firstSection -lt 0) { $lines = @($lines) + $stub }
         elseif ($firstSection -eq 0) { $lines = @($stub) + @($lines) }
         else { $lines = @($lines[0..($firstSection - 1)]) + $stub + @($lines[$firstSection..($lines.Count - 1)]) }
-        Set-Content -LiteralPath $changelog -Value $lines
+        [System.IO.File]::WriteAllLines($changelog, $lines, (New-Object System.Text.UTF8Encoding($false)))
         Write-Host "Inserted CHANGELOG stub for [$Version] (fill in the notes, then tag)."
     }
 }

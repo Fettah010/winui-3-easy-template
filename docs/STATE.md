@@ -5,10 +5,11 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** README rework — dropped stale What's-new history (0.0.5–0.0.11), fresh 0.0.26-beta notes, screenshots spread (home hero + settings) with toast dup removed, FEATURES.md wording fixed. Docs-only, parity OK (166).
-- **Version:** app `0.0.26-beta`; template package `0.3.11` (via tag).
-- **Tags:** `v0.0.26-beta` (release.yml → beta channel, published with assets); `templates-v0.3.11` (templates-publish → NuGet, pushed); `beta` branch moved to `v0.0.26-beta`. Main-push CI: msix + ui-tests green; templates matrix still running at last check.
-- **Branches:** `main` pushed; `beta` tracks latest (to verify).
+- **Goal:** Formixa cleanup pass (pain-log 1-25) — remove-sample-content.ps1 + neutral strings + per-mode FirstRun + runtime product links + add-page self-heal (dormant temp-copy, --route probe, nav fallback) + dormant-config parity hole closed + DialogHelper/picker-timeout/symbol-audit/UnitConversion/ChangeEpoch/DI-gate/BuildCommit + scaffold README minimal + AGENTS de-hardcoded. Bumped 0.0.26 → 0.0.27-beta.
+- **Version:** app `0.0.27-beta`; template package `0.3.12` (via tag, pending push).
+- **Tags (pending push):** `v0.0.27-beta` (release.yml → beta channel); `templates-v0.3.12` (templates-publish → NuGet); `beta` branch to move to `v0.0.27-beta` after release.
+- **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
+- **CI health (this session, local):** build 0/0, tests 281+1, parity OK (174), MSIX `-Validate` pass, fresh scaffold builds 0/0 + tests green, add-page dry run green in scaffold, remove-sample-content dry run green in scaffold (all three blocks cut, build + test green, zero template prose). Encoding incident fixed: template csproj reconstructed (148MB mojibake -> 5.6KB), scripts on explicit UTF-8 IO, RepoHygieneTests guard added.
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).
 - **Check-now fix (v0.0.14):** per-service deferred-init guards (one throw can't half-wire the app), busy check button (disabled + "Checking…" until the flow resolves), AppLog breadcrumbs on every update stage + dropped-toast/host warnings. If a check is ever silent again, `Logs/applog-*.log` names the cause.

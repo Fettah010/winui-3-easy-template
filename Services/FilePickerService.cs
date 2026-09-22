@@ -14,6 +14,14 @@ namespace DevTemWinUi3.Services;
 /// </summary>
 public sealed class FilePickerService : IFilePickerService
 {
+    /// <summary>
+    /// How long a native picker may stay open before the call degrades to
+    /// cancel. OS-modal dialogs are harness-hostile and can stall forever
+    /// under automation or a wedged shell (pain-log #22): the timeout
+    /// guarantees the app never hangs — callers treat it as cancel.
+    /// </summary>
+    internal static TimeSpan PickerTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
     public async Task<string?> PickSaveFileAsync(string suggestedFileName, string fileExtension = ".json")
     {
         try
@@ -36,7 +44,14 @@ public sealed class FilePickerService : IFilePickerService
             picker.FileTypeChoices.Add(label, new List<string> { ext });
             InitializeWithWindow(picker);
 
-            var file = await picker.PickSaveFileAsync();
+            var pickTask = picker.PickSaveFileAsync().AsTask();
+            var completed = await Task.WhenAny(pickTask, Task.Delay(PickerTimeout));
+            if (!ReferenceEquals(completed, pickTask))
+            {
+                try { AppLog.Warning("FilePicker: save picker timed out after {0}s; degrading to cancel.", PickerTimeout.TotalSeconds); } catch { }
+                return null;
+            }
+            var file = await pickTask;
             return file?.Path;
         }
         catch
@@ -56,7 +71,14 @@ public sealed class FilePickerService : IFilePickerService
             picker.FileTypeFilter.Add(".json");
             InitializeWithWindow(picker);
 
-            var file = await picker.PickSingleFileAsync();
+            var pickTask = picker.PickSingleFileAsync().AsTask();
+            var completed = await Task.WhenAny(pickTask, Task.Delay(PickerTimeout));
+            if (!ReferenceEquals(completed, pickTask))
+            {
+                try { AppLog.Warning("FilePicker: open picker timed out after {0}s; degrading to cancel.", PickerTimeout.TotalSeconds); } catch { }
+                return null;
+            }
+            var file = await pickTask;
             return file?.Path;
         }
         catch

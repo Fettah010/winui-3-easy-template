@@ -49,6 +49,30 @@ public static class FirstRunDialogService
         return false;
     }
 
+    /// <summary>
+    /// Builds the welcome body for the current scaffold: the neutral
+    /// <c>FirstRunContent</c> plus one update-mode line, so store-mode
+    /// scaffolds never advertise GitHub auto-updates Windows actually owns.
+    /// Pure (no UI) so it stays headless-testable.
+    /// </summary>
+    internal static string GetWelcomeContent()
+    {
+        var loc = LocalizationService.Current;
+        string body = loc.GetString("FirstRunContent");
+        string mode = AppFeatures.UpdateMode;
+        string noteKey = mode switch
+        {
+            "velopack" => "FirstRunUpdatesVelopack",
+            "basic" => "FirstRunUpdatesBasic",
+            "none" => "FirstRunUpdatesNone",
+            _ => "FirstRunUpdatesExternal",
+        };
+        string note = loc.GetString(noteKey);
+        if (string.IsNullOrWhiteSpace(note))
+            return body;
+        return body + "\n\n" + note;
+    }
+
     private static async Task ShowWelcomeAsync(Window window)
     {
         try
@@ -58,11 +82,11 @@ public static class FirstRunDialogService
             {
                 XamlRoot = window.Content.XamlRoot,
                 Title = loc.GetString("FirstRunTitle"),
-                Content = loc.GetString("FirstRunContent"),
+                Content = GetWelcomeContent(),
                 PrimaryButtonText = loc.GetString("FirstRunButton"),
                 DefaultButton = ContentDialogButton.Primary
             };
-            await dialog.ShowAsync();
+            await DialogHelper.ShowAsync(dialog);
         }
         catch { }
     }
@@ -80,7 +104,7 @@ public static class FirstRunDialogService
                 PrimaryButtonText = "OK",
                 DefaultButton = ContentDialogButton.Primary
             };
-            await dialog.ShowAsync();
+            await DialogHelper.ShowAsync(dialog);
         }
         catch { }
     }

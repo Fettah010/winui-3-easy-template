@@ -101,27 +101,35 @@
                             TextWrapping="Wrap"/>
 
                         <wrap:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
+                            <!-- Repo URLs resolve from ProductConfiguration via
+                                 AppMetadata at runtime (AboutPage.xaml.cs
+                                 ApplyProductLinks): XAML carries no hardcoded
+                                 repo identity so one rebrand covers everything. -->
                             <HyperlinkButton
-                                Content="{loc:Loc Key=AboutGithub}"
-                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template"/>
+                                x:Name="GithubButton"
+                                Content="{loc:Loc Key=AboutGithub}"/>
                             <HyperlinkButton
-                                Content="{loc:Loc Key=AboutReportIssue}"
-                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"/>
+                                x:Name="ReportIssueButton"
+                                Content="{loc:Loc Key=AboutReportIssue}"/>
                         </wrap:WrapPanel>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Two-column details: app info + technology -->
-            <!-- devtem:optional:about-tech — sample stack panel. Delete
-                 from HERE through devtem:end:about-tech to drop it (also
-                 delete the TechCol/TechPanel lines in AboutPage.xaml.cs
-                 UpdateResponsiveLayout, and the AboutCardUpdates/Logging/
-                 Mvvm/Ui keys in Services/Localization/*Strings.cs). -->
+            <!-- Two-column details: app info + technology. The technology
+                 column/panel are sample content in two devtem:optional
+                 :about-tech ranges (column definition + panel); deleting
+                 both ranges leaves a valid single-column app-info grid
+                 (also delete the TechCol/TechPanel lines in
+                 AboutPage.xaml.cs UpdateResponsiveLayout, and the
+                 AboutCardUpdates/Logging/Mvvm/Ui keys in
+                 Services/Localization/*Strings.cs). -->
             <Grid ColumnSpacing="16" RowSpacing="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition x:Name="AppCol" Width="*"/>
+                    <!-- devtem:optional:about-tech -->
                     <ColumnDefinition x:Name="TechCol" Width="*"/>
+                    <!-- devtem:end:about-tech -->
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -164,6 +172,7 @@
                     </ctk:SettingsCard>
                 </StackPanel>
 
+                <!-- devtem:optional:about-tech -->
                 <StackPanel x:Name="TechPanel" Grid.Column="1" Grid.Row="0" Spacing="8">
                     <TextBlock
                         Text="{loc:Loc Key=AboutTechnology}"
@@ -199,19 +208,22 @@
                         <TextBlock Text="CommunityToolkit.WinUI" VerticalAlignment="Center" TextWrapping="Wrap"/>
                     </ctk:SettingsCard>
                 </StackPanel>
+                <!-- devtem:end:about-tech -->
             </Grid>
-            <!-- devtem:end:about-tech -->
 
-            <!-- Two-column footer: license + links -->
-            <!-- devtem:optional:about-links — sample links panel. Delete
-                 from HERE through devtem:end:about-links to drop it (also
-                 delete the LinksCol/LinksPanel lines in AboutPage.xaml.cs
+            <!-- Two-column footer: license + links. The links column/panel
+                 are sample content in two devtem:optional:about-links
+                 ranges (column definition + panel); deleting both ranges
+                 leaves a valid single-column license grid (also delete the
+                 LinksCol/LinksPanel lines in AboutPage.xaml.cs
                  UpdateResponsiveLayout, and the AboutCardSource/Releases/
                  Issues keys in Services/Localization/*Strings.cs). -->
             <Grid ColumnSpacing="16" RowSpacing="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition x:Name="LicenseCol" Width="*"/>
+                    <!-- devtem:optional:about-links -->
                     <ColumnDefinition x:Name="LinksCol" Width="*"/>
+                    <!-- devtem:end:about-links -->
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -230,12 +242,13 @@
                             <FontIcon Glyph="&#xE8A7;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="ViewLicenseButton"
                             Content="{loc:Loc Key=AboutViewLicense}"
-                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/blob/main/LICENSE"
                             HorizontalAlignment="Right"/>
                     </ctk:SettingsCard>
                 </StackPanel>
 
+                <!-- devtem:optional:about-links -->
                 <StackPanel x:Name="LinksPanel" Grid.Column="1" Grid.Row="0" Spacing="8">
                     <TextBlock
                         Text="{loc:Loc Key=AboutLinks}"
@@ -248,8 +261,8 @@
                             <FontIcon Glyph="&#xE8C6;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="SourceButton"
                             Content="{loc:Loc Key=AboutGithubShort}"
-                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template"
                             HorizontalAlignment="Right"/>
                     </ctk:SettingsCard>
 
@@ -258,8 +271,8 @@
                             <FontIcon Glyph="&#xE785;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="ViewReleasesButton"
                             Content="{loc:Loc Key=AboutViewReleases}"
-                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"
                             HorizontalAlignment="Right"/>
                     </ctk:SettingsCard>
 
@@ -268,13 +281,13 @@
                             <FontIcon Glyph="&#xE783;"/>
                         </ctk:SettingsCard.HeaderIcon>
                         <HyperlinkButton
+                            x:Name="OpenIssueButton"
                             Content="{loc:Loc Key=AboutOpenIssue}"
-                            NavigateUri="https://github.com/Fettah010/winui-3-easy-template/issues"
                             HorizontalAlignment="Right"/>
                     </ctk:SettingsCard>
                 </StackPanel>
+                <!-- devtem:end:about-links -->
             </Grid>
-            <!-- devtem:end:about-links -->
 
         </StackPanel>
         </Grid>

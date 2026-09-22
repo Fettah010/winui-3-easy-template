@@ -24,6 +24,14 @@
       "displayName": "Page title",
       "description": "Page title: seeds the en-US strings in the snippet (XAML binds live via {loc:Loc}; es/fr ship as TODO-translate in the strings snippet)."
     },
+    "route": {
+      "type": "parameter",
+      "datatype": "text",
+      "defaultValue": "sample",
+      "replaces": "sample",
+      "displayName": "Route",
+      "description": "Lowercase navigation route. Use a unique route per page; add-page.ps1 validates the route before wiring it."
+    },
     "icon": {
       "type": "parameter",
       "datatype": "choice",

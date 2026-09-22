@@ -132,7 +132,7 @@ $requiredGuards = @{
     "Services\FirstRunDialogService.cs"        = @()
     "Services\ServiceLocator.cs"               = @("(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)", "(tray)", "(setup)", "(health)", "(http)")
     "Services\SystemTrayService.cs"            = @()
-    "Tests\Services\ServiceLocatorTests.cs"    = @("(http)", "(database)", "(http)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(health)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)")
+    "Tests\Services\ServiceLocatorTests.cs"    = @("(http)", "(database)", "(http)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(health)", "(setup)", "(database)", "(updates == 'velopack')", "(updates == 'basic')", "(tray)")
     "Tests\Services\DesktopToastServiceTests.cs" = @("(localization)")
     "ViewModels\SettingsPageViewModel.cs"      = @("(tray)")
     "ViewModels\DiagnosticsPageViewModel.cs"   = @("(crash)")
@@ -228,14 +228,24 @@ foreach ($rel in ($templateFiles.Keys | Sort-Object)) {
 
 # Nested page template: Templates/Page/X <-> Templates/Project/Templates/Page/X,
 # except the dormant config (config.hold vs .template.config).
+# The dormant config is CONTENT-compared too (not just existence): a stale
+# hold copy (e.g. missing a newer symbol like `route`) passes existence but
+# breaks every scaffolded add-page run with "Invalid option(s)" — proven
+# live 2026-09-22. See docs/DECISIONS.md.
 $pageSrc = Join-Path $repoRoot "Templates\Page"
 $pageDst = Join-Path $templateRoot "Templates\Page"
 $pageSrcFiles = Get-TreeFiles $pageSrc
 $pageDstFiles = Get-TreeFiles $pageDst
 foreach ($rel in ($pageSrcFiles.Keys | Sort-Object)) {
     if ($rel -eq ".template.config\template.json") {
-        if (-not $pageDstFiles.ContainsKey("config.hold\template.json.hold")) {
+        $holdRel = "config.hold\template.json.hold"
+        if (-not $pageDstFiles.ContainsKey($holdRel)) {
             $failures += "nested page template missing dormant config: config.hold/template.json.hold"
+            continue
+        }
+        $checked++
+        if ((Get-FileHash -LiteralPath $pageSrcFiles[$rel]).Hash -ne (Get-FileHash -LiteralPath $pageDstFiles[$holdRel]).Hash) {
+            $failures += "nested page template dormant config drifted: config.hold/template.json.hold differs from Templates/Page/.template.config/template.json (re-copy it)"
         }
         continue
     }

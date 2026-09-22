@@ -87,8 +87,8 @@
                                 Content="{loc:Loc Key=HomeOpenSettings}"
                                 Click="OpenSettingsQuickButton_Click"/>
                             <HyperlinkButton
-                                Content="{loc:Loc Key=HomeReleasesLink}"
-                                NavigateUri="https://github.com/Fettah010/winui-3-easy-template/releases"/>
+                                x:Name="ReleasesLinkButton"
+                                Content="{loc:Loc Key=HomeReleasesLink}"/>
                         </wrap:WrapPanel>
                     </StackPanel>
                 </Grid>

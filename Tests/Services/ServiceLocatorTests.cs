@@ -67,6 +67,10 @@ public class ServiceLocatorTests
     [TestMethod]
     public void ViewModels_ResolveTransient()
     {
+        // DI gate (pain-log #16): a dropped AddTransient line compiles
+        // green and only explodes on user click. Every registered VM must
+        // resolve here, so the missing-registration class of bug fails
+        // this test instead of a navigation.
         ServiceLocator.Initialize();
         var first = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
         var second = ServiceLocator.GetRequiredService<SettingsPageViewModel>();
@@ -76,6 +80,12 @@ public class ServiceLocatorTests
 
         var diag = ServiceLocator.GetRequiredService<DiagnosticsPageViewModel>();
         Assert.IsNotNull(diag);
+
+        var updates = ServiceLocator.GetRequiredService<UpdateCenterViewModel>();
+        Assert.IsNotNull(updates);
+
+        var wizard = ServiceLocator.GetRequiredService<SetupWizardViewModel>();
+        Assert.IsNotNull(wizard);
     }
 
     [TestMethod]

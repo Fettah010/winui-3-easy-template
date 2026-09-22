@@ -1,19 +1,24 @@
 # Initializes a new app from this template: rewrites the display name,
 # identifier-safe name, company, and repo URL across code, XAML, scripts,
-# CI workflow, and docs — then verifies zero template leftovers.
+# CI workflow, and docs â€” then verifies zero template leftovers.
 #
 #   .\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" `
 #       -RepoUrl "https://github.com/acme/desk-app" -Scheme "acme://"
 #
 # Code surfaces (mutex, registry, folders, feeds) read Services/Helpers/AppMetadata.cs,
-# whose defaults this script rewrites too. Manual steps afterwards (see
+# whose defaults this script rewrites too. Repo/license URL surfaces resolve
+# at runtime from Services/Configuration/ProductConfiguration.cs, whose
+# defaults this script rewrites (-RepoUrl always; -LicenseName/-LicenseUrl
+# when your license differs from MIT). Manual steps afterwards (see
 # docs/TEMPLATE-GUIDE.md): replace Assets art, re-run create-shortcut.ps1.
 param(
     [Parameter(Mandatory = $true)][string]$AppName,
     [Parameter(Mandatory = $true)][string]$Company,
     [Parameter(Mandatory = $true)][string]$RepoUrl,
     [string]$SafeName = "",
-    [string]$Scheme = ""
+    [string]$Scheme = "",
+    [string]$LicenseName = "MIT License",
+    [string]$LicenseUrl = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,6 +79,24 @@ foreach ($file in $files) {
     }
     if ($text -ne $original) {
         [System.IO.File]::WriteAllText($file.FullName, $text)
+        $totalEdits++
+    }
+}
+
+# License identity lives in ProductConfiguration defaults (About resolves
+# them at runtime): rewrite the defaults when they differ from MIT.
+$productConfig = Join-Path $PSScriptRoot "..\Services\Configuration\ProductConfiguration.cs"
+if (Test-Path -LiteralPath $productConfig) {
+    $pcText = [System.IO.File]::ReadAllText($productConfig)
+    $pcOriginal = $pcText
+    if ($LicenseName -ne "MIT License") {
+        $pcText = $pcText.Replace('LicenseName = "MIT License"', 'LicenseName = "' + $LicenseName + '"')
+    }
+    if (-not [string]::IsNullOrWhiteSpace($LicenseUrl)) {
+        $pcText = [regex]::Replace($pcText, 'LicenseUrl = ""', 'LicenseUrl = "' + $LicenseUrl + '"')
+    }
+    if ($pcText -ne $pcOriginal) {
+        [System.IO.File]::WriteAllText($productConfig, $pcText)
         $totalEdits++
     }
 }

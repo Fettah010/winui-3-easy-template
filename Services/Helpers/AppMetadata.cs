@@ -18,8 +18,53 @@ public static class AppMetadata
     /// <summary>Pack author / company.</summary>
     public const string Company = "Fettah";
 
-    /// <summary>GitHub repo hosting releases and links.</summary>
-    public const string RepoUrl = "https://github.com/Fettah010/winui-3-easy-template";
+    /// <summary>
+    /// GitHub repo hosting releases and links. Resolved from
+    /// <c>ProductConfiguration.RepoUrl</c> (rewritten at scaffold/rebrand
+    /// time) with <c>DEVTEM_REPO_URL</c> override support, so XAML surfaces
+    /// never hardcode the template repo. Falls back to the template default
+    /// when configuration is empty.
+    /// </summary>
+    public static string RepoUrl
+    {
+        get
+        {
+            try
+            {
+                string configured = Configuration.DeploymentConfiguration.RepoUrl;
+                if (!string.IsNullOrWhiteSpace(configured))
+                    return configured;
+            }
+            catch { }
+            return "https://github.com/Fettah010/winui-3-easy-template";
+        }
+    }
+
+    /// <summary>License display name (from ProductConfiguration).</summary>
+    public static string LicenseName
+    {
+        get
+        {
+            try
+            {
+                string configured = Configuration.DeploymentConfiguration.LicenseName;
+                if (!string.IsNullOrWhiteSpace(configured))
+                    return configured;
+            }
+            catch { }
+            return "MIT License";
+        }
+    }
+
+    /// <summary>License URL (from ProductConfiguration, derived when empty).</summary>
+    public static string LicenseUrl
+    {
+        get
+        {
+            try { return Configuration.DeploymentConfiguration.LicenseUrl; } catch { }
+            return "https://github.com/Fettah010/winui-3-easy-template/blob/main/LICENSE";
+        }
+    }
 
     /// <summary>HTTP user agent.</summary>
     public static string UserAgent => $"{SafeName}/{AppInfo.Current.Version}";

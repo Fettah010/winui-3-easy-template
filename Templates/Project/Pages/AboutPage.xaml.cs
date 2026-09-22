@@ -17,8 +17,9 @@ public sealed partial class AboutPage : Page, INavigationAware
     public AboutPage()
     {
         // Assign BEFORE InitializeComponent so {x:Bind AppVersion} binds
-        // against the real value on first evaluation.
-        AppVersion = AppInfo.Current.Version;
+        // against the real value on first evaluation. Carries the build
+        // commit when known so About names the exact binary (#18).
+        AppVersion = AppInfo.Current.VersionWithCommit;
         this.InitializeComponent();
         _layoutDebouncer = new LayoutDebouncer(DispatcherQueue);
     }
@@ -27,6 +28,7 @@ public sealed partial class AboutPage : Page, INavigationAware
     {
         // The page is cached but every label is a live loc binding now —
         // nothing to refresh on return.
+        ApplyProductLinks();
         PaintLayout();
     }
 
@@ -35,7 +37,43 @@ public sealed partial class AboutPage : Page, INavigationAware
         // Nothing to tear down on leave.
     }
 
-    private void AboutPage_Loaded(object sender, RoutedEventArgs e) => PaintLayout();
+    private void AboutPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        ApplyProductLinks();
+        PaintLayout();
+    }
+
+    /// <summary>
+    /// Resolves repo/license links from <see cref="AppMetadata"/> (backed by
+    /// <c>ProductConfiguration</c>) at runtime, so XAML carries no hardcoded
+    /// repo identity and one rebrand (init-template or scaffold params)
+    /// covers every surface. Never throws.
+    /// </summary>
+    private void ApplyProductLinks()
+    {
+        try
+        {
+            string repo = AppMetadata.RepoUrl.TrimEnd('/');
+            SetUri(GithubButton, repo);
+            SetUri(SourceButton, repo);
+            SetUri(ReportIssueButton, repo + "/issues");
+            SetUri(OpenIssueButton, repo + "/issues");
+            SetUri(ViewReleasesButton, repo + "/releases");
+            SetUri(ViewLicenseButton, AppMetadata.LicenseUrl);
+        }
+        catch { }
+    }
+
+    private static void SetUri(Microsoft.UI.Xaml.Controls.HyperlinkButton? button, string url)
+    {
+        try
+        {
+            if (button is null || string.IsNullOrWhiteSpace(url))
+                return;
+            button.NavigateUri = new System.Uri(url, System.UriKind.Absolute);
+        }
+        catch { }
+    }
 
     private void AboutPage_SizeChanged(object sender, SizeChangedEventArgs e) =>
         _layoutDebouncer.RequestSwap(

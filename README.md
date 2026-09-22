@@ -68,13 +68,18 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.0.26-beta
+## What's new in 0.0.27-beta
 
-- Navigation highlight is back: items use native selection again
-- Pane toggle no longer shakes the content: the nav shell is an overlay
-  drawer, so toggling resizes nothing
-- Nav is now a documented extension surface (`<devtem:nav-items>` region
-  + `<devtem:routes>`); the dead compact-pane sizing API is gone
+- Clean-scaffold pass from real-app pain: `remove-sample-content.ps1`
+  (inverse of `add-page.ps1`), neutral default strings, per-update-mode
+  first-run notes, runtime-resolved repo/license links
+- `add-page.ps1` heals itself: temp-copy activation for the dormant
+  nested template, `--route` probe with remediation, nav-anchor fallback
+  for restyled shells (plus a parity hole closed: dormant config is now
+  content-compared)
+- Runtime hardening kit: dialog uncollapse pattern, 60s picker timeout,
+  XAML symbol audit, unit-conversion/change-epoch helpers, DI gate test,
+  build-commit surfacing
 
 Earlier releases: full notes in [CHANGELOG.md](CHANGELOG.md).
 

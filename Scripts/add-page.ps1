@@ -57,7 +57,7 @@ if ($WhatIfPreference) {
 # references are rewritten to whatever the csproj declares.
 $appCsproj = Get-ChildItem -LiteralPath $RepoRoot -Filter "*.csproj" | Select-Object -First 1
 if ($null -eq $appCsproj) { throw "No .csproj found in $RepoRoot." }
-$csprojText = Get-Content -LiteralPath $appCsproj.FullName -Raw
+$csprojText = [System.IO.File]::ReadAllText($appCsproj.FullName, [System.Text.Encoding]::UTF8)
 $nsMatch = [regex]::Match($csprojText, "<RootNamespace>([^<]+)</RootNamespace>")
 $rootNs = if ($nsMatch.Success) { $nsMatch.Groups[1].Value } else { [System.IO.Path]::GetFileNameWithoutExtension($appCsproj.Name) }
 Write-Host "Root namespace: $rootNs"
@@ -91,7 +91,11 @@ function Snapshot-File([string]$path) {
 }
 
 function Insert-Unique([string]$path, [string]$anchor, [string]$insert, [switch]$Before) {
-    $text = Get-Content -LiteralPath $path -Raw
+    # .NET UTF-8 IO (not Get/Set-Content): the 5.1 cmdlets round-trip
+    # through the system codepage and corrupt non-ASCII (see
+    # bump-version.ps1: the same disease grew a csproj to 148MB).
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
     $count = ([regex]::Matches($text, [regex]::Escape($anchor))).Count
     if ($count -ne 1) { Fail "Anchor found $count times (expected once) in $path : $anchor" }
     if ($Before) {
@@ -100,11 +104,11 @@ function Insert-Unique([string]$path, [string]$anchor, [string]$insert, [switch]
     else {
         $text = $text.Replace($anchor, $anchor + $insert)
     }
-    Set-Content -LiteralPath $path -Value $text -NoNewline
+    [System.IO.File]::WriteAllText($path, $text, $utf8NoBom)
 }
 
 function Assert-RouteAvailable([string]$path, [string]$route) {
-    $text = Get-Content -LiteralPath $path -Raw
+    $text = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
     if (($text -match [regex]::Escape("RegisterRoute(`"$route`"")) -or ($text -match [regex]::Escape("Tag=`"$route`""))) {
         Fail "Route '$route' is already registered in $path. Choose a unique route; no duplicate registration was made."
     }
@@ -145,17 +149,59 @@ catch {
 }
 
 try {
+    $activationDir = ""
     Write-Host "`n==> install devtem-page template" -ForegroundColor Cyan
     # Scaffolded apps have no Templates\Page on disk (only the dormant nested
     # copy): skip the local install and use whatever devtem-page is installed
     # (e.g. from the DevTem.Templates NuGet package). The scaffold below fails
     # loudly if no devtem-page is installed at all.
     if (Test-Path -LiteralPath $TemplateSource) {
+        # The nested page template ships dormant in scaffolded apps
+        # (Templates\Page\config.hold\template.json.hold, so installing the
+        # project package does not register a stale global devtem-page).
+        # Activating it in place would dirty the tree the guard above just
+        # approved, so activate a temp copy and install that instead —
+        # the repo stays clean.
+        $activeConfig = Join-Path $TemplateSource ".template.config\template.json"
+        $dormantConfig = Join-Path $TemplateSource "config.hold\template.json.hold"
+        $installSource = $TemplateSource
+        if ((-not (Test-Path -LiteralPath $activeConfig)) -and (Test-Path -LiteralPath $dormantConfig)) {
+            $activationDir = Join-Path ([System.IO.Path]::GetTempPath()) ("add-page-template-" + [System.Guid]::NewGuid().ToString("N"))
+            Copy-Item -LiteralPath $TemplateSource -Destination $activationDir -Recurse -Force
+            $holdDir = Join-Path $activationDir "config.hold"
+            $liveDir = Join-Path $activationDir ".template.config"
+            Move-Item -LiteralPath $holdDir -Destination $liveDir -Force
+            Move-Item -LiteralPath (Join-Path $liveDir "template.json.hold") -Destination (Join-Path $liveDir "template.json") -Force
+            $installSource = $activationDir
+            Write-Host "Activated dormant page template via temp copy." -ForegroundColor Yellow
+        }
         # Reinstall for hermeticity (an older devtem-page may be installed).
         # Uninstalls fail when nothing is installed - expected, ignored.
-        try { & dotnet new uninstall "$TemplateSource" 2>&1 | Out-Null } catch { }
-        & dotnet new install "$TemplateSource" 2>&1 | Out-Null
-        if ($LASTEXITCODE -ne 0) { Fail "dotnet new install failed for $TemplateSource" }
+        # NOTE: uninstall/install by path only touches that path's entry. A
+        # stale devtem-page installed from ANOTHER path (older checkout,
+        # previous NuGet) keeps shadowing short-name resolution and fails
+        # the scaffold below with "Invalid option(s)" (e.g. no --route) —
+        # the probe after install catches exactly that.
+        try { & dotnet new uninstall "$installSource" 2>&1 | Out-Null } catch { }
+        & dotnet new install "$installSource" 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) { Fail "dotnet new install failed for $installSource" }
+
+        # Probe the RESOLVED template (not just the installed path): the
+        # scaffold must accept --route. A stale global install from another
+        # path shadows the fresh one here — fail loudly with remediation
+        # instead of dying at the scaffold step.
+        $helpText = (& dotnet new devtem-page --help 2>&1 | Out-String)
+        if ($helpText -notmatch "--route") {
+            Fail "The resolved devtem-page has no --route option (a stale install from another path is shadowing $installSource). Run 'dotnet new uninstall' with no args to list installs, uninstall every stale devtem-page entry, then retry."
+        }
+        # The temp activation served its purpose at install time (the engine
+        # snapshots content on install): uninstall it now so no dangling
+        # entry points at a deleted temp dir, then delete the dir.
+        if ($activationDir -ne "") {
+            try { & dotnet new uninstall "$activationDir" 2>&1 | Out-Null } catch { }
+            Remove-Item -LiteralPath $activationDir -Recurse -Force
+            $activationDir = ""
+        }
     }
     else {
         Write-Host "No template at $TemplateSource; using the installed devtem-page." -ForegroundColor Yellow
@@ -170,7 +216,7 @@ try {
     # dictionaries (en-US real, es/fr TODO-translate).
     $snippetPath = Join-Path $scaffoldDir "$($Name)Page.strings.md"
     if (-not (Test-Path -LiteralPath $snippetPath)) { Fail "Strings snippet missing: $snippetPath" }
-    $snippet = Get-Content -LiteralPath $snippetPath -Raw
+    $snippet = [System.IO.File]::ReadAllText($snippetPath, [System.Text.Encoding]::UTF8)
     $sections = @{}
     foreach ($m in [regex]::Matches($snippet, "## (en-US|es-ES|fr-FR)\r?\n((?:\[.*\r?\n)+)")) {
         $pairs = @{}
@@ -203,11 +249,11 @@ try {
         if (Test-Path -LiteralPath $to) { Fail "Target already exists: $($entry.Value) (page already added?)" }
         $dir = Split-Path $to -Parent
         if (-not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
-        $content = Get-Content -LiteralPath $from -Raw
+        $content = [System.IO.File]::ReadAllText($from, [System.Text.Encoding]::UTF8)
         if ($rootNs -ne "DevTemWinUi3") {
             $content = $content.Replace("DevTemWinUi3", $rootNs)
         }
-        Set-Content -LiteralPath $to -Value $content -NoNewline
+        [System.IO.File]::WriteAllText($to, $content, (New-Object System.Text.UTF8Encoding($false)))
         $createdFiles += $to
     }
     Remove-Item -LiteralPath $scaffoldDir -Recurse -Force
@@ -259,7 +305,21 @@ try {
     $xamlPath = Join-Path $RepoRoot "MainWindow.xaml"
     Snapshot-File $xamlPath
     $navItem = "`r`n                <NavigationViewItem AutomationProperties.AutomationId=`"Nav$($Name)Item`" Content=`"{loc:Loc Key=Nav$Name}`" Tag=`"$Route`">`r`n                    <NavigationViewItem.Icon>`r`n                        <SymbolIcon Symbol=`"$Icon`"/>`r`n                    </NavigationViewItem.Icon>`r`n                </NavigationViewItem>`r`n            "
-    Insert-Unique $xamlPath "</NavigationView.MenuItems>" $navItem -Before
+    # Stock shell anchor. Restyled shells (custom rail, no NavigationView)
+    # fall back to the documented <devtem:nav-items> end marker: after any
+    # shell restyle, keep one of the two anchors, or add-page cannot wire
+    # navigation (see docs/TEMPLATE-GUIDE.md, nav shell contract).
+    $xamlText = [System.IO.File]::ReadAllText($xamlPath, [System.Text.Encoding]::UTF8)
+    $menuAnchorCount = ([regex]::Matches($xamlText, [regex]::Escape("</NavigationView.MenuItems>"))).Count
+    if ($menuAnchorCount -eq 1) {
+        Insert-Unique $xamlPath "</NavigationView.MenuItems>" $navItem -Before
+    }
+    elseif (([regex]::Matches($xamlText, [regex]::Escape("<!-- </devtem:nav-items> -->"))).Count -eq 1) {
+        Insert-Unique $xamlPath "<!-- </devtem:nav-items> -->" $navItem -Before
+    }
+    else {
+        Fail "No nav anchor found in $xamlPath (expected </NavigationView.MenuItems> or <!-- </devtem:nav-items> --> exactly once). Restyle kept neither anchor."
+    }
 
     # Prove it: full build (warnings are errors) + full test suite.
     Write-Host "`n==> build (0 warnings)" -ForegroundColor Cyan
@@ -294,6 +354,15 @@ try {
 }
 catch {
     if ($_.Exception.Message -notmatch "Working tree is dirty") {
+        # A temp activation that never reached its uninstall leaves a
+        # dangling engine entry: remove it before rolling back files.
+        try {
+            if (($activationDir -ne "") -and (Test-Path -LiteralPath $activationDir)) {
+                & dotnet new uninstall "$activationDir" 2>&1 | Out-Null
+                Remove-Item -LiteralPath $activationDir -Recurse -Force
+            }
+        }
+        catch { }
         # Fail() already rolled back; anything else (guard, dotnet) leaves
         # either nothing (pre-copy) or snapshots behind - restore + rethrow.
         if ((Test-Path -LiteralPath $snapshotDir) -and ($createdFiles.Count -gt 0 -or $snapshots.Count -gt 0)) {

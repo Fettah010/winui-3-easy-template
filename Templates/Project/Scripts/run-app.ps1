@@ -35,6 +35,33 @@ if (-not (Test-Path $Exe)) {
     throw "App not found at $Exe`nRun without -NoBuild once, or check the build output."
 }
 
+# Stale-binary guard (pain-log #18): the desktop shortcut targets the built
+# exe directly, so after big changes (new pages/routes) it can launch an OLD
+# binary where the new route does not exist. Print the binary timestamp vs
+# the repo HEAD so a "click does nothing" report names the mismatch.
+try {
+    $exeTime = (Get-Item -LiteralPath $Exe).LastWriteTimeUtc.ToString("u")
+    Write-Host "Binary: $Exe" -ForegroundColor DarkGray
+    Write-Host "Built:  $exeTime (UTC)" -ForegroundColor DarkGray
+    Push-Location $ProjectRoot
+    try {
+        $head = (& git rev-parse --short HEAD 2>$null)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($head)) {
+            $headTime = (& git log -1 --format=%cI 2>$null)
+            Write-Host "HEAD:   $head ($headTime)" -ForegroundColor DarkGray
+            if (-not [string]::IsNullOrWhiteSpace($headTime)) {
+                $headUtc = [DateTime]::Parse($headTime).ToUniversalTime()
+                $exeLocal = (Get-Item -LiteralPath $Exe).LastWriteTimeUtc
+                if ($exeLocal -lt $headUtc) {
+                    Write-Host "WARNING: binary is older than HEAD - rebuild to test latest routes." -ForegroundColor Yellow
+                }
+            }
+        }
+    }
+    finally { Pop-Location }
+}
+catch { }
+
 Write-Host "==> Launching $Exe" -ForegroundColor Cyan
 Start-Process -FilePath $Exe
 Write-Host "==> Running. Close the app window to end."
