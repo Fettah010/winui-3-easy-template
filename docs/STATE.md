@@ -6,8 +6,8 @@
 > this file holds only **current facts**.
 
 - **Goal:** Formixa cleanup pass (pain-log 1-25) — remove-sample-content.ps1 + neutral strings + per-mode FirstRun + runtime product links + add-page self-heal (dormant temp-copy, --route probe, nav fallback) + dormant-config parity hole closed + DialogHelper/picker-timeout/symbol-audit/UnitConversion/ChangeEpoch/DI-gate/BuildCommit + scaffold README minimal + AGENTS de-hardcoded. Bumped 0.0.26 → 0.0.27-beta.
-- **Version:** app `0.0.27-beta`; template package `0.3.12` (via tag, pending push).
-- **Tags (pending push):** `v0.0.27-beta` (release.yml → beta channel); `templates-v0.3.12` (templates-publish → NuGet); `beta` branch to move to `v0.0.27-beta` after release.
+- **Version:** app `0.0.27-beta`; template package `0.3.12` (via tag, pushed).
+- **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
 - **CI health (this session, local):** build 0/0, tests 281+1, parity OK (174), MSIX `-Validate` pass, fresh scaffold builds 0/0 + tests green, add-page dry run green in scaffold, remove-sample-content dry run green in scaffold (all three blocks cut, build + test green, zero template prose). Encoding incident fixed: template csproj reconstructed (148MB mojibake -> 5.6KB), scripts on explicit UTF-8 IO, RepoHygieneTests guard added.
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
