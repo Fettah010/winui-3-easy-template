@@ -31,7 +31,7 @@ Live UI / Workflow). Anything touching `Templates/**` needs
 A template's security bugs replicate into every scaffolded app. Ordered by
 severity as found 2026-09-22.
 
-- [ ] **A1. Verify `basic`-mode downloads before launching them.**
+- [x] **A1. Verify `basic`-mode downloads before launching them.**
   `Services/BasicGithubUpdateService.cs` downloads a Setup `.exe` over
   HTTPS and runs it via `Process.Start` (`ApplyPendingUpdateAndRestart`)
   with no integrity check, and the download races no timeout
@@ -41,13 +41,13 @@ severity as found 2026-09-22.
   verify-before-launch + download timeout + progress-cancel. Tests:
   tampered-byte fails closed, timeout degrades to cancel. (Fast + one
   scaffold-matrix `basic` combo.)
-- [ ] **A2. Cap settings-backup imports.**
+- [x] **A2. Cap settings-backup imports.**
   `Services/SettingsBackupService.cs` `ImportFromFile` parses arbitrary
   user files with no size cap (multi-GB file = OOM) and no schema
   version. Ship: length cap (e.g. 1 MB, settings are ~1 KB) + top-level
   `"version"` field (ignore unknown future keys - already the rule;
   reject unknown MAJOR). Tests: oversized + future-version fixtures.
-- [ ] **A3. Prove protocol/registry writes are hijack-safe.**
+- [x] **A3. Prove protocol/registry writes are hijack-safe.**
   `Services/ProtocolService.cs` parsing is pure + tested (good), and
   `Services/AutoStartService.cs` quotes the exe path (good). Missing:
   a test pinning the quoted `HKCU\...\Run` value with a spaced path,
@@ -55,7 +55,7 @@ severity as found 2026-09-22.
   command value in `Scripts/register-protocol.ps1` +
   `ProtocolService.EnsureRegistered`. Add both tests; never build a
   command line by concatenating an unquoted path again.
-- [ ] **A4. Lock in secret hygiene with a test.**
+- [x] **A4. Lock in secret hygiene with a test.**
   Today this holds by inspection only: `CrashReportingService` never logs
   the DSN value (presence/absence + environment only), and the export
   bundle redacts settings. Ship: extend `Tests/Services/RepoHygieneTests.cs`
@@ -65,7 +65,7 @@ severity as found 2026-09-22.
   never reaches log output. (Peers: Uno keeps secrets in
   appsettings/user-secrets, never in code - our `DEVTEM_*` env layer is
   the equivalent; the test is what makes it stick.)
-- [ ] **A5. Audit Sentry PII defaults.**
+- [x] **A5. Audit Sentry PII defaults.**
   `Services/SentryCrashReporter.cs` is DSN-gated and off by default
   (good). Verify and test: default `SendDefaultPii = false`,
   breadcrumbs carry no file paths with usernames (or scrub `%USERNAME%`
@@ -73,7 +73,7 @@ severity as found 2026-09-22.
   the user opts in. Document the PII posture in
   `docs/feature-guides/` (crash) so scaffold owners can answer the
   question without reading SDK docs.
-- [ ] **A6. Give `basic`-mode scaffolds a release path.**
+- [x] **A6. Give `basic`-mode scaffolds a release path.**
   `Templates/Project/.template.config/template.json` excludes
   `release.yml` + `build-and-release.ps1` for `updates != 'velopack'`,
   so `basic` scaffolds have NO release workflow - yet `basic` NEEDS one
@@ -82,7 +82,7 @@ severity as found 2026-09-22.
   asset + `.sha256`) or a documented manual flow + CI check that the
   checksum exists. (Peers: Template Studio ships per-feature release
   notes; our FEATURES.md should link the basic flow.)
-- [ ] **A7. Validate scaffold-time identity that the engine cannot.**
+- [x] **A7. Validate scaffold-time identity that the engine cannot.**
   `template.json` `constraints` only cover the host, so a bad `--scheme`
   (uppercase, missing `://`) or `--publisher` placeholder scaffolds fine
   and breaks the manifest/MSIX later (same class as the fixed
@@ -91,7 +91,7 @@ severity as found 2026-09-22.
   scheme shape, repo shape, publisher non-placeholder, URLs reachable
   HEAD-check optional) + call it from `test-templates.ps1` per scaffold
   + document in the scaffold README first-steps.
-- [ ] **A8. Dependency-currency policy.**
+- [x] **A8. Dependency-currency policy.**
   `.github/dependabot.yml` (nuget, weekly, limit 5) exists - confirm PRs
   actually flow and who merges them; add Velopack/WindowsAppSDK major
   bumps to the release checklist (major SDK bumps change retail

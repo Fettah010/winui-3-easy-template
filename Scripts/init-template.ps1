@@ -11,17 +11,90 @@
 # defaults this script rewrites (-RepoUrl always; -LicenseName/-LicenseUrl
 # when your license differs from MIT). Manual steps afterwards (see
 # docs/TEMPLATE-GUIDE.md): replace Assets art, re-run create-shortcut.ps1.
+#
+#   .\Scripts\init-template.ps1 -Validate   # no renames: checks the current
+#       tree's identity consistency (metadata vs csproj vs manifest) and
+#       fails itemizing problems. The scaffold matrix runs this per combo.
 param(
-    [Parameter(Mandatory = $true)][string]$AppName,
-    [Parameter(Mandatory = $true)][string]$Company,
-    [Parameter(Mandatory = $true)][string]$RepoUrl,
+    [string]$AppName = "",
+    [string]$Company = "",
+    [string]$RepoUrl = "",
     [string]$SafeName = "",
     [string]$Scheme = "",
     [string]$LicenseName = "MIT License",
-    [string]$LicenseUrl = ""
+    [string]$LicenseUrl = "",
+    [switch]$Validate
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($Validate) {
+    $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    $problems = @()
+    $metaPath = Join-Path $root "Services\Helpers\AppMetadata.cs"
+    $prodPath = Join-Path $root "Services\Configuration\ProductConfiguration.cs"
+    if (-not (Test-Path -LiteralPath $metaPath)) { $problems += "missing Services/Helpers/AppMetadata.cs" }
+    if (-not (Test-Path -LiteralPath $prodPath)) { $problems += "missing Services/Configuration/ProductConfiguration.cs" }
+    if ($problems.Count -eq 0) {
+        $meta = [System.IO.File]::ReadAllText($metaPath, [System.Text.Encoding]::UTF8)
+        $prod = [System.IO.File]::ReadAllText($prodPath, [System.Text.Encoding]::UTF8)
+        $appName = ([regex]::Match($meta, 'AppName\s*=\s*"([^"]+)"')).Groups[1].Value
+        $safe = ([regex]::Match($meta, 'SafeName\s*=\s*"([^"]+)"')).Groups[1].Value
+        $company = ([regex]::Match($meta, 'Company\s*=\s*"([^"]+)"')).Groups[1].Value
+        $prefix = ([regex]::Match($meta, 'ProtocolPrefix\s*=\s*"([^"]+)"')).Groups[1].Value
+        $repo = ([regex]::Match($prod, 'RepoUrl\s*=\s*"([^"]+)"')).Groups[1].Value
+        $license = ([regex]::Match($prod, 'LicenseName\s*=\s*"([^"]+)"')).Groups[1].Value
+        $licenseUrl = ([regex]::Match($prod, 'LicenseUrl\s*=\s*"([^"]*)"')).Groups[1].Value
+        if ([string]::IsNullOrWhiteSpace($appName)) { $problems += "AppMetadata.AppName is empty" }
+        if ($safe -notmatch "^[A-Za-z_][A-Za-z0-9_]*$") { $problems += "AppMetadata.SafeName '$safe' is not identifier-safe" }
+        if ([string]::IsNullOrWhiteSpace($company)) { $problems += "AppMetadata.Company is empty" }
+        if ($prefix -notmatch "^[a-z][a-z0-9+.-]*://$") { $problems += "AppMetadata.ProtocolPrefix '$prefix' is not a lowercase scheme:// URI" }
+        if ($repo -notmatch "^https://github\.com/[^/]+/[^/]+$") { $problems += "ProductConfiguration.RepoUrl '$repo' is not https://github.com/org/name" }
+        if ([string]::IsNullOrWhiteSpace($license)) { $problems += "ProductConfiguration.LicenseName is empty" }
+        if (-not [string]::IsNullOrWhiteSpace($licenseUrl) -and -not [System.Uri]::IsWellFormedUriString($licenseUrl, [System.UriKind]::Absolute)) {
+            $problems += "ProductConfiguration.LicenseUrl '$licenseUrl' is not an absolute URI"
+        }
+
+        $csprojs = @(Get-ChildItem -LiteralPath $root -Filter "*.csproj" -File |
+            Where-Object { $_.FullName -notlike "*\Tests\*" -and $_.FullName -notlike "*\Packaging\*" })
+        if ($csprojs.Count -ne 1) { $problems += "expected exactly one app csproj, found $($csprojs.Count)" }
+        else {
+            $csproj = [System.IO.File]::ReadAllText($csprojs[0].FullName, [System.Text.Encoding]::UTF8)
+            $ns = ([regex]::Match($csproj, "<RootNamespace>([^<]+)</RootNamespace>")).Groups[1].Value
+            $asm = ([regex]::Match($csproj, "<AssemblyName>([^<]+)</AssemblyName>")).Groups[1].Value
+            if ($ns -ne $safe) { $problems += "csproj RootNamespace '$ns' disagrees with SafeName '$safe'" }
+            if ($asm -ne $safe) { $problems += "csproj AssemblyName '$asm' disagrees with SafeName '$safe'" }
+            $slnName = "$safe.sln"
+            if (-not (Test-Path -LiteralPath (Join-Path $root $slnName))) { $problems += "missing solution $slnName" }
+        }
+
+        $manifest = Join-Path $root "Packaging\Msix\Package.appxmanifest"
+        if (Test-Path -LiteralPath $manifest) {
+            $manifestText = [System.IO.File]::ReadAllText($manifest, [System.Text.Encoding]::UTF8)
+            $schemeName = $prefix.TrimEnd('/').TrimEnd(':')
+            if ($manifestText -notmatch [regex]::Escape('Name="' + $schemeName + '"')) {
+                $problems += "manifest protocol Name does not match scheme '$schemeName'"
+            }
+        }
+
+        if (($meta | Select-String -Pattern "DevTemWinUi3" -SimpleMatch) -and ($safe -ne "DevTemWinUi3")) {
+            $problems += "AppMetadata.cs still mentions DevTemWinUi3 after rename to '$safe'"
+        }
+    }
+
+    if ($problems.Count -gt 0) {
+        Write-Host "VALIDATE FAILED ($($problems.Count)):" -ForegroundColor Red
+        $problems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        throw "init-template -Validate found $($problems.Count) identity problem(s)."
+    }
+
+    Write-Host "VALID: identity consistent ($safe / $appName / $prefix)." -ForegroundColor Green
+    return
+}
+
+if ([string]::IsNullOrWhiteSpace($AppName)) { throw "Missing -AppName (or pass -Validate to only check the tree)." }
+if ([string]::IsNullOrWhiteSpace($Company)) { throw "Missing -Company (or pass -Validate to only check the tree)." }
+if ([string]::IsNullOrWhiteSpace($RepoUrl)) { throw "Missing -RepoUrl (or pass -Validate to only check the tree)." }
 
 if ([string]::IsNullOrWhiteSpace($SafeName)) {
     $SafeName = $AppName -replace "[^A-Za-z0-9_]", "_"

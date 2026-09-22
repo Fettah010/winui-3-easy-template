@@ -12,11 +12,22 @@ namespace DevTemWinUi3.Services;
 /// <see cref="LocalizationService"/> so callers have one entry point.
 /// Export files are plain JSON (<c>.json</c>); import tolerates missing keys
 /// (keeps current values) and normalizes out-of-range ones, but rejects
-/// unreadable files outright. Never throws.
+/// unreadable files outright. Imports are capped at 1 MB (settings are
+/// ~1 KB) and carry a schema <c>version</c>: unknown future MAJOR versions
+/// are refused, unknown keys are ignored. Never throws.
 /// </summary>
 public static class SettingsBackupService
 {
     private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = true };
+
+    /// <summary>Backup schema version written by <see cref="Capture"/>.</summary>
+    internal const int SchemaVersion = 1;
+
+    /// <summary>
+    /// Largest import honored. Settings snapshots are ~1 KB; anything near
+    /// this cap is not a settings file (a multi-GB file would OOM the parse).
+    /// </summary>
+    internal const long MaxImportBytes = 1024 * 1024;
 
     /// <summary>Resets preferences + language to defaults.</summary>
     public static void ResetAll()
@@ -34,6 +45,7 @@ public static class SettingsBackupService
         try
         {
             var settings = SettingsService.Current;
+            snapshot["version"] = SchemaVersion;
             snapshot["theme"] = settings.Theme;
             snapshot["channel"] = settings.Channel;
             snapshot["minimizeToTray"] = settings.MinimizeToTray;
@@ -73,7 +85,8 @@ public static class SettingsBackupService
     /// <summary>
     /// Reads preferences from <paramref name="path"/> and applies the valid
     /// ones. Unknown keys are ignored; invalid values fall back to defaults.
-    /// Returns false when the file is missing or unparseable (nothing applied).
+    /// Returns false when the file is missing, oversized, unparseable, or
+    /// from an unknown future schema MAJOR (nothing applied).
     /// </summary>
     public static bool ImportFromFile(string path)
     {
@@ -81,9 +94,17 @@ public static class SettingsBackupService
         {
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 return false;
+            if (new FileInfo(path).Length > MaxImportBytes)
+            {
+                AppLog.Warning("Settings import refused: file exceeds {Max} bytes", MaxImportBytes);
+                return false;
+            }
+
             var json = File.ReadAllText(path);
             var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
             if (data is null)
+                return false;
+            if (!CheckSchemaVersion(data))
                 return false;
 
             var settings = SettingsService.Current;
@@ -118,8 +139,39 @@ public static class SettingsBackupService
         }
     }
 
-    private static bool TryGetBool(Dictionary<string, JsonElement> data, string key, out bool value)
+    /// <summary>
+    /// Schema gate: absent version means a pre-versioned export (accepted);
+    /// a higher MAJOR is refused (forward-incompatible); same or lower
+    /// applies tolerant-per-key as before. Pure apart from the warning log.
+    /// </summary>
+    internal static bool CheckSchemaVersion(Dictionary<string, JsonElement> data)
     {
+        try
+        {
+            if (!data.TryGetValue("version", out var element))
+                return true;
+            int major = 0;
+            bool parsed = element.ValueKind == JsonValueKind.Number
+                ? element.TryGetInt32(out major)
+                : element.ValueKind == JsonValueKind.String && int.TryParse(element.GetString(), out major);
+            if (!parsed)
+                return false;
+
+            if (major > SchemaVersion)
+            {
+                AppLog.Warning("Settings import refused: schema v{Version} is newer than v{Supported}", major, SchemaVersion);
+                return false;
+            }
+
+            return major >= 1;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryGetBool(Dictionary<string, JsonElement> data, string key, out bool value)    {
         value = false;
         try
         {

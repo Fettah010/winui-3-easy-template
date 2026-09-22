@@ -20,6 +20,9 @@ powershell -File Scripts/bump-version.ps1 -Version 0.0.1
 .\Scripts\init-template.ps1 -AppName "DevTem-WinUI 3" -Company "Fettah" `
     -RepoUrl "https://github.com/Fettah010/winui-3-easy-template" -Scheme "devtem://"
 
+# 2b. Prove the identity is consistent (metadata vs csproj vs manifest):
+.\Scripts\init-template.ps1 -Validate
+
 # 3. Drop the sample cards you do not need (Home feature grid, About panels):
 powershell -File Scripts/remove-sample-content.ps1 -WhatIf
 ```
@@ -34,6 +37,27 @@ the template — this README describes your app, not the template.
 - Mica window + system tray + single-instance deep links (`devtem://`)
 - Auto-updates, diagnostics page, 3-language UI, persisted settings
 - Logging facade, SQLite + typed HTTP data layer, crash reporting (opt-in)
+
+### Starter profiles
+
+Same template, coherent presets (override any flag individually):
+
+```powershell
+# Minimal: shell, settings, English UI
+dotnet new devtem-winui -n MyApp --tray false --updates none --database false --http false --health false --logging none --crash false --localization false --tests false --attribution false
+
+# Desktop: tray and notifications, no data services
+dotnet new devtem-winui -n MyApp --updates none --database false --http false
+
+# Production: everything on (the default)
+dotnet new devtem-winui -n MyApp
+
+# Store: packaged MSIX for Microsoft Store submission
+dotnet new devtem-winui -n MyApp --distribution msix --updates store --setup false
+```
+
+Presets are documentation, not a `--profile` parameter: explicit flags
+always win. Full flag reference: `dotnet new devtem-winui --help`.
 
 ### Releases
 

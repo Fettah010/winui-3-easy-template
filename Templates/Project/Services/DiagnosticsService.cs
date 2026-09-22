@@ -332,9 +332,9 @@ public static class DiagnosticsService
                 JsonSerializer.Serialize(snapshot, s_jsonOptions));
             WriteZipEntry(zip, "settings.json",
                 JsonSerializer.Serialize(SettingsBackupService.Capture(), s_jsonOptions));
-            WriteZipEntry(zip, "log-filtered.log", filteredText ?? string.Empty);
+            WriteZipEntry(zip, "log-filtered.log", ScrubUserPaths(filteredText ?? string.Empty));
             WriteZipEntry(zip, "log-current.log",
-                ReadSelectedLogFullText(selectedLogFileName));
+                ScrubUserPaths(ReadSelectedLogFullText(selectedLogFileName)));
             return true;
         }
         catch (Exception ex)
@@ -349,6 +349,41 @@ public static class DiagnosticsService
         var entry = zip.CreateEntry(name);
         using var writer = new StreamWriter(entry.Open());
         writer.Write(content ?? string.Empty);
+    }
+
+    /// <summary>
+    /// Scrubs machine-specific paths from exported text: log lines embed
+    /// absolute paths (<c>C:\Users\Bob\...</c>), and the bundle goes to
+    /// support. Replaces the local-app-data root, the user profile root,
+    /// and the bare username with stable placeholders. Pure and
+    /// headless-testable. Case-insensitive; longest match first so
+    /// <c>Users\Bob\AppData\Local</c> does not half-scrub to
+    /// <c>Users\&lt;user&gt;\AppData\Local</c>.
+    /// </summary>
+    internal static string ScrubUserPaths(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text ?? string.Empty;
+        string result = text;
+        try
+        {
+            string? user = Environment.UserName;
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var replacements = new List<KeyValuePair<string, string>>();
+            if (!string.IsNullOrWhiteSpace(localAppData))
+                replacements.Add(new KeyValuePair<string, string>(localAppData, "<localappdata>"));
+            if (!string.IsNullOrWhiteSpace(profile))
+                replacements.Add(new KeyValuePair<string, string>(profile, "<profile>"));
+            if (!string.IsNullOrWhiteSpace(user))
+                replacements.Add(new KeyValuePair<string, string>(user, "<user>"));
+            replacements.Sort((a, b) => b.Key.Length.CompareTo(a.Key.Length));
+            foreach (var pair in replacements)
+                result = result.Replace(pair.Key, pair.Value, StringComparison.OrdinalIgnoreCase);
+        }
+        catch { }
+
+        return result;
     }
 
     /// <summary>

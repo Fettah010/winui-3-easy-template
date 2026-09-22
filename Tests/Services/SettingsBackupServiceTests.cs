@@ -72,8 +72,7 @@ public class SettingsBackupServiceTests
 
     [TestMethod]
     public void Import_CorruptFile_ReturnsFalse()
-    {
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
+    {        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
         try
         {
             File.WriteAllText(path, "{not json");
@@ -134,5 +133,76 @@ public class SettingsBackupServiceTests
         Assert.IsTrue(SettingsService.Current.MinimizeToTray);
         Assert.IsTrue(SettingsService.Current.AutoCheck);
         Assert.AreEqual("en-US", LocalizationService.Current.CurrentLanguage);
+    }
+
+    [TestMethod]
+    public void Export_WritesSchemaVersion_AndImport_AcceptsIt()
+    {
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
+        try
+        {
+            Assert.IsTrue(SettingsBackupService.ExportToFile(path));
+            string json = File.ReadAllText(path);
+            Assert.Contains("\"version\"", json);
+            SettingsService.Current.Theme = "Light";
+            Assert.IsTrue(SettingsBackupService.ImportFromFile(path));
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void Import_OversizedFile_ReturnsFalse_AndAppliesNothing()
+    {
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
+        try
+        {
+            SettingsService.Current.Theme = "Dark";
+            // Valid JSON over the cap: only the size gate may reject it.
+            File.WriteAllText(path, """{"theme": "Light", "pad": """ +
+                new string('x', (int)SettingsBackupService.MaxImportBytes) + "\"}");
+
+            Assert.IsFalse(SettingsBackupService.ImportFromFile(path));
+            Assert.AreEqual("Dark", SettingsService.Current.Theme);
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void Import_FutureMajorVersion_ReturnsFalse_AndAppliesNothing()
+    {
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
+        try
+        {
+            SettingsService.Current.Theme = "Dark";
+            File.WriteAllText(path, """{"version": 9999, "theme": "Light"}""");
+            Assert.IsFalse(SettingsBackupService.ImportFromFile(path));
+            Assert.AreEqual("Dark", SettingsService.Current.Theme);
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
+    }
+
+    [TestMethod]
+    public void Import_LegacyFileWithoutVersion_StillApplies()
+    {
+        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
+        try
+        {
+            File.WriteAllText(path, """{"theme": "Dark"}""");
+            Assert.IsTrue(SettingsBackupService.ImportFromFile(path));
+            Assert.AreEqual("Dark", SettingsService.Current.Theme);
+        }
+        finally
+        {
+            try { File.Delete(path); } catch { }
+        }
     }
 }

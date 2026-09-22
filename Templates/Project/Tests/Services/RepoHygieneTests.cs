@@ -49,6 +49,70 @@ public class RepoHygieneTests
     }
 
     [TestMethod]
+    public void Secrets_NeverReachLogs()
+    {
+        // A template's secret bugs replicate into every scaffold. No AppLog
+        // call may reference a secret by name (DSN, token, password,
+        // secret, API key, Authorization header, feed URL, SAS) — values
+        // must only flow to their SDK/client, never to logs or breadcrumbs.
+        // Sole exception: the static "no Sentry DSN configured" message,
+        // which names the KIND, never a value.
+        string? root = FindRepoRoot();
+        Assert.IsNotNull(root, "Could not locate repo root (no .sln found walking up).");
+        var rx = new System.Text.RegularExpressions.Regex(
+            @"AppLog\.\w+\(.*(Dsn|Token|Password|Secret|ApiKey|Authorization|FeedUrl|Sas)",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        var offenders = new System.Collections.Generic.List<string>();
+        foreach (string file in Directory.EnumerateFiles(root!, "*.cs", SearchOption.AllDirectories))
+        {
+            string rel = Path.GetRelativePath(root!, file);
+            if (rel.Split(Path.DirectorySeparatorChar).Any(s =>
+                s.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
+                s.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
+                s.Equals(".git", StringComparison.OrdinalIgnoreCase) ||
+                s.Equals("Tests", StringComparison.OrdinalIgnoreCase) ||
+                s.Equals("Templates", StringComparison.OrdinalIgnoreCase)))
+                continue;
+            string text;
+            try { text = File.ReadAllText(file); } catch { continue; }
+            foreach (System.Text.RegularExpressions.Match m in rx.Matches(text))
+            {
+                int lineStart = text.LastIndexOf('\n', System.Math.Max(0, m.Index - 1)) + 1;
+                int lineEnd = text.IndexOf('\n', m.Index);
+                if (lineEnd < 0)
+                    lineEnd = text.Length;
+                string line = text.Substring(lineStart, lineEnd - lineStart).Trim();
+                if (line.Contains("no Sentry DSN configured", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                int lineNo = text.Substring(0, m.Index).Count(c => c == '\n') + 1;
+                offenders.Add(rel + "(" + lineNo + ": " + line.Substring(0, System.Math.Min(90, line.Length)) + ")");
+            }
+        }
+        Assert.IsEmpty(offenders, "Secret-adjacent AppLog call sites: " + string.Join(" | ", offenders));
+    }
+
+    [TestMethod]
+    public void FeedUrl_WithSas_RoundTripsViaEnv()
+    {
+        // SAS-signed feed URLs must work through the env override layer
+        // (Secrets_NeverReachLogs above proves the value can never be
+        // logged anywhere in the process).
+        const string name = "DEVTEM_UPDATE_FEED_URL";
+        string? prior = Environment.GetEnvironmentVariable(name);
+        try
+        {
+            Environment.SetEnvironmentVariable(name, "https://example.com/feed?sig=SECRET");
+            Assert.AreEqual(
+                "https://example.com/feed?sig=SECRET",
+                DevTemWinUi3.Services.Configuration.DeploymentConfiguration.UpdateFeedUrl);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(name, prior);
+        }
+    }
+
+    [TestMethod]
     public void WinExeCsprojs_StaySmall()
     {
         string? root = FindRepoRoot();

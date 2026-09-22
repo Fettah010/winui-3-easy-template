@@ -20,22 +20,52 @@ public class BasicGithubUpdateServiceTests
     {
         public string ReleasesJson = "[]";
         public byte[] DownloadBytes = Encoding.UTF8.GetBytes("fake-setup-bytes");
+
+        /// <summary>
+        /// Checksum body served for *.sha256 URLs. Null = serve the correct
+        /// digest of <see cref="DownloadBytes"/>; "MISSING" = 404.
+        /// </summary>
+        public string? ChecksumText;
+
+        /// <summary>Artificial delay (ms) honoring cancellation, for timeout tests.</summary>
+        public int DelayMs;
+
+        /// <summary>When true, <see cref="DelayMs"/> applies to the .exe download only.</summary>
+        public bool DelayDownloadOnly;
+
         public HttpRequestMessage? LastApiRequest;
+
         public bool FailNetwork;
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
             string url = request.RequestUri?.ToString() ?? string.Empty;
-            if (url.Contains("api.github.com", StringComparison.OrdinalIgnoreCase))
+            bool isApi = url.Contains("api.github.com", StringComparison.OrdinalIgnoreCase);
+            bool isChecksum = url.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase);
+            if (DelayMs > 0 && (!DelayDownloadOnly || (!isApi && !isChecksum)))
+                await Task.Delay(DelayMs, cancellationToken);
+            if (isApi)
             {
                 LastApiRequest = request;
                 if (FailNetwork)
                     throw new HttpRequestException("offline");
-                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent(ReleasesJson, Encoding.UTF8, "application/json"),
-                });
+                };
+            }
+
+            if (url.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase))
+            {
+                if (ChecksumText == "MISSING")
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
+                string body = ChecksumText ??
+                    Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(DownloadBytes));
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(body, Encoding.UTF8, "text/plain"),
+                };
             }
 
             var download = new HttpResponseMessage(HttpStatusCode.OK)
@@ -43,7 +73,7 @@ public class BasicGithubUpdateServiceTests
                 Content = new ByteArrayContent(DownloadBytes),
             };
             download.Content.Headers.ContentLength = DownloadBytes.Length;
-            return Task.FromResult(download);
+            return download;
         }
     }
 
@@ -69,13 +99,21 @@ public class BasicGithubUpdateServiceTests
         Path.Combine(Path.GetTempPath(), AppMetadata.AppDataFolder, "updates");
 
     // v99 tags stay newer than any real current version, so these tests do
-    // not depend on the repo's version number.
+    // not depend on the repo's version number. The checksum asset ships by
+    // default (the secure release convention); pass checksum: false for the
+    // fail-closed tests.
     private static string Release(
-        string tag, bool prerelease = false, bool draft = false, string asset = "AcmeSetup.exe") =>
-        "{\"tag_name\":\"" + tag + "\",\"prerelease\":" + (prerelease ? "true" : "false") +
+        string tag, bool prerelease = false, bool draft = false, string asset = "AcmeSetup.exe", bool checksum = true)
+    {
+        string assets = "{\"name\":\"" + asset +
+            "\",\"browser_download_url\":\"https://example.com/" + asset + "\"}";
+        if (checksum)
+            assets += ",{\"name\":\"" + asset + ".sha256" +
+                "\",\"browser_download_url\":\"https://example.com/" + asset + ".sha256\"}";
+        return "{\"tag_name\":\"" + tag + "\",\"prerelease\":" + (prerelease ? "true" : "false") +
         ",\"draft\":" + (draft ? "true" : "false") +
-        ",\"assets\":[{\"name\":\"" + asset +
-        "\",\"browser_download_url\":\"https://example.com/" + asset + "\"}]}";
+        ",\"assets\":[" + assets + "]}";
+    }
 
     private static string Feed(params string[] releases) => "[" + string.Join(",", releases) + "]";
 
@@ -178,5 +216,76 @@ public class BasicGithubUpdateServiceTests
         Assert.IsNotNull(stub.LastApiRequest);
         Assert.IsFalse(string.IsNullOrWhiteSpace(
             stub.LastApiRequest!.Headers.UserAgent.ToString()));
+    }
+
+    [TestMethod]
+    public void ParseChecksum_AcceptsBareAndFilenames_RejectsGarbage()
+    {
+        string good = "ABCDEF0123456789abcdef0123456789ABCDEF0123456789abcdef0123456789";
+        Assert.AreEqual(good.ToUpperInvariant(), BasicGithubUpdateService.ParseChecksum(good));
+        Assert.AreEqual(
+            good.ToUpperInvariant(),
+            BasicGithubUpdateService.ParseChecksum(good.ToLowerInvariant() + "  AcmeSetup.exe"));
+        Assert.IsNull(BasicGithubUpdateService.ParseChecksum(null));
+        Assert.IsNull(BasicGithubUpdateService.ParseChecksum(""));
+        Assert.IsNull(BasicGithubUpdateService.ParseChecksum("short"));
+        Assert.IsNull(BasicGithubUpdateService.ParseChecksum(new string('g', 64)));
+    }
+
+    [TestMethod]
+    public async Task Download_RefusesReleaseWithoutChecksum()
+    {
+        var stub = new StubHandler { ReleasesJson = Feed(Release("v99.0.0", checksum: false)) };
+        using var svc = new BasicGithubUpdateService(stub);
+        var check = await svc.CheckAsync();
+        Assert.IsTrue(check.HasUpdate);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => svc.DownloadPendingUpdateAsync());
+        Assert.Contains("sha256", ex.Message);
+        Assert.IsFalse(File.Exists(Path.Combine(UpdatesDir(), "v99.0.0", "AcmeSetup.exe")));
+    }
+
+    [TestMethod]
+    public async Task Download_DiscardsFile_OnChecksumMismatch()
+    {
+        var stub = new StubHandler
+        {
+            ReleasesJson = Feed(Release("v99.0.0")),
+            ChecksumText = new string('0', 64),
+        };
+        using var svc = new BasicGithubUpdateService(stub);
+        var check = await svc.CheckAsync();
+        Assert.IsTrue(check.HasUpdate);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => svc.DownloadPendingUpdateAsync());
+        Assert.Contains("mismatch", ex.Message);
+        Assert.IsFalse(File.Exists(Path.Combine(UpdatesDir(), "v99.0.0", "AcmeSetup.exe")));
+    }
+
+    [TestMethod]
+    public async Task Download_TimesOut_InsteadOfHanging()
+    {
+        var stub = new StubHandler
+        {
+            ReleasesJson = Feed(Release("v99.0.0")),
+            DelayMs = 30_000,
+            DelayDownloadOnly = true,
+        };
+        using var svc = new BasicGithubUpdateService(stub);
+        var check = await svc.CheckAsync();
+        Assert.IsTrue(check.HasUpdate);
+
+        TimeSpan old = BasicGithubUpdateService.DownloadTimeout;
+        BasicGithubUpdateService.DownloadTimeout = TimeSpan.FromMilliseconds(100);
+        try
+        {
+            await Assert.ThrowsAsync<TimeoutException>(() => svc.DownloadPendingUpdateAsync());
+        }
+        finally
+        {
+            BasicGithubUpdateService.DownloadTimeout = old;
+        }
     }
 }

@@ -231,8 +231,11 @@ function Assert-ScaffoldIdentity([string]$outDir, [hashtable]$definition) {
     if ($metadata -notmatch [regex]::Escape('AppName = "' + $display + '"')) {
         throw "AppMetadata display name is not '$display'"
     }
-    if ($metadata -notmatch [regex]::Escape('RepoUrl = "https://github.com/' + $repo + '"')) {
-        throw "AppMetadata repository is not '$repo'"
+    # Repo identity lives in ProductConfiguration (AppMetadata resolves it
+    # at runtime since 0.0.27-beta): assert the literal where it lives.
+    $productConfig = [System.IO.File]::ReadAllText((Join-Path $outDir "Services\Configuration\ProductConfiguration.cs"))
+    if ($productConfig -notmatch [regex]::Escape('RepoUrl = "https://github.com/' + $repo + '"')) {
+        throw "ProductConfiguration repository is not '$repo'"
     }
     $csproj = [System.IO.File]::ReadAllText((Join-Path $outDir "$safe.csproj"))
     if ($csproj -notmatch [regex]::Escape("<RootNamespace>$safe</RootNamespace>")) {
@@ -558,6 +561,12 @@ try {
         else {
             Write-Host "tests skipped (tests feature off, shell project builds)"
         }
+        # Identity proof: the scaffold's own init-template -Validate checks
+        # metadata vs csproj vs manifest consistency (scheme/publisher gaps
+        # the engine cannot catch at scaffold time).
+        if (-not (Invoke-Step "init-template -Validate in $combo" {
+                & (Join-Path $outDir "Scripts\init-template.ps1") -Validate
+            })) { continue }
         Write-Host "PASSED: $combo" -ForegroundColor Green
     }
 

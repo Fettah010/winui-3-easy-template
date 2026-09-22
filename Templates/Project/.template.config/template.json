@@ -259,6 +259,7 @@
           "exclude": [
             "Services/BasicGithubUpdateService.cs",
             "Build/Features.Updates.Basic.props",
+            "Scripts/publish-basic.ps1",
             "Tests/Services/BasicGithubUpdateServiceTests.cs",
             "docs/feature-guides/updates-basic.md"
           ]
@@ -374,6 +375,12 @@
           "exclude": [
             "Services/SentryCrashReporter.cs",
             "Build/Features.Crash.props"
+          ]
+        },
+        {
+          "condition": "(!crash)",
+          "exclude": [
+            "docs/feature-guides/crash.md"
           ]
         },
         {

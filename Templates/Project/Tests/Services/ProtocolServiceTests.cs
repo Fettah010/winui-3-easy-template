@@ -80,8 +80,7 @@ public class ProtocolServiceTests
 
     [TestMethod]
     public void PendingUri_RoundTripsThroughFile()
-    {
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".txt");
+    {        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".txt");
         try
         {
             Assert.IsFalse(ProtocolService.TryReadAndClearPendingUri(out _, path));
@@ -95,5 +94,18 @@ public class ProtocolServiceTests
         {
             try { File.Delete(path); } catch { }
         }
+    }
+
+    [TestMethod]
+    public void RegistryValues_QuoteSpacedPaths()
+    {
+        // Binary-planting rule: every registry command value must quote
+        // the exe (a spaced path like "C:\My Apps\app.exe" unquoted lets
+        // Windows resolve "C:\My.exe" instead). The writes themselves stay
+        // untested by house rule; these builders are what get written.
+        const string spaced = @"C:\My Apps\AcmeDesk.exe";
+        Assert.AreEqual("\"" + spaced + "\" \"%1\"", ProtocolService.BuildCommandValue(spaced));
+        Assert.AreEqual("\"" + spaced + "\",0", ProtocolService.BuildIconValue(spaced));
+        Assert.AreEqual("\"" + spaced + "\"", AutoStartService.BuildRunValue(spaced));
     }
 }

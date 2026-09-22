@@ -55,6 +55,17 @@ Tag name determines channel (`v*-beta` → beta, plain `v*` → stable).
 Velopack versions must keep increasing — each beta bumps the patch.
 Never push a tag to "test CI" (Workflow tier above covers it).
 
+## Dependency currency (maintainer)
+
+- Dependabot (nuget, weekly, 5 open PRs) proposes; a human merges after
+  the Fast tier + the affected scaffold matrix combos stay green.
+- Major bumps of Velopack / WindowsAppSDK / .NET change retail behavior
+  (notifications, packaging, trim) — they ship in their own beta with a
+  CHANGELOG entry naming the behavioral deltas, never smuggled into a
+  feature release.
+- `dotnet list package --outdated` once per release cycle; record the
+  decision (bump or pin + reason) in `docs/DECISIONS.md`.
+
 ## Known fragile points (do not "fix" by retrying blindly)
 
 - Smoke tests need a quiet desktop: UIA reads work occluded, mouse clicks

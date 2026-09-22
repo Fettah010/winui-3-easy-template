@@ -14,17 +14,20 @@ namespace DevTemWinUi3.Services;
 /// <summary>
 /// Zero-dependency GitHub-releases update checker behind
 /// <see cref="IUpdateService"/>: polls the releases API, picks the newest
-/// qualifying tag, downloads the attached Setup <c>.exe</c>, and launches
-/// it. No update SDK, no installer framework, no background service —
-// one HTTP call per check. Channel mapping: <c>stable</c> ignores
+/// qualifying tag, downloads the attached Setup <c>.exe</c>, verifies its
+/// SHA-256 against the sibling <c>.exe.sha256</c> asset, and launches it.
+/// No update SDK, no installer framework, no background service —
+/// one HTTP call per check. Channel mapping: <c>stable</c> ignores
 /// prereleases, <c>beta</c> includes them. Process-lifetime singleton
 /// (never disposed in practice); implements <see cref="IDisposable"/>
 /// to own its <see cref="HttpClient"/> correctly (CA1001).
 /// <para/>
 /// Release convention (documented in
 /// <c>docs/feature-guides/updates-basic.md</c>): attach the installer as a
-/// <c>.exe</c> asset to the GitHub release; tags look like
-/// <c>v0.0.4</c> or <c>v0.0.4-beta</c>.
+/// <c>.exe</c> asset plus a <c>.exe.sha256</c> checksum file (hex digest,
+/// bare or "<c>hex  filename</c>") to the GitHub release; tags look like
+/// <c>v0.0.4</c> or <c>v0.0.4-beta</c>. Releases without the checksum are
+/// refused: an unverified executable is never launched.
 /// </summary>
 public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
 {
@@ -42,6 +45,21 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
     private string _channel = ChannelResolver.Stable;
     private PendingRelease? _pending;
     private string? _downloadedPath;
+
+    /// <summary>
+    /// Set for the last download whose SHA-256 verified. Apply launches
+    /// ONLY this path: a present-but-unverified file is never executed.
+    /// </summary>
+    private string? _verifiedPath;
+
+    /// <summary>Releases-API and checksum-fetch budget. Never infinite.</summary>
+    internal static TimeSpan CheckTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Whole-download budget (large installers on slow links). Generous
+    /// but finite: a stalled download degrades to an error, never a hang.
+    /// </summary>
+    internal static TimeSpan DownloadTimeout { get; set; } = TimeSpan.FromMinutes(30);
 
     /// <summary>
     /// The optional handler is a test seam (stub the releases API without
@@ -89,6 +107,11 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
                 _http = _testHandler is null
                     ? new HttpClient()
                     : new HttpClient(_testHandler, disposeHandler: false);
+                // Per-request CancellationTokenSources own every timeout
+                // (CheckTimeout / DownloadTimeout below), so the client
+                // itself must not impose HttpClient's 100s default — it
+                // would abort large downloads mid-stream on slow links.
+                _http.Timeout = Timeout.InfiniteTimeSpan;
                 _http.DefaultRequestHeaders.UserAgent.ParseAdd(AppMetadata.UserAgent);
                 _http.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
@@ -116,6 +139,7 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
             _channel = channel;
             _pending = null;
             _downloadedPath = null;
+            _verifiedPath = null;
         }
     }
 
@@ -135,9 +159,11 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         (string owner, string repo) = RepoParts();
 
         string url = $"https://api.github.com/repos/{owner}/{repo}/releases?per_page=100";
-        using var response = await Http.GetAsync(url, CancellationToken.None);
+        using var cts = new CancellationTokenSource(CheckTimeout);
+        CancellationToken token = cts.Token;
+        using var response = await Http.GetAsync(url, token);
         response.EnsureSuccessStatusCode();
-        string json = await response.Content.ReadAsStringAsync(CancellationToken.None);
+        string json = await response.Content.ReadAsStringAsync(token);
 
         PendingRelease? best = null;
         using (var doc = JsonDocument.Parse(json))
@@ -158,7 +184,10 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         {
             _pending = best;
             if (best is not null)
+            {
                 _downloadedPath = null;
+                _verifiedPath = null;
+            }
         }
 
         if (best is null)
@@ -168,8 +197,11 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
     }
 
     /// <summary>
-    /// Downloads the pending release asset with progress. No-op when
-    /// nothing is pending.
+    /// Downloads the pending release asset, verifies its SHA-256 against
+    /// the sibling <c>.exe.sha256</c> asset, and stages it for launch.
+    /// No-op when nothing is pending. Fails closed: a missing checksum, a
+    /// mismatch, or a timeout throws (callers surface it) and any partial
+    /// file is deleted — an unverified executable is never staged.
     /// </summary>
     public async Task DownloadPendingUpdateAsync(Action<int>? progress = null)
     {
@@ -182,52 +214,155 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         if (pending is null)
             return;
 
+        if (string.IsNullOrWhiteSpace(pending.ChecksumUrl))
+            throw new InvalidOperationException(
+                $"Release {pending.Tag} has no {pending.FileName}.sha256 checksum asset. " +
+                "Refusing an unverified installer (see docs/feature-guides/updates-basic.md).");
+
+        string expected = await FetchChecksumAsync(pending, CancellationToken.None);
+
         string dir = Path.Combine(Path.GetTempPath(), AppMetadata.AppDataFolder, "updates", pending.Tag);
         Directory.CreateDirectory(dir);
         string path = Path.Combine(dir, pending.FileName);
 
+        using var cts = new CancellationTokenSource(DownloadTimeout);
+        CancellationToken token = cts.Token;
         progress?.Invoke(0);
-        using (var response = await Http.GetAsync(pending.DownloadUrl, CancellationToken.None))
+        string actual;
+        try
         {
-            response.EnsureSuccessStatusCode();
-            long? total = response.Content.Headers.ContentLength;
-            await using var content = await response.Content.ReadAsStreamAsync(CancellationToken.None);
-            await using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            var buffer = new byte[81920];
-            long read = 0;
-            int count;
-            while ((count = await content.ReadAsync(buffer, CancellationToken.None)) > 0)
+            using (var response = await Http.GetAsync(pending.DownloadUrl, token))
             {
-                await file.WriteAsync(buffer.AsMemory(0, count), CancellationToken.None);
-                read += count;
-                if (total > 0)
-                    progress?.Invoke((int)Math.Min(100, (read * 100L) / total.Value));
+                response.EnsureSuccessStatusCode();
+                long? total = response.Content.Headers.ContentLength;
+                await using var content = await response.Content.ReadAsStreamAsync(token);
+                await using var file = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+                using var sha = System.Security.Cryptography.IncrementalHash.CreateHash(
+                    System.Security.Cryptography.HashAlgorithmName.SHA256);
+                var buffer = new byte[81920];
+                long read = 0;
+                int count;
+                while ((count = await content.ReadAsync(buffer, token)) > 0)
+                {
+                    await file.WriteAsync(buffer.AsMemory(0, count), token);
+                    sha.AppendData(buffer, 0, count);
+                    read += count;
+                    if (total > 0)
+                        progress?.Invoke((int)Math.Min(100, (read * 100L) / total.Value));
+                }
+
+                await file.FlushAsync(token);
+                actual = Convert.ToHexString(sha.GetHashAndReset());
             }
+            // Streams are closed here, so a mismatch delete cannot race an
+            // open handle (FileShare.None would refuse it).
+            if (!actual.Equals(expected, StringComparison.OrdinalIgnoreCase))
+            {
+                try { File.Delete(path); } catch { }
+                throw new InvalidOperationException(
+                    $"Release {pending.Tag} checksum mismatch (expected {expected}, got {actual}). " +
+                    "The download was discarded; the installer was not staged.");
+            }
+        }
+        catch (OperationCanceledException ex) when (!token.IsCancellationRequested)
+        {
+            // The CTS above is the only token that can cancel here.
+            throw new TimeoutException(
+                $"Download of release {pending.Tag} timed out after {DownloadTimeout.TotalMinutes:F0} minutes.", ex);
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TimeoutException(
+                $"Download of release {pending.Tag} timed out after {DownloadTimeout.TotalMinutes:F0} minutes.");
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            try { if (File.Exists(path)) File.Delete(path); } catch { }
+            throw;
         }
 
         progress?.Invoke(100);
         lock (_lock)
         {
             _downloadedPath = path;
+            _verifiedPath = path;
         }
 
-        AppLog.Information("Basic update downloaded to {Path}", path);
+        AppLog.Information("Basic update downloaded and verified: {Path}", path);
     }
 
     /// <summary>
-    /// Launches the downloaded installer and exits. Throws when nothing
-    /// was downloaded (callers surface it).
+    /// Fetches and parses the sibling checksum file: first whitespace-
+    /// delimited token must be 64 hex chars (bare digest or
+    /// "<c>hex  filename</c>" form). Pure apart from the fetch.
+    /// </summary>
+    private async Task<string> FetchChecksumAsync(PendingRelease pending, CancellationToken outer)
+    {
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(outer);
+        cts.CancelAfter(CheckTimeout);
+        string text;
+        try
+        {
+            using var response = await Http.GetAsync(pending.ChecksumUrl!, cts.Token);
+            response.EnsureSuccessStatusCode();
+            text = await response.Content.ReadAsStringAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TimeoutException(
+                $"Checksum fetch for release {pending.Tag} timed out after {CheckTimeout.TotalSeconds:F0}s.");
+        }
+
+        string? digest = ParseChecksum(text);
+        if (digest is null)
+            throw new InvalidOperationException(
+                $"Release {pending.Tag} has an unreadable {pending.FileName}.sha256 checksum asset. " +
+                "Refusing an unverified installer (see docs/feature-guides/updates-basic.md).");
+        return digest;
+    }
+
+    /// <summary>
+    /// Parses a checksum file body to its hex digest, or null. Pure and
+    /// headless-testable.
+    /// </summary>
+    internal static string? ParseChecksum(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return null;
+        string token = text.Trim().Split(ChecksumSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault() ?? string.Empty;
+        if (token.Length != 64)
+            return null;
+        foreach (char c in token)
+        {
+            bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+            if (!hex)
+                return null;
+        }
+
+        return token.ToUpperInvariant();
+    }
+
+    /// <summary>
+    /// Launches the downloaded, hash-verified installer and exits. Throws
+    /// when nothing was downloaded AND verified (callers surface it): a
+    /// present-but-unverified file is never executed.
     /// </summary>
     public void ApplyPendingUpdateAndRestart()
     {
         string? path;
+        string? verified;
         lock (_lock)
         {
             path = _downloadedPath;
+            verified = _verifiedPath;
         }
 
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
             throw new InvalidOperationException("No downloaded update to apply. Download it first.");
+        if (!string.Equals(path, verified, StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                "Downloaded update failed verification and was discarded. Check for updates again.");
 
         using var _ = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
         Environment.Exit(0);
@@ -247,7 +382,10 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
     private static readonly SearchValues<char> TagSuffixSeparators =
         SearchValues.Create(new[] { '-', '+' });
 
-    private sealed record PendingRelease(string Tag, string Version, string DownloadUrl, string FileName, string? Notes);
+    private static readonly char[] ChecksumSeparators = { ' ', '\t', '\r', '\n' };
+
+    private sealed record PendingRelease(
+        string Tag, string Version, string DownloadUrl, string FileName, string? Notes, string? ChecksumUrl);
 
     private static (Version Numeric, bool Prerelease) CurrentVersionParts()
     {
@@ -288,7 +426,7 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
             return null;
         if (!IsNewer(numeric, isPrerelease, currentNumeric, currentPrerelease))
             return null;
-        if (!TryFindExeAsset(element, out string? downloadUrl, out string? fileName))
+        if (!TryFindExeAsset(element, out string? downloadUrl, out string? fileName, out string? checksumUrl))
         {
             AppLog.Information("Basic update skipped {Tag}: no .exe asset attached", tag);
             return null;
@@ -298,7 +436,7 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         string? notes = null;
         if (TryGetString(element, "body", out string? body) && !string.IsNullOrWhiteSpace(body))
             notes = body.Trim();
-        return new PendingRelease(tag, version, downloadUrl, fileName, notes);
+        return new PendingRelease(tag, version, downloadUrl, fileName, notes, checksumUrl);
     }
 
     /// <summary>Higher numeric wins; a stable release supersedes the same-number prerelease.</summary>
@@ -318,34 +456,58 @@ public sealed class BasicGithubUpdateService : IUpdateService, IDisposable
         return (l ?? new Version(0, 0, 0)).CompareTo(r ?? new Version(0, 0, 0));
     }
 
+    /// <summary>
+    /// Finds the installer asset plus its sibling checksum file
+    /// (<c>{name}.sha256</c>). The checksum URL may be null (release
+    /// predates the convention) — the download refuses those releases.
+    /// </summary>
     private static bool TryFindExeAsset(
         JsonElement element,
         [NotNullWhen(true)] out string? downloadUrl,
-        [NotNullWhen(true)] out string? fileName)
+        [NotNullWhen(true)] out string? fileName,
+        out string? checksumUrl)
     {
         downloadUrl = null;
         fileName = null;
+        checksumUrl = null;
         if (!element.TryGetProperty("assets", out JsonElement assets) ||
             assets.ValueKind != JsonValueKind.Array)
             return false;
 
+        string? exeUrl = null;
+        string? exeName = null;
+        var checksumByName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var asset in assets.EnumerateArray())
         {
             if (!TryGetString(asset, "name", out string? name) ||
                 !TryGetString(asset, "browser_download_url", out string? url))
                 continue;
-            if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                continue;
             if (string.IsNullOrWhiteSpace(url))
                 continue;
-            downloadUrl = url;
-            fileName = Path.GetFileName(name);
-            if (string.IsNullOrWhiteSpace(fileName))
-                fileName = "setup.exe";
-            return true;
+            if (name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase))
+            {
+                checksumByName[name] = url;
+                continue;
+            }
+
+            if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (exeUrl is null)
+            {
+                exeUrl = url;
+                exeName = Path.GetFileName(name);
+                if (string.IsNullOrWhiteSpace(exeName))
+                    exeName = "setup.exe";
+            }
         }
 
-        return false;
+        if (exeUrl is null || exeName is null)
+            return false;
+
+        downloadUrl = exeUrl;
+        fileName = exeName;
+        checksumByName.TryGetValue(exeName + ".sha256", out checksumUrl);
+        return true;
     }
 
     private static bool TryParseReleaseVersion(

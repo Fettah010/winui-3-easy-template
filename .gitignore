@@ -3,6 +3,7 @@ bin/
 obj/
 Releases/
 ReleasesLocal/
+ReleasesBasic/
 nupkgs/
 
 # Generated Store listing drafts (Scripts/new-store-listing.ps1)

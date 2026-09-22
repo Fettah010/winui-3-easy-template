@@ -49,7 +49,7 @@ public sealed class AutoStartService
             if (enabled)
             {
                 var exePath = Environment.ProcessPath ?? string.Empty;
-                key.SetValue(AppMetadata.AutoStartRegistryName, $"\"{exePath}\"");
+                key.SetValue(AppMetadata.AutoStartRegistryName, BuildRunValue(exePath));
                 AppLog.Information("Auto-start enabled");
             }
             else
@@ -63,6 +63,15 @@ public sealed class AutoStartService
             AppLog.Error(ex, "Failed to set auto-start");
         }
     }
+
+    /// <summary>
+    /// The <c>Run</c> key value for <paramref name="exePath"/>. Quoting is
+    /// load-bearing (same binary-planting rule as
+    /// <see cref="ProtocolService.BuildCommandValue"/>). Pure and
+    /// headless-testable; the registry write itself stays untested by
+    /// house rule.
+    /// </summary>
+    internal static string BuildRunValue(string exePath) => $"\"{exePath}\"";
 
     /// <summary>
     /// Packaged equivalent of <see cref="IsEnabled"/> over the manifest

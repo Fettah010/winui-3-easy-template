@@ -209,4 +209,28 @@ public class DiagnosticsServiceTests
             try { File.Delete(outside); } catch { }
         }
     }
+
+    [TestMethod]
+    public void ScrubUserPaths_ReplacesMachineSpecificSegments()
+    {
+        // Exported bundles go to support: no usernames or home dirs inside.
+        string lad = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string user = Environment.UserName;
+        if (string.IsNullOrWhiteSpace(lad) || string.IsNullOrWhiteSpace(user))
+            Assert.Inconclusive("No user profile paths on this machine.");
+        string text = "Exported to " + Path.Combine(lad, "Acme", "settings.json") +
+            " by " + user + " at " + DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+        string scrubbed = DiagnosticsService.ScrubUserPaths(text);
+        Assert.DoesNotContain(user, scrubbed);
+        Assert.DoesNotContain(lad, scrubbed);
+        Assert.Contains("<localappdata>", scrubbed);
+        Assert.Contains("<user>", scrubbed);
+        Assert.Contains("settings.json", scrubbed);
+    }
+
+    [TestMethod]
+    public void ScrubUserPaths_EmptyStaysEmpty()
+    {
+        Assert.AreEqual(string.Empty, DiagnosticsService.ScrubUserPaths(string.Empty));
+    }
 }

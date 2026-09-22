@@ -117,9 +117,9 @@ public static class ProtocolService
                 scheme.SetValue(null, $"URL:{AppMetadata.AppName} deep link");
                 scheme.SetValue("URL Protocol", string.Empty);
                 using (var icon = scheme.CreateSubKey("DefaultIcon"))
-                    icon?.SetValue(null, $"\"{exePath}\",0");
+                    icon?.SetValue(null, BuildIconValue(exePath));
                 using (var command = scheme.CreateSubKey(@"shell\open\command"))
-                    command?.SetValue(null, $"\"{exePath}\" \"%1\"");
+                    command?.SetValue(null, BuildCommandValue(exePath));
             }
             AppLog.Information("Protocol {Scheme} registered to {Exe}", Scheme, exePath);
             return true;
@@ -130,6 +130,18 @@ public static class ProtocolService
             return false;
         }
     }
+
+    /// <summary>
+    /// The <c>shell\open\command</c> value for <paramref name="exePath"/>.
+    /// Quoting is load-bearing: an unquoted path with spaces lets Windows
+    /// resolve siblings of the exe instead (binary-planting). Pure and
+    /// headless-testable; the registry write itself stays untested by
+    /// house rule.
+    /// </summary>
+    internal static string BuildCommandValue(string exePath) => $"\"{exePath}\" \"%1\"";
+
+    /// <summary>The <c>DefaultIcon</c> value for <paramref name="exePath"/> (same quoting rule).</summary>
+    internal static string BuildIconValue(string exePath) => $"\"{exePath}\",0";
 
     /// <summary>Removes the scheme keys. Never throws.</summary>
     public static bool UnregisterProtocol()

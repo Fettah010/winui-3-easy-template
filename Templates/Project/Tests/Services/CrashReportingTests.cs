@@ -83,4 +83,18 @@ public class CrashReportingTests
         Assert.IsFalse(string.IsNullOrWhiteSpace(context["version"]));
         Assert.IsTrue(context.ContainsKey("channel"));
     }
+
+    private static readonly System.Collections.Generic.HashSet<string> s_allowedStatusKeys =
+        new(new[] { "version", "channel", "theme", "language", "logLevel" }, StringComparer.Ordinal);
+
+    [TestMethod]
+    public void BuildStatusContext_CarriesNoPii()
+    {
+        // The status rides every Sentry envelope (SendDefaultPii is false
+        // at the SDK layer): pin the exact key set so no path, username,
+        // or machine identifier can sneak in later.
+        var context = CrashReportingService.BuildStatusContext();
+        foreach (string key in context.Keys)
+            Assert.Contains(key, s_allowedStatusKeys, "Unexpected status key: " + key);
+    }
 }
