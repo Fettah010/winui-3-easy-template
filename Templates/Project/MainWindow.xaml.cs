@@ -106,9 +106,6 @@ public sealed partial class MainWindow : Window
         {
             try { InitializeDeferredServices(); } catch { }
         }
-
-        // Listen for second-instance activation signals (single-instance enforcement)
-        Program.StartActivationListener(this.DispatcherQueue, BringToFront);
     }
 
     /// <summary>
@@ -122,6 +119,10 @@ public sealed partial class MainWindow : Window
     /// </summary>
     private void InitializeDeferredServices()
     {
+        // P0-4: second-instance listener spawns its thread here, past the
+        // first frame — the ctor keeps chrome + navigation only.
+        try { Program.StartActivationListener(this.DispatcherQueue, BringToFront); } catch { }
+
 #if (tray)
         try
         {

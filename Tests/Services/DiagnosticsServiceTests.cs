@@ -123,6 +123,33 @@ public class DiagnosticsServiceTests
     }
 
     [TestMethod]
+    public void ReadLogTail_CapsLargeFiles()
+    {
+        // D4: a multi-MB log must return a bounded tail (seek-window cap),
+        // never the whole file — the UI thread only ever parses this.
+        var dir = DiagnosticsService.LogDirectoryPath;
+        try { Directory.CreateDirectory(dir); } catch { }
+        var file = Path.Combine(dir, "applog-20990301.log");
+        try
+        {
+            using (var writer = new StreamWriter(file))
+            {
+                for (int i = 0; i < 40000; i++)
+                    writer.WriteLine("line {0} with padding to grow the file xxxxxxxxxxxxxxxxxxxx", i);
+            }
+            Assert.IsGreaterThan(1024L * 1024, new FileInfo(file).Length);
+            string tail = DiagnosticsService.ReadLogTail(file, 200);
+            Assert.IsLessThanOrEqualTo(210, tail.Split('\n').Length);
+            Assert.IsLessThan(512L * 1024, tail.Length);
+            Assert.Contains("line 39999", tail);
+        }
+        finally
+        {
+            try { File.Delete(file); } catch { }
+        }
+    }
+
+    [TestMethod]
     public void ReadLogTail_ReadsThroughSharedWriteLock()
     {
         // Serilog holds the live file open: the view must still read it.

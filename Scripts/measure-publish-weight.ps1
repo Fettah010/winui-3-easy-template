@@ -5,8 +5,9 @@
 #
 # Publishes win-x64 Release to a temp dir (never touches Releases/), reports
 # the total size, and compares against docs/publish-weight-baseline.json when
-# present. -FailOnJump exits 1 on an unexplained >10% jump (CI guardrail);
-# without it the script only warns (warn-first for one release, per the plan).
+# present. -FailOnJump exits 1 on an unexplained >10% jump: CI (main-push)
+# always passes it (armed Phase D1 — a jump gets triaged, never muted);
+# without it the script only warns (local dev loop).
 # Reads inside the repo only; the publish output goes to the temp folder.
 
 [CmdletBinding()]

@@ -260,34 +260,56 @@ Default stance: small, stable seams over rewrites (house precedent).
 `Services/StartupBudgets.cs` + `measure-publish-weight.ps1` currently
 warn (decided: fail after the first green baseline). Time to arm them.
 
-- [ ] **D1. Arm the budgets.**
+- [x] **D1. Arm the budgets.**
   Flip `StartupBudgets.Check` and `-FailOnJump` to failing on breach
   with the baselines committed in-repo; CI (main-push) runs both.
   First breach gets triaged, not muted (mute = new baseline + reason
   in DECISIONS).
-- [ ] **D2. Publish-weight diet, measured.**
+  Shipped 2026-09-22: `StartupBudgets.Report` logs breaches as errors
+  at launch (wired post-window-phase) + budget-shape anti-mute test;
+  CI `weight` job runs `-FailOnJump` on main push; local gate proven
+  green (+0.1% vs baseline).
+- [x] **D2. Publish-weight diet, measured.**
   `docs/publish-weight-baseline.json` exists - add the trend to the
   release checklist (delta per release in CHANGELOG). Evaluate: unused
   Toolkit packages per flag combo (matrix already builds all combos -
   assert per-combo weight ceilings), `PublishTrimmed` analysis for the
   non-WinUI assemblies we own, icon/asset compression (11 PNG variants
   + 3 ICOs today; all small - verify, don't assume).
-- [ ] **D3. Startup path audit.**
+  Shipped 2026-09-22: dead `Animations`/`Helpers` refs removed
+  (267.8MB vs 268.2MB baseline, -0.2% — transitives remain via
+  Controls); assets verified small (largest 128KB); trend rule in
+  WORKFLOW. `PublishTrimmed` declined (WinUI-unsupported, like AOT);
+  per-combo ceilings deferred to nightly/tag (21 publishes ≈ 84min,
+  over the 30min matrix budget) — see DECISIONS.
+- [x] **D3. Startup path audit.**
   Trace cold start end-to-end (Serilog init, DI build, first frame,
   deferred queue): assert P0-4 holds (ctor = chrome + navigation only),
   move anything that crept into the ctor back past the first frame.
   Record the flame numbers in STATE; regressions trip D1.
-- [ ] **D4. List/log throughput guards.**
+  Shipped 2026-09-23: P0-4 holds (only creep: instance-listener thread,
+  moved to deferred); flame in STATE (cold 1451/1715/1964, warm
+  ~300/~320/~500); splash re-baselined 800 → 1600 with reason.
+- [x] **D4. List/log throughput guards.**
   Live-event cap (500) exists; extend the pattern: file-tail read caps
   + background parsing (never parse multi-MB logs on the UI thread -
   verify `DiagnosticsService` tail path), DB query time guards, image
   decode sizes (`Logo.png` 76KB is fine; user content is not - decode
   to container size, the Formixa lesson).
-- [ ] **D5. Splash honesty.**
+  Shipped 2026-09-22: export bundle I/O moved off the UI thread (was
+  8MB read + scrub + zip inline); DB 30s command timeout + 2s slow
+  tripwire on all three query paths; tail path verified already-capped
+  (seek window + 200-line bound, pinned by a 2MB cap test). No
+  user-image decode path exists (bundled assets only) — nothing to
+  guard.
+- [x] **D5. Splash honesty.**
   `SplashScreen.xaml` + `SplashLoadingServices/PreparingWindow` strings
   exist - wire them to real milestones (services ready, window ready)
   instead of static text, or drop the staged strings. A fake progress
   narrative is worse than none.
+  Shipped 2026-09-22: audited already-honest (0.4/services,
+  0.85/constructed — real completions, determinate bar, no filler
+  animation) + added the 1.0 completion milestone at window-shown.
 
 ---
 

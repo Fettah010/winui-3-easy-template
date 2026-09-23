@@ -55,10 +55,28 @@ public partial class App : Application
         {
             await TransitionToMainWindow();
         }
+        // Completion milestone (D5): the bar reaches full exactly when the
+        // window is shown — determinate progress with no fake narrative.
+        // The text stays PreparingWindow (same phase); the bar is the signal.
+        _splash?.ReportProgress(1.0, LocalizationService.Current.GetString("SplashPreparingWindow"));
         AppLog.Information(
             "Main window shown after {ElapsedMs}ms", Program.StartupStopwatch.ElapsedMilliseconds);
         DevTemWinUi3.Services.Diagnostics.AppMetrics.RecordStartupPhase(
             "window", Program.StartupStopwatch.ElapsedMilliseconds);
+
+        // Armed budgets (Phase D1): breaches log as errors (triage, don't
+        // mute). Release uses the tighter budget; Debug the looser one.
+        try
+        {
+#if DEBUG
+            const bool launchIsRelease = false;
+#else
+            const bool launchIsRelease = true;
+#endif
+            DevTemWinUi3.Services.StartupBudgets.Report(
+                DevTemWinUi3.Services.Diagnostics.AppMetrics.GetSnapshot(), launchIsRelease);
+        }
+        catch { }
 
         // Deep link that started this process (if any) wins over the home page.
         // Unpackaged: command line (Program.PendingProtocolUri, already

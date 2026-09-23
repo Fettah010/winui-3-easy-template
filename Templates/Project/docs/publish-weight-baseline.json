@@ -1,1 +1,1 @@
-{"bytes":281198381,"mb":268.2,"measured":"2026-09-16","configuration":"Release win-x64 self-contained","note":"P3-2 baseline. CI warns (fails with -FailOnJump) on unexplained jumps over 10 percent."}
+{"bytes":281198381,"mb":268.2,"measured":"2026-09-16","configuration":"Release win-x64 self-contained","note":"P3-2 baseline, armed Phase D1. CI fails (-FailOnJump) on unexplained jumps over 10 percent; mute = new baseline + reason in DECISIONS."}

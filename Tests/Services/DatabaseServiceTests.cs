@@ -60,8 +60,34 @@ public class DatabaseServiceTests
         var result = await db.ExecuteScalarAsync<string>("SELECT Value FROM Settings WHERE Key = 'k'");
         Assert.AreEqual("v", result);
     }
+    [TestMethod]
+    public void QueryGuards_HaveSaneDefaults()
+    {
+        // D4: the hard guard must be positive (a wedged query fails), the
+        // tripwire above zero (local answers land in ms).
+        Assert.IsGreaterThan(TimeSpan.Zero, DatabaseService.QueryTimeout);
+        Assert.IsGreaterThan(TimeSpan.Zero, DatabaseService.SlowQueryThreshold);
+    }
 
     [TestMethod]
+    public void QueryGuards_RejectNonPositiveValues()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => DatabaseService.QueryTimeout = TimeSpan.Zero);
+        Assert.Throws<ArgumentOutOfRangeException>(() => DatabaseService.SlowQueryThreshold = TimeSpan.FromSeconds(-1));
+    }
+
+    [TestMethod]
+    public async Task GuardedQuery_Works()
+    {
+        // Guard plumbing must not break the normal path.
+        var db = DatabaseService.Current;
+        await db.InitializeAsync();
+        await db.SetSettingAsync("guard-key", "guard-value");
+        Assert.AreEqual("guard-value", await db.GetSettingAsync("guard-key"));
+    }
+
+    [TestMethod]
+
     public async Task Migrations_ApplyInOrder_AndAreIdempotent()
     {
         // P1-3: fresh DBs land on the current schema version; re-running

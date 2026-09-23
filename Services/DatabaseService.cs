@@ -224,6 +224,61 @@ public sealed class DatabaseService : IDisposable
     }
 
     /// <summary>
+    /// Hard guard for every query (D4): a wedged query fails instead of
+    /// hanging the caller forever. Applied to every command below.
+    /// </summary>
+    internal static TimeSpan QueryTimeout
+    {
+        get => _queryTimeout;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, TimeSpan.Zero);
+            _queryTimeout = value;
+        }
+    }
+    private static TimeSpan _queryTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Slow-query tripwire (D4): anything slower logs a warning with its
+    /// elapsed time so regressions surface in Diagnostics instead of
+    /// hiding as vague UI jank. Local SQLite should answer in ms.
+    /// </summary>
+    internal static TimeSpan SlowQueryThreshold
+    {
+        get => _slowQueryThreshold;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(value, TimeSpan.Zero);
+            _slowQueryThreshold = value;
+        }
+    }
+    private static TimeSpan _slowQueryThreshold = TimeSpan.FromSeconds(2);
+
+    private static async Task<T> WithQueryGuardAsync<T>(string operation, Func<Task<T>> run)
+    {
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            return await run().ConfigureAwait(false);
+        }
+        finally
+        {
+            try
+            {
+                watch.Stop();
+                if (watch.Elapsed >= SlowQueryThreshold)
+                    AppLog.Warning("Slow DB query ({Operation}): {ElapsedMs}ms", operation, watch.Elapsed.TotalMilliseconds);
+            }
+            catch { }
+        }
+    }
+
+    private static void ApplyTimeout(Microsoft.Data.Sqlite.SqliteCommand cmd)
+    {
+        try { cmd.CommandTimeout = (int)QueryTimeout.TotalSeconds; } catch { }
+    }
+
+    /// <summary>
     /// Executes a SQL command and returns the number of affected rows.
     /// </summary>
     public async Task<int> ExecuteAsync(string sql, params SqliteParameter[] parameters)
@@ -235,8 +290,9 @@ public sealed class DatabaseService : IDisposable
         cmd.CommandText = sql;
         if (parameters.Length > 0)
             cmd.Parameters.AddRange(parameters);
+        ApplyTimeout(cmd);
 
-        return await cmd.ExecuteNonQueryAsync();
+        return await WithQueryGuardAsync("Execute", () => cmd.ExecuteNonQueryAsync());
     }
 
     /// <summary>
@@ -251,8 +307,9 @@ public sealed class DatabaseService : IDisposable
         cmd.CommandText = sql;
         if (parameters.Length > 0)
             cmd.Parameters.AddRange(parameters);
+        ApplyTimeout(cmd);
 
-        var result = await cmd.ExecuteScalarAsync();
+        var result = await WithQueryGuardAsync("ExecuteScalar", () => cmd.ExecuteScalarAsync());
         if (result is null || result == DBNull.Value)
             return default;
 
@@ -272,8 +329,9 @@ public sealed class DatabaseService : IDisposable
         cmd.CommandText = sql;
         if (parameters.Length > 0)
             cmd.Parameters.AddRange(parameters);
+        ApplyTimeout(cmd);
 
-        await using var readerResult = await cmd.ExecuteReaderAsync();
+        await using var readerResult = await WithQueryGuardAsync("Query", () => cmd.ExecuteReaderAsync());
         return reader(readerResult);
     }
 

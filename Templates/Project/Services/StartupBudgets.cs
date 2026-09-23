@@ -9,13 +9,19 @@ namespace DevTemWinUi3.Services;
 /// §2.2): the machines catch regressions, not users. <see cref="Check"/>
 /// compares a metrics snapshot against the budgets and returns human
 /// descriptions of every breach (empty when green). Pure and
-/// headless-testable. For one release breaches only warn (see the
-/// budget test); afterwards they fail.
+/// headless-testable. Armed (Phase D1): <see cref="Report"/> logs every
+/// breach as an error at launch, and CI fails publish-weight jumps —
+/// a breach gets triaged, never muted (mute = new baseline + reason in
+/// DECISIONS).
 /// </summary>
 public static class StartupBudgets
 {
-    /// <summary>Process → splash pixels, Debug dev box.</summary>
-    public const double SplashMs = 800;
+    /// <summary>
+    /// Process → splash pixels, Debug dev box. Re-baselined 800 → 1600 on
+    /// the first measured cold flame (1451ms; warm ~300ms — cold is
+    /// loader/JIT-dominated, not app code). Guards regressions, not physics.
+    /// </summary>
+    public const double SplashMs = 1600;
 
     /// <summary>Process → interactive main window, Debug.</summary>
     public const double WindowMsDebug = 2500;
@@ -48,6 +54,22 @@ public static class StartupBudgets
                 breaches.Add($"window {window:F0} ms > budget {windowBudget:F0} ms");
         }
         catch { }
+        return breaches;
+    }
+
+    /// <summary>
+    /// Armed reporting (Phase D1): checks and logs every breach as an
+    /// error (error-level = fails loudly in logs, Diagnostics, and
+    /// bundles — the first breach gets triaged, not muted). Called once
+    /// at launch after the window phase records. Never throws.
+    /// </summary>
+    public static IReadOnlyList<string> Report(AppMetrics.MetricsSnapshot snapshot, bool isRelease)
+    {
+        var breaches = Check(snapshot, isRelease);
+        foreach (string breach in breaches)
+        {
+            try { AppLog.Error("Startup budget breach: {Breach}", breach); } catch { }
+        }
         return breaches;
     }
 }

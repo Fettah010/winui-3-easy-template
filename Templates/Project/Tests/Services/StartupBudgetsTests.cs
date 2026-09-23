@@ -68,4 +68,25 @@ public class StartupBudgetsTests
         var breaches = StartupBudgets.Check(AppMetrics.GetSnapshot(), isRelease: false);
         Assert.IsNotNull(breaches);
     }
+
+    [TestMethod]
+    public void Budgets_AreSaneAndOrdered()
+    {
+        // Anti-mute guard (Phase D1): budgets live in code, so pinning
+        // their shape stops a quiet raise-to-green. Mute = new baseline +
+        // reason in DECISIONS, never a constant edit.
+        Assert.IsGreaterThan(0, StartupBudgets.SplashMs);
+        Assert.IsGreaterThan(0, StartupBudgets.WindowMsDebug);
+        Assert.IsGreaterThan(0, StartupBudgets.WindowMsRelease);
+        Assert.IsLessThanOrEqualTo(StartupBudgets.WindowMsDebug, StartupBudgets.WindowMsRelease);
+        Assert.IsGreaterThan(1, StartupBudgets.ToleranceRatio);
+    }
+
+    [TestMethod]
+    public void Report_ReturnsBreachesWithoutThrowing()
+    {
+        var breaches = StartupBudgets.Report(SnapshotWith(400, 6000), isRelease: false);
+        Assert.HasCount(1, breaches);
+        Assert.IsEmpty(StartupBudgets.Report(SnapshotWith(400, 1500), isRelease: false));
+    }
 }

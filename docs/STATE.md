@@ -5,11 +5,12 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** Advancement Plan Phase C (consumer architecture) — C1 PageFactory + injected pages + journal retired, C2 NavigationRegistry + add-page appends, C3 IHost spike (DECLINE, ~110ms cold), C4 SettingsSchema migrations + validation, C5 BackgroundTaskRunner + update check as task #1, C6 auth evaluation (DEFER, no code).
+- **Goal:** Advancement Plan Phase D (performance budgets with teeth) — D1 armed budgets + CI weight gate, D2 Toolkit diet + trend rule, D3 startup audit + cold flame, D4 throughput guards, D5 splash completion milestone.
 - **Version:** app `0.0.27-beta` (unchanged — no release this pass); template package `0.3.12` (unchanged).
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
-- **CI health (this session, local):** build 0/0, tests 340+1, parity OK (196), FULL 21-combo matrix PASSED (builds + per-combo tests + add-page smokes + msix DryRun + init-template scratch). Caught live: basic-scaffold CheckInterval visibility, msixnone setup-factory assert, nodiag footer assert (all relational now).
+- **CI health (this session, local):** build 0/0, tests 346+1, parity OK (196), FULL 21-combo matrix PASSED (D1-D5 core: csproj diet, App splash milestone, MainWindow P0-4 move, DB/export guards).
+- **Cold flame (D3, Debug dev box 2026-09-23):** splash 1451 / services 1715 / window 1964ms cold; ~300 / ~320 / ~500ms warm. P0-4 holds; splash budget re-baselined 800 → 1600 (loader/JIT-dominated, see DECISIONS); window 2500 holds.
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).
 - **Check-now fix (v0.0.14):** per-service deferred-init guards (one throw can't half-wire the app), busy check button (disabled + "Checking…" until the flow resolves), AppLog breadcrumbs on every update stage + dropped-toast/host warnings. If a check is ever silent again, `Logs/applog-*.log` names the cause.

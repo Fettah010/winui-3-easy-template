@@ -54,6 +54,10 @@ git push origin templates-v0.3.0
 Tag name determines channel (`v*-beta` → beta, plain `v*` → stable).
 Velopack versions must keep increasing — each beta bumps the patch.
 Never push a tag to "test CI" (Workflow tier above covers it).
+Publish-weight trend (Phase D2): record the release delta in the
+CHANGELOG entry (`Scripts/measure-publish-weight.ps1` prints it);
+an intended jump re-baselines `docs/publish-weight-baseline.json`
+with the reason in `docs/DECISIONS.md`, never silently.
 
 ## Dependency currency (maintainer)
 

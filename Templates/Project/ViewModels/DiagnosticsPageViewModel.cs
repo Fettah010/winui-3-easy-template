@@ -504,8 +504,14 @@ public partial class DiagnosticsPageViewModel : ObservableObject
             var path = await _pickers.PickSaveFileAsync("devtem-diagnostics", ".zip");
             if (string.IsNullOrWhiteSpace(path))
                 return;
-            bool ok = DiagnosticsService.CreateDiagnosticBundle(
-                path, GetFilteredExportText(), SelectedLogFile, Status);
+            // Bundle I/O (up to 8 MB of log text + scrub + zip) runs on
+            // the pool — never parse multi-MB logs on the UI thread (D4).
+            // VM state is captured first; only flags are touched after.
+            string filtered = GetFilteredExportText();
+            var status = Status;
+            string? selected = SelectedLogFile;
+            bool ok = await Task.Run(() => DiagnosticsService.CreateDiagnosticBundle(
+                path, filtered, selected, status));
             if (ok)
                 LastExportPath = path;
             else

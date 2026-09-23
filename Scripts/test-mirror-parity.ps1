@@ -109,7 +109,7 @@ $conditioned = @(
 # intentionally change — a mismatch failure names the file.
 $requiredGuards = @{
     "AGENTS.md"                                = @()
-    "App.xaml.cs"                              = @("(database)", "(updates == 'velopack' || updates == 'basic')")
+    "App.xaml.cs"                                = @("DEBUG", "(database)", "(updates == 'velopack' || updates == 'basic')")
     "Build\Features.Distribution.props"        = @()
     "__SafeName__.csproj"                      = @()
     "__SafeName__.sln"                         = @()

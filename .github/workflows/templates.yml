@@ -18,6 +18,8 @@ on:
       - "Scripts/bump-version.ps1"
       - "Scripts/submit-store.ps1"
       - "Scripts/new-store-listing.ps1"
+      - "Scripts/measure-publish-weight.ps1"
+      - "docs/publish-weight-baseline.json"
       - ".github/workflows/store-submit.yml"
       - ".github/workflows/release.yml"
       - "Services/**"
@@ -41,6 +43,8 @@ on:
       - "Scripts/bump-version.ps1"
       - "Scripts/submit-store.ps1"
       - "Scripts/new-store-listing.ps1"
+      - "Scripts/measure-publish-weight.ps1"
+      - "docs/publish-weight-baseline.json"
       - ".github/workflows/store-submit.yml"
       - ".github/workflows/release.yml"
       - "Services/**"
@@ -69,3 +73,13 @@ jobs:
         run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/register-protocol.ps1 -Scheme "devtem-ci-probe://" -ExePath "$env:SystemRoot\System32\notepad.exe" -WhatIf
       - name: Scaffold matrix (build + test every combo)
         run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-templates.ps1
+  weight:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Publish weight gate (>10% jump fails)
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/measure-publish-weight.ps1 -FailOnJump
