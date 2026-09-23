@@ -26,6 +26,56 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.0.28-beta] - 2026-09-23
+
+Advancement Plan Phases A–F shipped (template quality, security,
+performance, UX, mechanics, ecosystem). Only manual remainder: the
+high-contrast + text-scaling screenshot pass (B5, needs a live desktop).
+
+### Added
+
+- Phase A (trust + security): SHA-256 verify-before-launch + timeouts
+  for `basic`-mode updates; 1 MB cap + schema version on
+  settings-backup imports; quoted-path proofs for Run/protocol registry
+  writes; secret-hygiene source-scan tests; Sentry PII defaults pinned
+  + crash-guide posture; `basic`-mode release path feeding the checksum;
+  `init-template -Validate`; dependency-currency policy in WORKFLOW.
+- Phase B (UX, a11y): code-behind responsive layout everywhere (Settings
+  VSM retired); keyboard accelerators (Back, Ctrl+Comma, Escape);
+  screen-reader live regions on toasts + update status; compiled
+  bindings in item templates; `devtem-list-details` item template +
+  `add-page -Kind list`; dialog-button language rule + content tests;
+  whats-new once per version + About recall + length cap; Home/Settings/
+  wizard empty-error-loading audit.
+- Phase C (consumer architecture): `PageFactory` constructor injection
+  (locator-at-click retired); `NavigationRegistry` data-driven nav
+  (`add-page` never touches XAML); `SettingsSchema` validated options +
+  migrations; `BackgroundTaskRunner` task registry. IHost spike:
+  declined, ~110 ms cold (DECISIONS). Auth: evaluation only, deferred.
+- Phase D (performance budgets): armed `StartupBudgets` + CI weight
+  gate; Toolkit diet (dead refs removed); startup audit (P0-4 holds,
+  flame in STATE, splash re-baselined 800 -> 1600 with reason); export
+  bundle off the UI thread + DB 30 s/2 s guards + tail caps; splash
+  completion milestone.
+- Phase E (mechanics, CI, docs): `-Profile Fast` for PRs, full matrix on
+  main/nightly/tags; smoke auto-retry with both-attempts evidence;
+  `DocsDriftTests` drift guards; docs split (GETTING-STARTED +
+  MAINTAINERS, guide 539 -> 250 lines); release notes filled,
+  `devtem-list-details` added to the nupkg; version-reset stands;
+  updates x distribution truth table.
+- Phase F (ecosystem parity): `devtem-datagrid` item template +
+  `add-page -Kind grid` (sortable columns, selection + empty state,
+  DataGrid 7.1.2 — the only WinUI 3 DataGrid published); suspend/resume
+  spike closed with no code (WinAppSDK has no suspend state);
+  `init-profile.ps1` preset picker (minimal/recommended/full);
+  PublishAot annual track (next due 2027-09).
+- Publish weight: 267.8 MB, delta -0.1% vs the 268.2 MB baseline
+  (DataGrid ships opt-in only — zero base-scaffold weight change).
+- Template package `0.4.0` (MINOR per policy — new template surface:
+  `devtem-list-details`, `devtem-datagrid`, `init-profile.ps1`; nupkg
+  actually ships all four templates — the 0.3.12 package predates them).
+
 ## [0.0.27-beta] - 2026-09-22
 
 ### Added

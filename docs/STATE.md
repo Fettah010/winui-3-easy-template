@@ -5,8 +5,8 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** Advancement Plan Phase F (ecosystem parity, cherry-picked) — F1 devtem-datagrid + add-page -Kind grid, F2 suspend spike (CLOSE), F3 init-profile picker, F4 AOT annual track. E1/E2 boxes checked (work shipped in Phase E); B5 marked BLOCKED (live-desktop screenshots).
-- **Version:** app `0.0.27-beta` (unchanged — no release this pass); template package `0.3.12` (unchanged).
+- **Goal:** Release 0.0.28-beta (app, Advancement Phases A–F) + 0.4.0 (templates: list-details, datagrid, picker).
+- **Version:** app `0.0.28-beta` (bumped, unreleased); template package `0.4.0` (tag-driven, unreleased).
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
 - **CI health (this session, local):** build 0/0, tests 350+1, parity OK (209), FULL 21-combo matrix PASSED (F1 core: grid add-page smoke in allon, DataGrid 7.1.2 restore on net10; nupkg 293 entries, 4 templates resolve; picker -WhatIf x4 + live scaffold).
