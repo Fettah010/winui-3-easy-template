@@ -5,8 +5,10 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** Release 0.0.28-beta (app, Advancement Phases A–F) + 0.4.0 (templates: list-details, datagrid, picker).
-- **Version:** app `0.0.28-beta` (bumped, unreleased); template package `0.4.0` (tag-driven, unreleased).
+- **Goal:** Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates). All pipelines green, changelogs live on GitHub + NuGet.
+- **Version:** app `0.0.28-beta` (released); template package `0.4.0` (released).
+- **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
+- **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
 - **CI health (this session, local):** build 0/0, tests 350+1, parity OK (209), FULL 21-combo matrix PASSED (F1 core: grid add-page smoke in allon, DataGrid 7.1.2 restore on net10; nupkg 293 entries, 4 templates resolve; picker -WhatIf x4 + live scaffold).
