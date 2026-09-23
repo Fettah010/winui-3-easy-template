@@ -13,6 +13,24 @@ Packaged runs of this binary automatically take the slim status surface
 (Settings + Update Center report the Windows-owned flow); unpackaged
 runs keep the full Velopack flow. No re-scaffold, no rebuild per route.
 
+## Updates × distribution truth table
+
+Not every combination exists — the engine cannot constrain parameters,
+so invalid pairs fail the build with an MSBuild guard instead (proven by
+the `badupd`/`badupd2` matrix combos). Each valid cell links its guide.
+
+| `--updates` \ `--distribution` | `portable` (default) | `msix` |
+| --- | --- | --- |
+| `velopack` (default) | ✅ Setup.exe + feed, full in-app flow ([guide](updates-velopack.md)) | ❌ Guard: `cannot be combined with --distribution msix` (ship the Dual tracks below instead) |
+| `basic` | ✅ Setup.exe + `.sha256`, zero-dependency checker ([guide](updates-basic.md)) | ❌ Guard: `cannot be combined with --distribution msix` |
+| `none` | ✅ No update code at all (manual distribution) | ✅ Slim status surface, Windows owns updates |
+| `appinstaller` | ❌ Guard: `cannot be combined with --distribution portable` (needs package identity) | ✅ `.msix` + `.appinstaller`, Windows owns updates ([guide](updates-appinstaller.md)) |
+| `store` | ❌ Guard: `cannot be combined with --distribution portable` (needs package identity) | ✅ Partner Center submission ([guide](updates-store.md)) |
+
+The Dual profile (Production source + `--publisher`) is not a cell —
+it is two artifacts from one source: the portable Velopack track and
+the Store `.msixupload` at the same version, released together below.
+
 ## Releasing both tracks
 
 1. Bump once (`Scripts/bump-version.ps1 -Version X`): the same version

@@ -4,7 +4,7 @@ name: msix
 # with an ephemeral self-signed cert, emits the .appinstaller feed and the
 # .msixbundle/.msixupload Store outputs, then uploads everything + the cert.
 # Proves Scripts/build-msix.ps1 + Packaging/Msix end to end on every change.
-# Release signing with a real cert happens manually (see TEMPLATE-GUIDE §5).
+# Release signing with a real cert happens manually (see docs/MAINTAINERS.md).
 
 on:
   push:

@@ -134,7 +134,9 @@ $extensions = @("*.cs", "*.xaml", "*.ps1", "*.yml", "*.md", "*.csproj", "*.manif
 $skipDirs = @(".git", "bin", "obj", "docs\archive")
 $selfName = Split-Path $PSCommandPath -Leaf
 # TEMPLATE-GUIDE.md documents the tokens themselves: never rewrite it.
-$frozenNames = @($selfName, "TEMPLATE-GUIDE.md")
+# GETTING-STARTED.md (token table) and MAINTAINERS.md (template commands)
+# document them too: freeze all three.
+$frozenNames = @($selfName, "TEMPLATE-GUIDE.md", "GETTING-STARTED.md", "MAINTAINERS.md")
 
 $files = Get-ChildItem -LiteralPath $PSScriptRoot/.. -Recurse -File -Include $extensions |
     Where-Object {

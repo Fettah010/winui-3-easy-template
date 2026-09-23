@@ -8,18 +8,30 @@
 #
 #   powershell -File Scripts/test-templates.ps1                 # full matrix
 #   powershell -File Scripts/test-templates.ps1 -Combos allon,alloff
+#   powershell -File Scripts/test-templates.ps1 -Profile Fast     # PR subset
 #   powershell -File Scripts/test-templates.ps1 -KeepTemp       # inspect output
 #
+# Profiles (Phase E1 cost control): Fast = allon + alloff + one msix
+# (CI runs it per PR); Full (default) = all 21 combos + init-template
+# scratch (main push, nightly, templates-v* tags). The init-template
+# scratch proof runs under every profile.
 # Same matrix runs in CI (.github/workflows/templates.yml).
 
 param(
     [string[]]$Combos = @("allon", "alloff", "minimal", "desktop", "production", "notray", "noupd", "updbasic", "logmel", "lognone", "nocrash", "noloc", "notests", "nohttp", "nodiag", "nosetup", "msixapp", "msixstore", "msixnone", "badupd", "badupd2"),
+    [ValidateSet("Full", "Fast")]
+    [string]$Profile = "Full",
     [switch]$KeepTemp
 )
 
 # `powershell -File` passes `-Combos a,b` through as one string; accept both
-# comma-joined and real arrays.
-$Combos = @($Combos | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
+# comma-joined and real arrays. An explicit -Combos always wins over -Profile.
+if ($PSBoundParameters.ContainsKey('Combos')) {
+    $Combos = @($Combos | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
+}
+elseif ($Profile -eq 'Fast') {
+    $Combos = @("allon", "alloff", "msixapp")
+}
 
 $ErrorActionPreference = "Stop"
 

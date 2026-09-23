@@ -14,6 +14,7 @@
     <Description>Production-ready WinUI 3 starter for .NET: a full MVVM desktop app (Mica window, system tray, auto-updates with Velopack/basic/none or native AppInstaller/Store options for MSIX, first-run setup wizard, SQLite + HTTP data layer, 3-language or English-only UI, persisted settings, Serilog/MEL/none logging, release pipeline) plus an MVVM content-page scaffolder. dotnet new devtem-winui / dotnet new devtem-page. Beyond blank templates: tray, i18n, deep links, settings backup, diagnostics.</Description>
     <PackageTags>winui;winui-3;winui3;windows;windows-app-sdk;winappsdk;desktop;desktop-app;dotnet-new;template;templates;starter;starter-kit;boilerplate;mvvm;csharp;sqlite;velopack;auto-update;tray;i18n;localization</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReleaseNotes>See https://github.com/Fettah010/winui-3-easy-template/releases for per-release notes.</PackageReleaseNotes>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/Fettah010/winui-3-easy-template</RepositoryUrl>
@@ -32,6 +33,7 @@
   <ItemGroup>
     <Content Include="..\..\Templates\Project\**\*" Exclude="..\..\Templates\Project\bin\**\*;..\..\Templates\Project\obj\**\*" PackagePath="content\Project\%(RecursiveDir)%(Filename)%(Extension)" />
     <Content Include="..\..\Templates\Page\**\*" Exclude="..\..\Templates\Page\bin\**\*;..\..\Templates\Page\obj\**\*" PackagePath="content\Page\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="..\..\Templates\ListDetails\**\*" Exclude="..\..\Templates\ListDetails\bin\**\*;..\..\Templates\ListDetails\obj\**\*" PackagePath="content\ListDetails\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- Package face: icon + readme land at the package root (not content/). -->
     <None Include="..\..\Assets\Logo.png" Pack="true" PackagePath="icon.png" />
     <None Include="README.md" Pack="true" PackagePath="README.md" />

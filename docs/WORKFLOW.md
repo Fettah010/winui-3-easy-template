@@ -9,9 +9,19 @@ that applies. Time costs are local-machine figures.
 | --- | --- | --- | --- |
 | Fast | `dotnet build DevTemWinUi3.csproj -c Debug -p:Platform=x64` (0 warn/0 err) + `dotnet test Tests/` (currently 215 passed + 4 skipped) | ~1 min | Every change, no exceptions |
 | Matrix | `powershell -File Scripts/test-templates.ps1` (21 combos build 0/0 + tests) | ~30 min | Any `Templates/**` change (incl. mirror edits) |
+| Matrix-Fast | `powershell -File Scripts/test-templates.ps1 -Profile Fast` (allon + alloff + one msix + init-template scratch) | ~10 min | PRs touching `Templates/**` (CI enforces; main/nightly/tags run full) |
 | Pack | `powershell -File Scripts/build-msix.ps1 -DryRun` (staging valid) | ~3 min | Manifest, csproj, Assets changes |
 | Live UI | `dotnet test UI/…` 4/4 + screenshot in the summary | ~1 min | Any XAML / navigation / theme / Settings change |
 | Workflow | `pwsh` parse + logic test with sample values (pass + reject) | ~1 min | Any `.github/workflows` change (CI only runs on tag/push) |
+
+## CI tiers (Phase E1 cost control)
+
+| Trigger | Matrix | Weight gate | Smoke |
+| --- | --- | --- | --- |
+| Pull request (paths-filtered) | Fast subset | — | on UI paths |
+| Push to `main` | Full 21 combos | `-FailOnJump` | on UI paths |
+| Nightly (02:00 UTC) | Full 21 combos | `-FailOnJump` | — |
+| `templates-v*` tag | Full 21 combos | — (publish smoke instead) | — |
 
 Always pass `-p:Platform=x64` (XAML compiler fails without it).
 

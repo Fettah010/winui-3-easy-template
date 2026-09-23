@@ -1,36 +1,17 @@
 name: templates
 
-# Scaffold matrix: every push/PR touching templates runs test-templates.ps1
-# (all flag combos scaffolded, built with 0 warnings, tested).
+# Scaffold matrix: PRs run the Fast subset, main pushes / nightly /
+# templates-v* tags run the full matrix (see -Profile in
+# Scripts/test-templates.ps1 and the tier table in docs/WORKFLOW.md).
 # Publishing lives in templates-publish.yml (tag-driven, no paths filter).
 
 on:
+  # Main pushes and release tags always run the full matrix (no paths
+  # filter: the tag commit itself may touch nothing matrix-relevant, but
+  # the release must still prove every combo).
   push:
     branches: [main]
-    paths:
-      - "Templates/**"
-      - "Packaging/**"
-      - "Scripts/test-templates.ps1"
-      - "Scripts/test-mirror-parity.ps1"
-      - "Scripts/register-protocol.ps1"
-      - "Scripts/build-msix.ps1"
-      - "Scripts/publish-store.ps1"
-      - "Scripts/bump-version.ps1"
-      - "Scripts/submit-store.ps1"
-      - "Scripts/new-store-listing.ps1"
-      - "Scripts/measure-publish-weight.ps1"
-      - "docs/publish-weight-baseline.json"
-      - ".github/workflows/store-submit.yml"
-      - ".github/workflows/release.yml"
-      - "Services/**"
-      - "Pages/**"
-      - "ViewModels/**"
-      - "Controls/**"
-      - "Assets/**"
-      - "**.csproj"
-      - "**.sln"
-      - ".github/workflows/templates.yml"
-      - "Tests/**"
+    tags: ["templates-v*"]
   pull_request:
     paths:
       - "Templates/**"
@@ -56,12 +37,14 @@ on:
       - "**.sln"
       - ".github/workflows/templates.yml"
       - "Tests/**"
+  schedule:
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 jobs:
   matrix:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -71,7 +54,13 @@ jobs:
         run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-mirror-parity.ps1
       - name: register-protocol dry run (writes nothing)
         run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/register-protocol.ps1 -Scheme "devtem-ci-probe://" -ExePath "$env:SystemRoot\System32\notepad.exe" -WhatIf
-      - name: Scaffold matrix (build + test every combo)
+      # PRs prove the Fast subset (allon + alloff + one msix); main,
+      # nightly, and release tags prove the full matrix (E1 cost control).
+      - name: Scaffold matrix, Fast subset (PR)
+        if: github.event_name == 'pull_request'
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-templates.ps1 -Profile Fast
+      - name: Scaffold matrix, full (main/nightly/tag)
+        if: github.event_name != 'pull_request'
         run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/test-templates.ps1
   weight:
     runs-on: windows-latest

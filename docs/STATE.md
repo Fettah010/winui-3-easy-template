@@ -5,11 +5,11 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** Advancement Plan Phase D (performance budgets with teeth) — D1 armed budgets + CI weight gate, D2 Toolkit diet + trend rule, D3 startup audit + cold flame, D4 throughput guards, D5 splash completion milestone.
+- **Goal:** Advancement Plan Phase E (mechanics, CI, docs) — E1 Fast/full matrix tiers + CI, E2 smoke auto-retry, E3 drift guards, E4 docs split, E5 nupkg audit (list-details was missing), E6 version-reset stands, E7 duality table.
 - **Version:** app `0.0.27-beta` (unchanged — no release this pass); template package `0.3.12` (unchanged).
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
-- **CI health (this session, local):** build 0/0, tests 346+1, parity OK (196), FULL 21-combo matrix PASSED (D1-D5 core: csproj diet, App splash milestone, MainWindow P0-4 move, DB/export guards).
+- **CI health (this session, local):** build 0/0, tests 350+1, parity OK (199), FULL 21-combo matrix PASSED + `-Profile Fast` proven (E1/E4 core: profiles, frozen new docs, nupkg content).
 - **Cold flame (D3, Debug dev box 2026-09-23):** splash 1451 / services 1715 / window 1964ms cold; ~300 / ~320 / ~500ms warm. P0-4 holds; splash budget re-baselined 800 → 1600 (loader/JIT-dominated, see DECISIONS); window 2500 holds.
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).

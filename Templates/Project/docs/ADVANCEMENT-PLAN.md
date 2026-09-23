@@ -327,36 +327,52 @@ warn (decided: fail after the first green baseline). Time to arm them.
   plus a documented "CI agent display" setup so UI tests run
   headless-reliably (or mark the suite `[Explicit]`-style nightly).
   Goal: no human re-runs to get green.
-- [ ] **E3. AGENTS/docs drift guards.**
+- [x] **E3. AGENTS/docs drift guards.**
   The 0.0.26-era stale version/branch/pages proved generated docs
   drift. Ship: a structural test asserting AGENTS.md has no
   hardcoded `0.0.x` version line (must say "see csproj"), the branch
   table is generic, and README layout lists only pages that exist
   (parse `Pages/*.xaml` vs the layout code fence). Cheap, permanent.
-- [ ] **E4. Docs information architecture.**
+  Shipped 2026-09-23: `DocsDriftTests` (csproj pointer, app-version
+  allowlist, generic branch table, page mentions incl. the scaffold
+  fence, flag-relational); rotting `0.0.26-beta` example removed.
+- [x] **E4. Docs information architecture.**
   TEMPLATE-GUIDE.md is ~500 lines serving first-run, daily, and
   maintainer audiences. Split: `docs/GETTING-STARTED.md` (scaffold ->
   first run, 15 min), TEMPLATE-GUIDE (daily workflows), `docs/MAINTAINERS.md`
   (parity, matrix, release, encoding rules). Keep the bootstrap order
   (AGENTS -> STATE -> WORKFLOW) intact; update all cross-links in the
   same commit.
-- [ ] **E5. NuGet/VS presentation.**
+  Shipped 2026-09-23: byte-exact section moves (guide 539 → 250
+  daily-only lines); AGENTS/msix/init-template cross-links updated;
+  new docs frozen for identity like the guide; Fast matrix green.
+- [x] **E5. NuGet/VS presentation.**
   Package face (`icon.png`, README, tags) ships - verify the VS New
   Project dialog rendering (screenshots in the release PR), fill
   `PackageReleaseNotes`, confirm `dotnet new update` picks up 0.3.x.
   Record VS template-cache troubleshooting (already in guide §2c -
   verify it still matches VS 2026 behavior).
-- [ ] **E6. Revisit the version-reset story.**
+  Shipped 2026-09-23: `PackageReleaseNotes` filled; `devtem-list-details`
+  actually added to the nupkg (B6 shipped it, packaging missed it —
+  caught by pack-content audit); pack verified (277 entries, all three
+  templates install + resolve, update check queries clean). VS dialog
+  screenshots stay manual (release PR); cache remedy text stands.
+- [x] **E6. Revisit the version-reset story.**
   Scaffolded apps inherit the template version; reset is one documented
   `bump-version` command (engine runs no post-actions - decided). Leave
   as is unless the engine gains post-actions; if it does, prefer a
   `version` symbol (default `0.0.1`) over scripts. Do NOT invent a
   custom post-scaffold runner (worse UX than flags - decided).
-- [ ] **E7. `basic`-mode + MSIX duality docs.**
+  Revisited 2026-09-23: engine unchanged (still no post-actions) —
+  keep the command. See DECISIONS.
+- [x] **E7. `basic`-mode + MSIX duality docs.**
   `distribution-dual.md` covers Velopack+Store. Extend the truth table:
   basic+MSIX? none+MSIX? appinstaller+portable (invalid - MSBuild
   errors, proven by `badupd` combo)? One matrix table in the guide,
   each cell linking its behavior. No code - comprehension.
+  Shipped 2026-09-23: updates × distribution table in
+  `distribution-dual.md` (valid cells link guides, invalid cite the
+  MSBuild guards + proving combos).
 
 ---
 

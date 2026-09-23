@@ -68,7 +68,7 @@ Starred on GitHub: `Fettah010/winui-3-easy-template` (public). Platform: Windows
 | `Pages/UpdatesPage.*` | REMOVED — retired sample lives in `docs/archive/updates-legacy/` (reference only, not built). |
 | `ViewModels/SettingsPageViewModel.*` | MVVM ViewModel for Settings page using CommunityToolkit.Mvvm. |
 | `Templates/Page/` | `dotnet new devtem-page` item template (Page + VM + test stub). Excluded from build; sources live under `Templates/`. |
-| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--database/--http/--health/--crash/--localization/--tests` flags + `--updates/--logging` choices + `--distribution/--setup`). Hand-conditioned copy; see `docs/TEMPLATE-GUIDE.md` §2c. |
+| `Templates/Project/` | `dotnet new devtem-winui` project template (identity params + `--tray/--database/--http/--health/--crash/--localization/--tests` flags + `--updates/--logging` choices + `--distribution/--setup`). Hand-conditioned copy; see `docs/GETTING-STARTED.md` (scaffold + flags). |
 | `Services/UpdateService.cs` | Velopack `UpdateManager` behind `IUpdateService` (holds the pending update; VMs/tests never touch Velopack types). Sibling: `BasicGithubUpdateService` (zero-dependency checker). |
 | `Services/Abstractions/` | `IUpdateService`/`UpdateCheckResult`/`IFilePickerService` seams (VM testability). |
 | `Services/FilePickerService.cs` | WinRT save/open pickers with window association for unpackaged apps. |
@@ -204,7 +204,7 @@ or run from the terminal when the `(Dev)` shortcut exists — point at it.
 
 Current version: see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all four in sync, plus `<InformationalVersion>`:
-beta releases carry the `-beta` suffix (e.g. `0.0.26-beta`) so fresh installs
+beta releases carry the `-beta` suffix so fresh installs
 default to the beta channel; stable releases use the plain version.
 (Scaffolded apps start from the template's version: run
 `Scripts/bump-version.ps1 -Version 0.0.1` as the first step — dotnet-new
