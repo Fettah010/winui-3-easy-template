@@ -136,6 +136,14 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
     --repo "acme/desk-app" --scheme "acme://" --tray false --updates none --database false --http false --health false --logging none --crash false --localization false --tests false --attribution false
 ```
 
+**Presets (no flag archaeology).** `Scripts/init-profile.ps1` bundles the
+flags into three presets — `minimal` (leanest build), `recommended`
+(everything on, portable + Velopack), `full` (everything on, MSIX) — with
+optional `-Distribution`/`-Updates` overrides. Omit `-Preset` for the
+interactive menu; `-WhatIf` prints the `dotnet new` command without running
+it. The template itself gains no `--profile` parameter (the engine forbids
+it by decision) — the script is sugar over the same flags above.
+
 **Visual Studio (no VSIX needed).** VS's New Project dialog runs the same
 template engine: after `dotnet new install` (path or NuGet package),
 `devtem-winui` appears in File → New → Project with its icon, and the

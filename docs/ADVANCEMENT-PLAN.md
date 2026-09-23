@@ -133,7 +133,9 @@ is broken; everything here is what separates "works" from "polished".
   Add `x:DataType` so mistyped paths fail the build (same class as the
   `Symbol="X"` runtime crash we now audit). Do the same in the
   `devtem-page` item template's list content.
-- [ ] **B5. High-contrast + text-scaling pass.**
+- [ ] **B5. High-contrast + text-scaling pass.** BLOCKED (needs a live
+  desktop session: 200% OS text scaling + HC theme switches + EN/ES
+  screenshots at 900px/1920px — OS-level changes, no headless path).
   Blocker 2026-09-22: static half shipped (fixed-height/hardcoded-color
   audit found no defects; `TextScalingAuditTests` pins the invariants).
   The screenshot matrix (200%, all four HC themes, EN/ES, 900px/1920px)
@@ -315,18 +317,25 @@ warn (decided: fail after the first green baseline). Time to arm them.
 
 ## Phase E - Template mechanics, CI, and docs
 
-- [ ] **E1. Scaffold-matrix cost control.**
+- [x] **E1. Scaffold-matrix cost control.**
   Full matrix (~30 min, 21 combos) on every `Templates/**` change is
   correct but slow. Ship: fast subset on PR (allon + alloff + one msix
   + init-template scratch), full matrix nightly + on `templates-v*`
   tags. Document in WORKFLOW; CI enforces the subset per PR.
-- [ ] **E2. Smoke-test reliability.**
+  Shipped 2026-09-23: `-Profile Fast` (allon/alloff/msixapp + scratch)
+  for PRs; full matrix on main push (paths filter dropped so releases
+  prove every combo), nightly 02:00 UTC, and `templates-v*` tags; tier
+  table in WORKFLOW; matrix timeout 30 -> 45min.
+- [x] **E2. Smoke-test reliability.**
   Suite is flaky on shared desktops (known fragile point) and needs a
   quiet desktop. Ship: retry-with-evidence (already partially),
   screenshot-on-failure artifacts in CI (already `TestResults/`),
   plus a documented "CI agent display" setup so UI tests run
   headless-reliably (or mark the suite `[Explicit]`-style nightly).
   Goal: no human re-runs to get green.
+  Shipped 2026-09-23: CI auto-retry once with both-attempts evidence;
+  display note (Windows runners are interactive, no Xvfb); in-test
+  FlaUI retry + screenshots already existed.
 - [x] **E3. AGENTS/docs drift guards.**
   The 0.0.26-era stale version/branch/pages proved generated docs
   drift. Ship: a structural test asserting AGENTS.md has no
@@ -383,18 +392,18 @@ wizard. Adopt peer ideas only where they beat the current answer:
 
 | Peer idea | Verdict |
 | --- | --- |
-| Template Studio page shapes (ListDetails, ContentGrid, DataGrid, WebView, Map, Camera) | Adopt ListDetails/DataGrid as item templates (B6); decline WebView/Map/Camera (app-domain, dependency + privacy weight) |
+| Template Studio page shapes (ListDetails, ContentGrid, DataGrid, WebView, Map, Camera) | Adopt ListDetails/DataGrid as item templates (B6); decline WebView/Map/Camera (app-domain, dependency + privacy weight). Shipped 2026-09-23 (F1): `devtem-datagrid` (sortable columns, selection + empty state, `ApplySort` + column-property tests, `add-page -Kind grid` incl. package injection, matrix + nupkg proof). Only WinUI 3 DataGrid ever published is 7.1.2 (no 8.x; safe to mix) — pinned + justified in DECISIONS. ContentGrid adds nothing over list+grid (a reflowing grid is a list); declined, same rule as WebView. |
 | Template Studio Settings Storage | Already have (`LocalSettingsStore` + backup) - no work |
-| Template Studio suspend/resume + activation handlers | Evaluate: unpackaged suspend is limited; deep-link activation exists. One spike, then adopt-or-close like C3 |
+| Template Studio suspend/resume + activation handlers | Evaluate: unpackaged suspend is limited; deep-link activation exists. One spike, then adopt-or-close like C3. Spiked 2026-09-23 (F2): CLOSE, no code. Windows App SDK apps are running-or-not-running (no suspend/resume state at all — Microsoft docs); a Suspending handler would be dead code. The documented replacement (main-window Closed) is already the pattern: settings flush + loop cancel on Closed. Protocol cold-start + second-instance redirect + toast action already cover activation; file activation waits for a consumer (C6 rule). |
 | Template Studio testing templates | Already have (MSTest + FlaUI smoke) - no work |
-| Uno presets (Blank/Recommended/Customize) | Docs presets exist; engine forbids `--profile` (decided). Consider `init-profile.ps1` interactive picker as sugar (E-priority low) |
+| Uno presets (Blank/Recommended/Customize) | Docs presets exist; engine forbids `--profile` (decided). Consider `init-profile.ps1` interactive picker as sugar (E-priority low). Shipped 2026-09-23 (F3): `Scripts/init-profile.ps1` (minimal/recommended/full bundles as explicit flags + -Distribution/-Updates overrides + -WhatIf preview; interactive menu only with a console). Template gains no symbols; matrix already proves every bundle. |
 | Uno .resw localization | Evaluate at 4th-language request only (decided P2-4); dictionary system stays below that line |
 | Uno/auth option | C6 evaluation only |
 | Avalonia `-f`/`-av` version params | Adopt the SHAPE: `--winappsdk`/`--net` params are tempting - decline for now (matrix multiplies per value; revisit past real demand) |
 | Avalonia `--remove-view-locator` trimming flag | Adopt the instinct (D2), not the flag |
 | Avalonia compiled bindings default | B4 (x:DataType) |
 | Community ViewModel-first navigation | C2 registry is the pragmatic middle; full VM-first deferred |
-| `PublishAot` | Declined for WinUI (platform-unsupported); track annually |
+| `PublishAot` | Declined for WinUI (platform-unsupported); track annually. Tracked 2026-09-23 (F4): annual check recorded in DECISIONS (WinAppSDK version + trim/AOT posture); next due 2027-09. |
 
 ---
 

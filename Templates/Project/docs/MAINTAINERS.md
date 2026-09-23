@@ -131,5 +131,11 @@ powershell -File Scripts/build-msix.ps1 -Publisher "CN=Acme" -CertificatePath C:
   see `docs/WORKFLOW.md` CI tiers.
 - Encoding: explicit UTF-8 IO on repo files, ASCII-only in tooling
   comments, non-ASCII in loc dictionaries only — see `docs/DECISIONS.md`.
+  File encodings are load-bearing: `.ps1`/`.csproj`/`.xaml`/`.json` ship
+  UTF-16LE, `.md` UTF-8. Editing tools rewrite bytes — after touching a
+  UTF-16 file, convert it back (UTF-16LE CRLF) and re-prove with a probe
+  scaffold; a UTF-8 `.ps1` fails `dotnet new` with exit 100 (seen 2026-09-23:
+  `test-mirror-parity.ps1`). The `read` tool cannot open UTF-16 files
+  ("binary") — use `Select-String` to inspect and patch scripts to edit.
 - Releases: version policy (template MINOR for symbols, PATCH for
   content) and the runbook — see `docs/WORKFLOW.md`.
