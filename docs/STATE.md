@@ -5,18 +5,29 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates). All pipelines green, changelogs live on GitHub + NuGet.
-- **Version:** app `0.0.28-beta` (released); template package `0.4.0` (released).
+- **Goal:** v0.1.0-beta in progress (foundation reset; work order `docs/V0.1.0-ADVANCED-PLAN.md`). Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates).
+- **Version:** app `0.1.0-beta` (uncommitted working tree; `v0.1.0-beta` tag NOT pushed yet); template package `0.4.0` (released, independent).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
 - **CI health (this session, local):** build 0/0, tests 350+1, parity OK (209), FULL 21-combo matrix PASSED (F1 core: grid add-page smoke in allon, DataGrid 7.1.2 restore on net10; nupkg 293 entries, 4 templates resolve; picker -WhatIf x4 + live scaffold).
-- **Cold flame (D3, Debug dev box 2026-09-23):** splash 1451 / services 1715 / window 1964ms cold; ~300 / ~320 / ~500ms warm. P0-4 holds; splash budget re-baselined 800 → 1600 (loader/JIT-dominated, see DECISIONS); window 2500 holds.
+- **Cold flame (v0.1.0, Debug dev box 2026-10-04, applog-measured):** cold (first of
+  day) splash 839 / window 1196ms; warm splash ~280 / window ~475ms (2 runs).
+  Budgets hold (splash 1600, window 2500 — zero breaches). Services phase is not
+  log-surfaced; P0-4 holds trivially (v0.1.0 changes zero product code). Supersedes
+  the 2026-09-23 flame (1451/1715/1964 cold).
 - **Toast post-mortem:** the card Border had `Opacity="0"` while motion targets the card — every toast invisible since introduction (found via installed-app log forensics: checks ran, toasts dropped silently). Fixed + smoke test. "Not installed" lines in the shared log were dev-binary runs; identity line now disambiguates.
 - **CI health (last known):** Local: build 0/0, tests 269+1, parity OK (158), MSIX `-Validate` pass, template matrix green (alloff/noupd/updbasic/msixnone/msixapp/allon + init-template), smoke launch + update-check pass live in isolation. Release asset diet: Portable.zip no longer uploaded (~340MB/28min → ~230MB/~18min expected).
 - **Check-now fix (v0.0.14):** per-service deferred-init guards (one throw can't half-wire the app), busy check button (disabled + "Checking…" until the flow resolves), AppLog breadcrumbs on every update stage + dropped-toast/host warnings. If a check is ever silent again, `Logs/applog-*.log` names the cause.
-- **Tree:** modified `README.md` only (uncommitted); local `wiki/` staging removed (lives in wiki.git).
+- **Tree:** version-bump M (csproj pair + CITATION + CHANGELOG `0.1.0-beta`), ROADMAP mirrored to `Templates/Project/docs/`, parity exclusion +1 line in both `test-mirror-parity.ps1` copies, new `docs/V0.1.0-ADVANCED-PLAN.md` (repo-only) + this STATE refresh; staged deletions (ADVANCEMENT pair + discovery drafts) still uncommitted. Nothing committed/pushed/tagged (AGENTS.md rule).
+- **CI health (this session, local):** build 0/0, tests 350+1, parity OK (210),
+  Matrix-Fast PASSED, smoke 9+1 full-green on re-run (first run: 1 nav failure from
+  Start-menu occlusion + whats-new modal — environmental, both-attempts evidence kept;
+  see plan log), `build-msix -Validate` reads 0.1.0.0 then stops at
+  placeholder-publisher guard (by design). Screenshots re-captured at 0.1.0
+  (home/settings/toast + new about.png, 1920px, EN, fresh defaults, pane expanded);
+  S1/S2 (200% + HC) stay manual (OS-level display changes, unsafe to automate here).
 - **CI health (last known):** Local: build 0/0, tests 268+1, parity OK (157), MSIX `-Validate` + `-DryRun` (+AppInstaller feed) pass, template matrix green (21 combos incl. init-template scratch), smoke launch + update-check pass live in isolation (full suite flaky on shared desktop — known fragile point).
 - **Release pipeline:** `vpk` packs, `Scripts/Invoke-GithubParallelUpload.ps1` uploads (`gh`, one job per asset, 3x retry, markers). Serial `vpk upload github` topped ~1h at ~2-3 Mbps and tripped timeouts; parallel lands ~11 min. See DECISIONS + AGENTS gotcha 5.
 - **Update UX (v0.0.12):** `UpdateDialogService` = toasts (checking/up-to-date/not-installed/error-via-dialog) + native `ContentDialog` (available/download-progress/ready); 30s check timeout + unpackaged short-circuit (no infinite checking); legacy `UpdatePopup` overlay kept wired but hidden. First-run wizard never auto-opens (installer owns setup); `ShouldShowSetupWizard()` retired to false; parity guard manifest dropped to `@()` for that file.

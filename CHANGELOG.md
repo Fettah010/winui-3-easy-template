@@ -27,6 +27,22 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.1.0-beta] - 2026-10-04
+
+Foundation reset: closes the 0.0.x era. No behavior change on any scaffold.
+
+### Changed
+
+- Version renumber `0.0.28-beta` -> `0.1.0-beta` (csproj quartet + CITATION;
+  Velopack-increasing, one version per channel).
+- `docs/ROADMAP.md`: roadmap to v1.0 (`0.1.0 -> ... -> 1.0`), mirrored to
+  `Templates/Project/docs/`; `docs/V0.1.0-ADVANCED-PLAN.md` work order (repo-only).
+- Retired plan files removed (`ADVANCEMENT-PLAN.md` pair + `docs/discovery/`
+  drafts; history stays in git + CHANGELOG + DECISIONS).
+- Publish weight: 267.8 MB, delta -0.1% vs the 268.2 MB baseline
+  (renumber-only release — zero payload change, CI weight gate green).
+
 ## [0.0.28-beta] - 2026-09-23
 
 Advancement Plan Phases A–F shipped (template quality, security,

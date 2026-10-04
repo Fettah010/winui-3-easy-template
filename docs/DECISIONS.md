@@ -368,3 +368,13 @@ in git history; this file saves the next agent the archaeology.
 - **2026-09-23 - F3 picker ships as flag sugar.** `init-profile.ps1` bundles minimal/recommended/full as explicit flags (immune to default drift) + `-Distribution`/`-Updates` overrides + `-WhatIf` preview; interactive menu only with a console. No template symbols added (engine `--profile` ban stands); matrix already proves every bundle; one live scaffold proved the forwarder.
 - **2026-09-23 - F4 AOT annual track.** Posture unchanged: `PublishTrimmed`/`PublishAot` declined for WinUI (XAML + WinRT projections; WinAppSDK 1.8 line). Next check due 2027-09 (WinAppSDK version + trim/AOT posture).
 - **2026-09-23 - File encodings are load-bearing for `dotnet new`.** Editing tools rewrite UTF-16LE files (all `.ps1`/`.csproj`/`.xaml`/`.json`) as UTF-8; a UTF-8 `.ps1` under `Templates/Project/Scripts/` fails every scaffold with exit 100 (`Index was out of range ... test-mirror-parity.ps1` - content was innocent, bytes were guilty). Rule: never change a file''s encoding; after touching UTF-16, convert back (UTF-16LE CRLF) and re-prove with a probe scaffold. UTF-8 `.md` scaffolds fine (Phase E proves it). `read` cannot open UTF-16 (binary) - inspect with `Select-String`, edit via patch scripts.
+- **2026-10-04 - ROADMAP.md is mirrored, work-order docs are repo-only.** `docs/ROADMAP.md`
+  ships into `Templates/Project/docs/` (successor of the mirrored ADVANCEMENT-PLAN.md;
+  fixed the 1-file parity failure of the untracked roadmap). Version work-order files
+  (`V0.1.0-ADVANCED-PLAN.md` pattern) stay repo-only via the parity app-only exclusion
+  list (same rule as STATE/WORKFLOW/RELEASE-PLAN): product direction ships, session
+  machinery does not.
+- **2026-10-04 - v0.1.0 is renumber + hygiene, zero behavior change.** `0.0.28-beta` ->
+  `0.1.0-beta` via `bump-version.ps1` (Velopack-increasing, one version per channel
+  preserved). Template package version independent (tag-driven); no MINOR bump for
+  content-only changes.
