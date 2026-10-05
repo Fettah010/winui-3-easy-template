@@ -6,7 +6,7 @@
 > this file holds only **current facts**.
 
 - **Goal:** v0.1.0-beta SHIPPED (foundation reset; work order `docs/V0.1.0-ADVANCED-PLAN.md` closed). Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates) before it.
-- **Version:** app `0.1.0-beta` (commit `be65001`, tag `v0.1.0-beta` pushed — CI release.yml building beta channel); template package `0.4.0` (released, independent).
+- **Version:** app `0.1.0-beta` (commit `be65001`, tag `v0.1.0-beta` pushed — CI release.yml building beta channel); template package `0.4.1` (tag `templates-v0.4.1` pushed — CI templates-publish pushing to NuGet; content-only PATCH: ROADMAP mirror + parity exclusion + 4 screenshots, no new symbols).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
