@@ -42,8 +42,11 @@
   bullets in the dialog, fixed by filling the CHANGELOG entry; screenshot
   evidence kept), `build-msix -Validate` reads 0.2.0.0 then stops at
   placeholder-publisher guard (by design), nupkg 0.4.2 audit (5 resolve, scaffold
-  builds 0/0, uninstalled after). Screenshots shell-tabs + settings-cards
-  (+ settings.png re-capture) stay MANUAL (filed in plan log, not faked).
+  builds 0/0, uninstalled after). Screenshots captured post-release via
+  in-box UI Automation (commit `a5e55b3`): `shell-tabs.png` (Workspace TabView
+  live in the app) + `settings-cards.png` (rail closed) + `settings.png`
+  re-captured at the 1024px beauty pass (pane expanded), EN dark 1904px,
+  mirrored to the template side; README Shells table carries the tab shot.
 - **Tree:** version-bump M (csproj pair + CITATION + CHANGELOG `0.1.0-beta`), ROADMAP mirrored to `Templates/Project/docs/`, parity exclusion +1 line in both `test-mirror-parity.ps1` copies, new `docs/V0.1.0-ADVANCED-PLAN.md` (repo-only) + this STATE refresh; staged deletions (ADVANCEMENT pair + discovery drafts) still uncommitted. Nothing committed/pushed/tagged (AGENTS.md rule).
 - **CI health (this session, local):** build 0/0, tests 350+1, parity OK (210),
   Matrix-Fast PASSED, smoke 9+1 full-green on re-run (first run: 1 nav failure from
