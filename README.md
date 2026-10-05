@@ -83,6 +83,8 @@ the flags, and each scaffold records its picks in a generated
 | Tabs | Document apps: several open documents in one view | `add-page.ps1 -Kind tab` |
 | Menubar commands | Command-dense apps: menus over the same commands | `docs/TEMPLATE-GUIDE.md` "Shells" |
 
+![Tabbed workspace — document tabs with add/close over one rail route](docs/screenshots/shell-tabs.png)
+
 Earlier releases: full notes in [CHANGELOG.md](CHANGELOG.md).
 
 ## Run this repo locally
