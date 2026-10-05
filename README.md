@@ -68,14 +68,20 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.1.0-beta
+## What's new in 0.2.0-beta
 
-- Foundation reset: the `0.0.x` era closes honestly — version renumber, retired
-  plan files removed, hygiene gates re-proven. No behavior change on any scaffold.
-- Roadmap to 1.0: `docs/ROADMAP.md` lays out `0.1.0 → … → 1.0`, one shippable
-  MINOR at a time (shells → pages+data → identity+notifications → Store GA →
-  DevEx → a11y RC → ecosystem → hardening → stable).
-- Screenshots re-verified at frozen `0.1.0-beta` (`docs/screenshots/`).
+- Shell choice: the rail stays default; tabbed document workspaces are one
+  command (`add-page.ps1 -Kind tab`, `devtem-tabview` item template over the
+  in-box WinUI TabView, no extra package); menubar needs are a documented
+  command pattern (no second shell).
+- Settings beauty pass: wider cards (1024px) with strong section headers.
+- No behavior change on the default rail scaffold.
+
+| Shape | Use | Command |
+| --- | --- | --- |
+| Rail (default) | Hub apps: a handful of pages, one route each | built in |
+| Tabs | Document apps: several open documents in one view | `add-page.ps1 -Kind tab` |
+| Menubar commands | Command-dense apps: menus over the same commands | `docs/TEMPLATE-GUIDE.md` "Shells" |
 
 Earlier releases: full notes in [CHANGELOG.md](CHANGELOG.md).
 

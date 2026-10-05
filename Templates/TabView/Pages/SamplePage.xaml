@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DevTemWinUi3.Pages.SamplePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:loc="using:DevTemWinUi3.Controls"
+    mc:Ignorable="d"
+    NavigationCacheMode="Enabled"
+    Loaded="SamplePage_Loaded"
+    SizeChanged="SamplePage_SizeChanged">
+
+    <!-- Root Grid -> ScrollViewer (horizontal Disabled) -> viewport Grid ->
+         content StackPanel with MaxWidth: the width never depends on content
+         length, so translations wrap instead of shifting the layout; the panel
+         centers above the cap by design (see docs/TEMPLATE-GUIDE.md "Layout
+         rules"). The TabView is one tabbed surface over the page ViewModel:
+         tabs are in-page document tabs (the rail still owns navigation), so
+         this page registers exactly one route like every other kind.
+         TabView is NOT an ItemsControl (no ItemsSource/TabItemTemplate):
+         tabs are synced from the ViewModel in code-behind (SyncTabs, the
+         single sanctioned exception to bindings-only content). -->
+
+    <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid>
+        <StackPanel x:Name="ContentPanel" Padding="32,24,32,32" Spacing="20" MaxWidth="980" HorizontalAlignment="Stretch">
+
+            <StackPanel Spacing="8">
+                <!-- Labels bind live ({loc:Loc}); the title parameter seeds
+                     the en-US strings in the snippet (wire-up step 2). -->
+                <TextBlock AutomationProperties.AutomationId="SampleTitleText" Text="{loc:Loc Key=SampleTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock Text="{loc:Loc Key=SampleDescription}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Document tabs: the ViewModel owns tabs + selection + add/close
+                 guards; SyncTabs rebuilds TabItems from ViewModel.Tabs (initial
+                 paint, collection changes, closability flips). Selection stays
+                 two-way bound, so rail/back navigation never desyncs it. The
+                 last tab cannot close (the ViewModel guards it), so the
+                 surface never goes blank. -->
+            <TabView
+                x:Name="SampleTabView"
+                AutomationProperties.AutomationId="SampleTabView"
+                SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
+                IsAddTabButtonVisible="True"
+                AddTabButtonClick="SampleTabView_AddTabButtonClick"
+                TabCloseRequested="SampleTabView_TabCloseRequested"
+                MinHeight="360"
+                VerticalAlignment="Stretch"/>
+
+        </StackPanel>
+        </Grid>
+    </ScrollViewer>
+    </Grid>
+</Page>

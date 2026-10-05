@@ -28,6 +28,38 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.2.0-beta] - 2026-10-05
+
+Shell choice: no one picks another template just for a shell shape.
+No behavior change on the default rail scaffold.
+
+### Added
+
+- `devtem-tabview` item template + `add-page.ps1 -Kind tab`: one route in
+  the rail opens a document workspace; the in-box WinUI `TabView` inside
+  owns add/close document tabs (`Tabs`, `SelectedIndex`,
+  `AddTabCommand`/`CloseTab`/`CloseTabAt`). The last tab cannot close.
+  TabView is not an ItemsControl (no `ItemsSource`), so tabs sync from the
+  ViewModel in code-behind — no `MainWindow` fork, no extra package.
+- MenuBar-command pattern (guide-only, no second shell): keep the rail, bind
+  `MenuBar` items to the same `RelayCommand`s, claim accelerators in
+  `KeyboardShortcuts` first. See `docs/TEMPLATE-GUIDE.md` "Shells".
+- Settings beauty pass: panel `MaxWidth` 820 -> 1024, section headers to
+  `BodyStrong` (MS settings guidance); code-behind responsive rule unchanged.
+- Shells guide (`docs/TEMPLATE-GUIDE.md` "Shells: rail, tabs, menubar
+  commands") + tab kind in Flow A/B docs.
+
+### Changed
+
+- Version renumber `0.1.0-beta` -> `0.2.0-beta` (csproj quartet + CITATION;
+  Velopack-increasing, one version per channel).
+- Template package `0.4.2` (convergence PATCH per the 0.5.0-meet decision in
+  `docs/DECISIONS.md` — new surface held at PATCH so app and NuGet meet at
+  `0.5.0`; nupkg now ships all five templates).
+- Publish weight: 267.8 MB, delta -0.1% vs the 268.2 MB baseline
+  (TabView/MenuBar ship opt-in only — zero base-scaffold weight change).
+
 ## [0.1.0-beta] - 2026-10-04
 
 Foundation reset: closes the 0.0.x era. No behavior change on any scaffold.

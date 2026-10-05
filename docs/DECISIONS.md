@@ -378,3 +378,29 @@ in git history; this file saves the next agent the archaeology.
   `0.1.0-beta` via `bump-version.ps1` (Velopack-increasing, one version per channel
   preserved). Template package version independent (tag-driven); no MINOR bump for
   content-only changes.
+- **2026-10-05 — v0.2.0 is shell choice, no shell fork.** Rail stays default;
+  `devtem-tabview` item template + `add-page -Kind tab` reuse `NavigationRegistry`
+  routes (no `MainWindow` fork); MenuBar answered as a command pattern
+  (KeyboardShortcuts + guide recipe, no second shell); Settings beauty adopts the
+  DevWinUI shape (1024px, BodyStrong) with zero new deps.
+- **2026-10-05 — App<->NuGet convergence: PATCH steps to joint 0.5.0.**
+  `0.2.0-beta`/`0.4.2` is a deliberate convergence PATCH (new surface held at
+  PATCH so the numbers can meet at `0.5.0`/`0.5.0`); standing MINOR-for-surface
+  policy resumes at convergence. CI still passes `-p:Version` from
+  `templates-v*` tags; packaging fallback untouched. Package face
+  (Title/Description/README) follows the list-details/datagrid precedent:
+  item templates ship without description changes.
+- **2026-10-05 — V0.2.0 work-order file is repo-only.** `docs/V0.2.0-ADVANCED-PLAN.md`
+  stays out of the template via the parity app-only exclusion list (same rule as
+  STATE/WORKFLOW/V0.1.0 file): product direction ships (`ROADMAP.md` mirrored),
+  session machinery does not.
+- **2026-10-05 — TabView is not an ItemsControl: tabs sync in code-behind.**
+  The first `devtem-tabview` draft bound `ItemsSource`/`TabItemTemplate` and the
+  matrix caught it live (`WMC0011: Unknown member 'ItemsSource' on element
+  'TabView'`). WinUI `TabView` inherits `Control`, not `ItemsControl`: tabs live
+  in `TabItems`, so the page rebuilds them from `ViewModel.Tabs` (`SyncTabs` on
+  load/navigate/collection-change, closability refresh on `CanCloseTabs`,
+  selection restored from the ViewModel). Records are immutable, so content is
+  set once with no per-item bindings to leak. Tab headers live in the ViewModel
+  as replaceable literals (dynamic tabs cannot bind loc keys); only page chrome
+  needs dictionary keys, so `-Kind tab` needs no extra `add-page` key branch.

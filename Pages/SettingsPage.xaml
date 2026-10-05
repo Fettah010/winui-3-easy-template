@@ -26,7 +26,7 @@
              resizes. A bare StackPanel sizes to its longest unwrapped line,
              which moved the whole page when translations changed length. -->
         <Grid>
-        <StackPanel x:Name="SettingsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Stretch">
+        <StackPanel x:Name="SettingsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="1024" HorizontalAlignment="Stretch">
 
             <TextBlock AutomationProperties.AutomationId="SettingsTitleText" Text="{loc:Loc Key=SettingsTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
             <TextBlock
@@ -38,9 +38,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsAppearance}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsTheme}"
@@ -61,9 +59,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsLanguage}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard x:Name="LanguageCard" Header="{loc:Loc Key=SettingsLanguage}" Description="{loc:Loc Key=SettingsLanguageDesc}">
                     <ComboBox
@@ -78,9 +74,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsUpdates}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsChannelHeader}"
@@ -165,9 +159,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsNotifications}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsNotifyTestHeader}"
@@ -185,9 +177,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsSystemTray}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsMinimizeToTray}"
@@ -213,9 +203,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsBackup}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
                     Header="{loc:Loc Key=SettingsBackupHeader}"
@@ -241,9 +229,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsAbout}"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard Header="{loc:Loc Key=SettingsAppVersion}">
                     <TextBlock Text="{x:Bind ViewModel.AppVersion, Mode=OneTime}" VerticalAlignment="Center"/>
