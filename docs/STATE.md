@@ -5,8 +5,8 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.3.0-beta IMPLEMENTED uncommitted (pages + data; work order `docs/V0.3.0-ADVANCED-PLAN.md` done, WB-09 handover pending). v0.2.0-beta SHIPPED before it. Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates) before that.
-- **Version:** app `0.3.0-beta` (uncommitted: csproj quartet + CITATION + filled CHANGELOG `0.3.0-beta`; Velopack-increasing over `0.2.0`). Template package `0.4.3` planned (tag `templates-v0.4.3` NOT pushed yet; convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, package scaffold builds 0/0).
+- **Goal:** v0.3.0-beta SHIPPED (`v0.3.0-beta` + `templates-v0.4.3` tagged 2026-10-06, `beta` moved; work order `docs/V0.3.0-ADVANCED-PLAN.md` closed). Next: v0.4.0 planning from `docs/ROADMAP.md` §4 in a new work-order file.
+- **Version:** app `0.3.0-beta` (commit `5c07215`, tag `v0.3.0-beta` pushed — CI release.yml success, beta channel GitHub release published with phase notes + assets; `beta` branch moved to `v0.3.0-beta`). Template package `0.4.3` (tag `templates-v0.4.3` pushed — CI templates-publish success, "Your package was pushed" to NuGet; convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, package scaffold builds 0/0).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
