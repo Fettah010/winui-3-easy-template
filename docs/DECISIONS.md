@@ -403,4 +403,38 @@ in git history; this file saves the next agent the archaeology.
   selection restored from the ViewModel). Records are immutable, so content is
   set once with no per-item bindings to leak. Tab headers live in the ViewModel
   as replaceable literals (dynamic tabs cannot bind loc keys); only page chrome
-  needs dictionary keys, so `-Kind tab` needs no extra `add-page` key branch.
+   needs dictionary keys, so `-Kind tab` needs no extra `add-page` key branch.
+- **2026-10-06 — v0.3.0 is pages + data, no project-symbol fork.** Rail + tab shells stay;
+  `devtem-contentgrid` item template + `add-page -Kind contentgrid` reuse `NavigationRegistry`
+  routes (no `MainWindow` fork, no new base package); settings sections answered as a snippet
+  recipe; WebView2 answered as opt-in guide + sample (never default); EF Core answered as a
+  documented evaluation with `DatabaseService` kept as default.
+- **2026-10-06 — ContentGrid F4 decline revisited with a real shape.** The 2026-09-23
+  "reflowing grid is a list" decline is superseded by a shippable `devtem-contentgrid`
+  over the list VM (paged/sorted/filtered): if the template proves redundant in use,
+  a later version may re-decline with usage evidence — the shape now exists to judge.
+- **2026-10-06 — App↔NuGet convergence: PATCH steps to joint 0.5.0 (continued).**
+  `0.3.0-beta`/`0.4.3` is a deliberate convergence PATCH (new surface held at
+  PATCH so the numbers can meet at `0.5.0`/`0.5.0`); standing MINOR-for-surface
+  policy resumes at convergence. CI still passes `-p:Version` from
+  `templates-v*` tags; packaging fallback untouched.
+- **2026-10-06 — V0.3.0 work-order file is repo-only.** `docs/V0.3.0-ADVANCED-PLAN.md`
+  stays out of the template via the parity app-only exclusion list (same rule as
+  STATE/WORKFLOW/V0.1.0/V0.2.0 files): product direction ships (`ROADMAP.md` mirrored),
+  session machinery does not.
+- **2026-10-06 — Matrix/probe discipline pays twice in v0.3.0.** The scratch-scaffold
+  probe caught (1) MSTEST0037 analyzer errors invisible to the repo build
+  (`AreEqual(PageSize, Count)` → `HasCount`, `IsTrue(x > 1)` → `IsGreaterThan`)
+  and (2) MSTest `Assert.IsGreaterThan(lowerBound, value)` argument order — both
+  failed only in renamed scaffolds. Rule restated: template test stubs are proven
+  in scaffolds, never by repo-green alone.
+- **2026-10-06 — Datagrid dark-theme header observation (not a v0.3.0 fix).**
+  The new `datagrid.png` ABA shot shows an empty-looking black header row in dark
+  theme (F1-shipped code, untouched by v0.3.0). Filed as a contrast/style follow-up
+  for the v0.7.0/v0.9.0 quality passes; headers are set from code-behind and sort
+  still works (matrix + unit proof).
+- **2026-10-06 — Protocol cold-start is the deterministic screenshot path.**
+  Rail clicks under an occupied desktop flake (overlay drawer state + occlusion);
+  launching the scratch app with `shot://route` lands directly on the page and
+  screenshots went green three-for-three. Throwaway VSTest rig deleted after use
+  (GUI children only survive under the test host).

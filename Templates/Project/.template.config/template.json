@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none — or native AppInstaller / Store updates for packaged MSIX), optional SQLite, HTTP, diagnostics, crash reporting, and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, optional first-run setup wizard (portable only), release tooling, and profile-aware documentation. Identity, distribution and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none — or native AppInstaller / Store updates for packaged MSIX), optional SQLite, HTTP, diagnostics, crash reporting, and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, optional first-run setup wizard (portable only), sample-data service, page templates (page/list/grid/contentgrid/tab via add-page), release tooling, and profile-aware documentation. Identity, distribution and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,

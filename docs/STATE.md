@@ -5,13 +5,26 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.2.0-beta IMPLEMENTED uncommitted (shell choice; work order `docs/V0.2.0-ADVANCED-PLAN.md` open). v0.1.0-beta SHIPPED before it. Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates) before that.
-- **Version:** app `0.2.0-beta` (commit `b56c261`, tag `v0.2.0-beta` pushed — CI release.yml building beta channel; `beta` branch moved to `v0.2.0-beta`). Template package `0.4.2` (tag `templates-v0.4.2` pushed — CI templates-publish pushing to NuGet; convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 5 templates resolve, package scaffold builds 0/0).
+- **Goal:** v0.3.0-beta IMPLEMENTED uncommitted (pages + data; work order `docs/V0.3.0-ADVANCED-PLAN.md` done, WB-09 handover pending). v0.2.0-beta SHIPPED before it. Released 0.0.28-beta (app, Phases A–F) + 0.4.0 (templates) before that.
+- **Version:** app `0.3.0-beta` (uncommitted: csproj quartet + CITATION + filled CHANGELOG `0.3.0-beta`; Velopack-increasing over `0.2.0`). Template package `0.4.3` planned (tag `templates-v0.4.3` NOT pushed yet; convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, package scaffold builds 0/0).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
-- **CI health (this session, local):** build 0/0, tests 350+1, parity OK (209), FULL 21-combo matrix PASSED (F1 core: grid add-page smoke in allon, DataGrid 7.1.2 restore on net10; nupkg 293 entries, 4 templates resolve; picker -WhatIf x4 + live scaffold).
+- **CI health (this session, local, v0.3.0):** build 0/0, tests 357+1, parity OK (228),
+  FULL 21-combo matrix PASSED (allon incl. all 6 page kinds + duplicate-route rejection;
+  init-template scratch), smoke 9+1 on retry (first run: 2 nav failures under the post-bump
+  whats-new modal — same known flake as v0.2.0, both-attempts evidence kept), `build-msix
+  -Validate` stops at placeholder-publisher guard (by design), nupkg 0.4.3 audit (6 resolve,
+  scaffold builds 0/0, uninstalled after). Screenshots captured via scratch scaffold +
+  throwaway VSTest rig (deleted after): `list-details.png`, `datagrid.png`, `contentgrid.png`
+  (EN dark, pane expanded, protocol cold-start landing), mirrored to the template side.
+  OBSERVATION: datagrid shot shows an empty-looking black header row in dark theme —
+  pre-existing F1 code, filed as contrast follow-up for v0.7.0/v0.9.0, not fixed here.
+- **Cold flame (v0.3.0, Debug dev box 2026-10-06, applog-measured, warm machine):**
+  splash 318/319/308 / window 548/536/524 (3 launches, zero budget breaches).
+  Consistent with the v0.2.0 warm floor (~300/~495); v0.3.0 changes zero hot-path
+  code (templates + service + guides only). Weight 267.9 MB (-0.1% vs 268.2 MB baseline).
 - **Cold flame (v0.2.0, Debug dev box 2026-10-05, applog-measured, warm machine):**
   splash ~300 / window ~495ms (3 launches: 314/509, 292/491, 299/492).
   Budgets hold (splash 1600, window 2500 — zero breaches). No cold-of-day this

@@ -8,8 +8,8 @@ authors:
 repository-code: "https://github.com/Fettah010/winui-3-easy-template"
 url: "https://github.com/Fettah010/winui-3-easy-template"
 license: MIT
-version: "0.2.0-beta"
-date-released: "2026-10-05"
+version: "0.3.0-beta"
+date-released: "2026-10-06"
 keywords:
   - WinUI 3
   - Windows App SDK

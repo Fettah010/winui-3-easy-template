@@ -68,20 +68,27 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.2.0-beta
+## What's new in 0.3.0-beta
 
-- Shell choice: the rail stays default; tabbed document workspaces are one
-  command (`add-page.ps1 -Kind tab`, `devtem-tabview` item template over the
-  in-box WinUI TabView, no extra package); menubar needs are a documented
-  command pattern (no second shell).
-- Settings beauty pass: wider cards (1024px) with strong section headers.
-- No behavior change on the default rail scaffold.
+- Pages + data: the content grid closes the last page-shape gap (`add-page.ps1
+  -Kind contentgrid`, `devtem-contentgrid` item template over the in-box WinUI
+  GridView with search + sort + paging, no extra package); sample data is a
+  runnable service (`SampleDataService` + paged/sorted/filtered guidance);
+  WebView2 and EF Core are answered as opt-in guide and documented default
+  (no base-scaffold weight change).
+- No behavior change on the default scaffold.
 
-| Shape | Use | Command |
+| Kind | Use | Command |
 | --- | --- | --- |
-| Rail (default) | Hub apps: a handful of pages, one route each | built in |
-| Tabs | Document apps: several open documents in one view | `add-page.ps1 -Kind tab` |
-| Menubar commands | Command-dense apps: menus over the same commands | `docs/TEMPLATE-GUIDE.md` "Shells" |
+| `page` (default) | Static content, forms, single-object views | `add-page.ps1 -Name Orders` |
+| `list` | Master/details with selection + details strip | `add-page.ps1 -Kind list` |
+| `grid` | Dense comparable rows, sortable columns | `add-page.ps1 -Kind grid` |
+| `contentgrid` | Browsable catalogs, reflowing cards + search/sort/paging | `add-page.ps1 -Kind contentgrid` |
+| `tab` | Document workspaces, several open documents in one view | `add-page.ps1 -Kind tab` |
+
+Shells from 0.2.0 still hold: rail default, tabs for document apps,
+menubar as a command pattern over the same commands
+(`docs/TEMPLATE-GUIDE.md` "Shells").
 
 ![Tabbed workspace — document tabs with add/close over one rail route](docs/screenshots/shell-tabs.png)
 

@@ -29,6 +29,43 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.3.0-beta] - 2026-10-06
+
+Pages + data: every common page is one command; data guidance exists beyond
+`IRepository<T>`. No behavior change on the default scaffold.
+
+### Added
+
+- `devtem-contentgrid` item template + `add-page.ps1 -Kind contentgrid`: one
+  route in the rail opens a reflowing card gallery; the in-box WinUI `GridView`
+  (`ItemsWrapGrid`) reflows with the window, with a search box, sort combo, and
+  pager bound to the ViewModel (`ApplyFilter`/`ApplySort`/`SetPage`, page size
+  5, unknown sort names throw). No extra package, no `MainWindow` fork.
+- `Services/Data/SampleDataService`: deterministic 12-card seed + pure
+  `Search`/`Sort`/`Page`/`PageCount` helpers (headless-tested,
+  `Tests/Services/SampleDataServiceTests.cs`); ships unconditionally and never
+  touches `DatabaseService` (point it at your store when a real table arrives).
+- Settings-section snippet recipe + Pages matrix (`page`/`list`/`grid`/
+  `contentgrid`/`tab`) in `docs/TEMPLATE-GUIDE.md` ("Pages", "Settings
+  sections", "Data").
+- WebView2 opt-in guide (`docs/feature-guides/webview2-optin.md`, scaffold-time
+  doc): package ref, ~100MB+ weight note, privacy + packaged-vs-portable notes,
+  removal steps. Base scaffold pays zero bytes for it by design.
+- EF Core spike verdict (docs only, no reference): raw SQLite +
+  `DatabaseService` migrations stay the default; EF wins past real relational
+  demand (see `docs/DECISIONS.md`).
+
+### Changed
+
+- Version renumber `0.2.0-beta` -> `0.3.0-beta` (csproj quartet + CITATION;
+  Velopack-increasing, one version per channel).
+- Template package `0.4.3` (convergence PATCH per the 0.5.0-meet decision in
+  `docs/DECISIONS.md` — new surface held at PATCH so app and NuGet meet at
+  `0.5.0`; nupkg now ships all six templates).
+- Publish weight: 267.9 MB, delta -0.1% vs the 268.2 MB baseline
+  (ContentGrid/SampleData ship opt-in only — zero base-scaffold weight change).
+
 ## [0.2.0-beta] - 2026-10-05
 
 Shell choice: no one picks another template just for a shell shape.

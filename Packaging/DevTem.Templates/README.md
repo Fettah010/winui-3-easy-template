@@ -62,15 +62,22 @@ Apply a preset by copying its flags into the scaffold command, then change
 any individual flag as needed. Individual flags are authoritative; there is
 no separate `--profile` parameter.
 
-## `devtem-page` — content page
+## `devtem-page` — content pages
 
 XAML + code-behind (`INavigationAware`, localization, responsive) +
 transient ViewModel + MSTest stub. Wire-up (strings, DI, route) takes
 ~5 minutes; the generated test proves the strings landed in all languages.
 
 ```powershell
-dotnet new devtem-page -n Orders
+dotnet new devtem-page -n Orders                                    # hero-card content
+dotnet new devtem-list-details -n Products                           # master/details
+dotnet new devtem-datagrid -n Inventory                              # sortable rows (DataGrid 7.1.2)
+dotnet new devtem-contentgrid -n Catalog                             # reflowing cards + search/sort/paging
+dotnet new devtem-tabview -n Workspace                              # document tabs
 ```
+
+Or wire any kind in one command inside the app repo:
+`Scripts/add-page.ps1 -Kind page|list|grid|contentgrid|tab`.
 
 ## Updating
 
