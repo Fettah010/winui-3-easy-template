@@ -5,8 +5,8 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.4.0-beta COMMITTED LOCALLY (`50b9b39`, 63 files) — push/tag blocked: this environment cannot reach github.com:443 (21s connect timeout, twice). Next: run the WB-10 handover below where the network reaches GitHub.
-- **Version:** app `0.4.0-beta` (bump-version from `0.3.0-beta`; `templates-v0.4.4` planned — convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, `--auth` in help, auth-on/off probe scaffolds build 0/0 + tests green, uninstalled after).
+- **Goal:** v0.4.0-beta SHIPPED (`v0.4.0-beta` + `templates-v0.4.4` tagged 2026-10-09, `beta` moved; work order `docs/V0.4.0-ADVANCED-PLAN.md` closed). CI owns the releases (`release.yml` beta channel; `templates-publish` → NuGet 0.4.4). Next: v0.5.0 planning from `docs/ROADMAP.md` §4 in a new work-order file. Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works.
+- **Version:** app `0.4.0-beta` (commit `50b9b39`, tag `v0.4.0-beta` pushed — CI release.yml building the beta-channel GitHub release; `beta` branch moved to `v0.4.0-beta`). Template package `0.4.4` (tag `templates-v0.4.4` pushed — CI templates-publish pushing to NuGet; convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, `--auth` in help, auth-on/off probe scaffolds build 0/0 + tests green, uninstalled after).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
