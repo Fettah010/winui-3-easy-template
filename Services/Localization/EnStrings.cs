@@ -264,5 +264,14 @@ internal static class EnStrings
         ["SetupWizardComplete"] = "Finish setup",
         ["SetupWizardDoneHeader"] = "You're set",
         ["SetupWizardDoneBody"] = "Updates check on launch. Settings can change anything later.",
+        ["SettingsAccount"] = "ACCOUNT",
+        ["SettingsAccountHeader"] = "Microsoft account",
+        ["SettingsAccountDesc"] = "Sign in with your work or Microsoft account.",
+        ["SettingsAccountSignedOut"] = "Not signed in.",
+        ["SettingsAccountSignedIn"] = "Signed in as {0}.",
+        ["SettingsSignIn"] = "Sign in",
+        ["SettingsSignOut"] = "Sign out",
+        ["SettingsAuthNeedsClientId"] = "Sign-in needs a client id (see the auth guide).",
+        ["SettingsAuthError"] = "Sign-in did not complete.",
     };
 }

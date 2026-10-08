@@ -428,6 +428,30 @@ public class LocalizationCoverageTests
     }
 
     [TestMethod]
+    public void NewAuthKeys_AreTranslated()
+    {
+        var loc = LocalizationService.Current;
+
+        loc.SetLanguage("en-US");
+        Assert.AreEqual("ACCOUNT", loc.GetString("SettingsAccount"));
+        Assert.AreEqual("Microsoft account", loc.GetString("SettingsAccountHeader"));
+        Assert.AreEqual("Not signed in.", loc.GetString("SettingsAccountSignedOut"));
+        Assert.AreEqual("Signed in as a@b.c.", loc.GetString("SettingsAccountSignedIn", "a@b.c"));
+        Assert.AreEqual("Sign in", loc.GetString("SettingsSignIn"));
+        Assert.AreEqual("Sign out", loc.GetString("SettingsSignOut"));
+
+        loc.SetLanguage("es-ES");
+        Assert.AreEqual("CUENTA", loc.GetString("SettingsAccount"));
+        Assert.AreEqual("Iniciar sesión", loc.GetString("SettingsSignIn"));
+        Assert.AreEqual("Cerrar sesión", loc.GetString("SettingsSignOut"));
+
+        loc.SetLanguage("fr-FR");
+        Assert.AreEqual("COMPTE", loc.GetString("SettingsAccount"));
+        Assert.AreEqual("Se connecter", loc.GetString("SettingsSignIn"));
+        Assert.AreEqual("Se déconnecter", loc.GetString("SettingsSignOut"));
+    }
+
+    [TestMethod]
     public void Dictionaries_ContainNoHardcodedVersions()
     {        var versionLike = new System.Text.RegularExpressions.Regex(@"\bv\d+\.\d+");
         var offenders = new System.Collections.Generic.List<string>();

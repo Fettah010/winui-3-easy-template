@@ -15,6 +15,7 @@ corresponding feature is enabled.
 | Diagnostics page | __HEALTH__ |
 | Logging backend | __LOGGING__ |
 | Crash reporting | __CRASH__ |
+| Entra ID auth | __AUTH__ |
 | Three-language UI | __LOCALIZATION__ |
 | MSTest suite | __TESTS__ |
 | DevTem attribution | __ATTRIBUTION__ |

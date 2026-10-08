@@ -264,5 +264,14 @@ internal static class EsStrings
         ["SetupWizardComplete"] = "Terminar",
         ["SetupWizardDoneHeader"] = "Listo",
         ["SetupWizardDoneBody"] = "Las actualizaciones se comprueban al iniciar. Configuración puede cambiarlo todo después.",
+        ["SettingsAccount"] = "CUENTA",
+        ["SettingsAccountHeader"] = "Cuenta de Microsoft",
+        ["SettingsAccountDesc"] = "Inicia sesión con tu cuenta profesional o de Microsoft.",
+        ["SettingsAccountSignedOut"] = "Sesión no iniciada.",
+        ["SettingsAccountSignedIn"] = "Sesión iniciada como {0}.",
+        ["SettingsSignIn"] = "Iniciar sesión",
+        ["SettingsSignOut"] = "Cerrar sesión",
+        ["SettingsAuthNeedsClientId"] = "El inicio de sesión necesita un id. de cliente (ver la guía).",
+        ["SettingsAuthError"] = "El inicio de sesión no se completó."
     };
 }

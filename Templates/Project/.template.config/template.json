@@ -6,7 +6,7 @@
   "groupIdentity": "WinUI3.App",
   "name": "DevTem",
   "shortName": "devtem-winui",
-  "description": "WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none — or native AppInstaller / Store updates for packaged MSIX), optional SQLite, HTTP, diagnostics, crash reporting, and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, optional first-run setup wizard (portable only), sample-data service, page templates (page/list/grid/contentgrid/tab via add-page), release tooling, and profile-aware documentation. Identity, distribution and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
+  "description": "WinUI 3 app: Mica window, optional system tray, optional auto-updates (Velopack, basic checker, or none — or native AppInstaller / Store updates for packaged MSIX), optional SQLite, HTTP, diagnostics, crash reporting, optional Entra ID auth (MSAL, off by default), and 3-language UI (or English-only), persisted settings, flexible logging (Serilog by default), optional MSTest suite, optional first-run setup wizard (portable only), sample-data service, page templates (page/list/grid/contentgrid/tab via add-page), release tooling, and profile-aware documentation. Identity, distribution and features are scaffold-time parameters; see docs/TEMPLATE-GUIDE.md in the scaffolded app.",
   "type": "project",
   "sourceName": "DevTemWinUi3",
   "preferNameDirectory": true,
@@ -211,6 +211,14 @@
       "replaces": "__CRASH__",
       "description": "Include Sentry crash reporting behind the veneer (DSN-gated, off until configured) (--crash false to drop the SDK)."
     },
+    "auth": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "Entra ID auth (MSAL)",
+      "defaultValue": "false",
+      "replaces": "__AUTH__",
+      "description": "Include Entra ID sign-in behind the veneer (MSAL broker-first with loopback fallback, DPAPI cache per distribution; configure a client id to enable) (--auth true to include)."
+    },
     "localization": {
       "type": "parameter",
       "datatype": "bool",
@@ -387,6 +395,15 @@
           "condition": "(!crash)",
           "exclude": [
             "docs/feature-guides/crash.md"
+          ]
+        },
+        {
+          "condition": "(!auth)",
+          "exclude": [
+            "Services/MsalAuthProvider.cs",
+            "Build/Features.Auth.props",
+            "Tests/Services/MsalAuthProviderTests.cs",
+            "docs/feature-guides/auth.md"
           ]
         },
         {

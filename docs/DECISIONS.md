@@ -438,3 +438,33 @@ in git history; this file saves the next agent the archaeology.
   launching the scratch app with `shot://route` lands directly on the page and
   screenshots went green three-for-three. Throwaway VSTest rig deleted after use
   (GUI children only survive under the test host).
+- **2026-10-08 — v0.4.0 is identity + notifications, one flag only.** Rail + tab
+  shells and all six page kinds stay; `--auth` (default off) + `AuthService`
+  veneer/MSAL backend reuse the crash shape (veneer always compiles, SDK excluded
+  when off, DPAPI cache under `AppPaths` per distribution); notifications hardened
+  as one road (OS toast + in-app cards + `WindowActivator`/protocol unification,
+  packaged proof manual-kit). File activation stays guide-only without a named
+  consumer (F2 continued).
+- **2026-10-08 — C6 deferral executed as a build-time spike.** Broker-vs-embedded
+  settled against MSAL 4.90.1 (Sep 2026): the desktop broker (WAM) left MSAL core
+  for the `Microsoft.Identity.Client.Broker` extension package (`WithBroker(bool)`
+  is obsolete-error under the repo's warnings-as-errors); the build takes broker
+  where the app has package identity and system-browser loopback everywhere else,
+  with one automatic rebuild-and-retry on a broker miss. Unpackaged broker would
+  need a per-install SID registration the template cannot ship — loopback stays
+  the unpackaged default by construction, not by TODO.
+- **2026-10-08 — `DesktopToastService` was already `AppNotificationManager`.**
+  ROADMAP's "not adopted" cell is corrected: v0.4.0 did not first-adopt the manager
+  — it unified toast-click with protocol/nav handoff (`RouteActivationRequested`,
+  pure `ResolveActivation`/`TryExtractRoute`) and documented the which-API table.
+  No second toast stack was added. Payload construction needs the OS platform
+  (`REGDB_E_CLASSNOTREG` headless), so tests pin the routing decision, not the builder.
+- **2026-10-08 — App↔NuGet convergence: PATCH steps to joint 0.5.0 (continued).**
+  `0.4.0-beta`/`0.4.4` is a deliberate convergence PATCH (new surface held at
+  PATCH so the numbers can meet at `0.5.0`/`0.5.0`); standing MINOR-for-surface
+  policy resumes at convergence. CI still passes `-p:Version` from
+  `templates-v*` tags; packaging fallback untouched.
+- **2026-10-08 — V0.4.0 work-order file is repo-only.** `docs/V0.4.0-ADVANCED-PLAN.md`
+  stays out of the template via the parity app-only exclusion list (same rule as
+  STATE/WORKFLOW/V0.1.0/V0.2.0/V0.3.0 files): product direction ships (`ROADMAP.md`
+  mirrored), session machinery does not.

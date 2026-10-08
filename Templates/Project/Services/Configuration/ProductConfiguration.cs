@@ -14,6 +14,9 @@ public static class ProductConfiguration
     public const string SentryDsn = "";
     public const string SentryEnvironment = "";
     public const string SentryRelease = "";
+    public const string EntraClientId = "";
+    public const string EntraAuthority = "https://login.microsoftonline.com/common";
+    public const string EntraScopes = "User.Read";
 
     /// <summary>
     /// Canonical repository URL (releases, issues, license pages).
@@ -45,6 +48,9 @@ public static class DeploymentConfiguration
     public static string SentryDsn => Read("DEVTEM_SENTRY_DSN", ProductConfiguration.SentryDsn);
     public static string SentryEnvironment => Read("DEVTEM_SENTRY_ENVIRONMENT", ProductConfiguration.SentryEnvironment);
     public static string SentryRelease => Read("DEVTEM_SENTRY_RELEASE", ProductConfiguration.SentryRelease);
+    public static string EntraClientId => Read("DEVTEM_ENTRA_CLIENT_ID", ProductConfiguration.EntraClientId);
+    public static string EntraAuthority => Read("DEVTEM_ENTRA_AUTHORITY", ProductConfiguration.EntraAuthority);
+    public static string EntraScopes => Read("DEVTEM_ENTRA_SCOPES", ProductConfiguration.EntraScopes);
     public static string RepoUrl => Read("DEVTEM_REPO_URL", ProductConfiguration.RepoUrl);
     public static string LicenseName => Read("DEVTEM_LICENSE_NAME", ProductConfiguration.LicenseName);
     public static string LicenseUrl

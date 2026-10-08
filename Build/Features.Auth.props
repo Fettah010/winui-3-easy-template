@@ -1,0 +1,9 @@
+<Project>
+  <!-- Entra ID auth (MSAL). Scaffolded only with the `auth` flag
+       (default off); imported with an Exists guard. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.90.1" />
+    <PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.90.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+  </ItemGroup>
+</Project>

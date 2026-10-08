@@ -50,6 +50,11 @@ public sealed partial class SettingsPage : Page, INavigationAware
         if (LocalizationService.AvailableLanguages.Count <= 1)
             LanguageCard.Visibility = Visibility.Collapsed;
 
+        // Auth-optional scaffolds hide the account section: a sign-in card
+        // with no backend is noise, not a choice (same rule as the picker).
+        if (!AppFeatures.Auth)
+            AccountSection.Visibility = Visibility.Collapsed;
+
         SelectCurrentLanguage();
     }
 
@@ -58,6 +63,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
         RefreshDynamicLabels();
         RefreshThemeComboBoxDisplay();
         ViewModel.RefreshUpdateLabels();
+        ViewModel.RefreshAuthLabels();
     }
 
     private void SelectCurrentLanguage()
@@ -94,6 +100,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
         AutomationProperties.SetName(AutoInstallToggle, loc.GetString("SettingsAutoInstall"));
         AutomationProperties.SetName(MinimizeToTrayToggle, loc.GetString("SettingsMinimizeToTray"));
         AutomationProperties.SetName(AutoStartToggle, loc.GetString("SettingsAutoStart"));
+        AutomationProperties.SetName(AccountActionButton, loc.GetString("SettingsAccountHeader"));
     }
 
     /// <summary>
@@ -131,6 +138,7 @@ public sealed partial class SettingsPage : Page, INavigationAware
     public void OnNavigatedTo(object? parameter)
     {
         RefreshDynamicLabels();
+        ViewModel.RefreshAuthLabels();
         PaintLayout();
         if (TrayNavigationRequest.ShouldAutoCheck(parameter))
             _autoCheckArmed = true;

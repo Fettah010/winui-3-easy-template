@@ -62,6 +62,41 @@ public class DesktopToastServiceTests
     }
 
     [TestMethod]
+    public void ResolveActivation_RoutesRoutedToast_AndFallsBackOtherwise()
+    {
+        // The route rides the payload; the OS hands it back on click and
+        // OnNotificationInvoked turns it into RouteActivationRequested.
+        // (Payload construction itself needs the OS platform, so the
+        // decision — not the builder — is what headless tests pin.)
+        string uri = ProtocolService.Scheme + "://settings";
+        var routed = new Windows.Foundation.Collections.ValueSet { { "route", uri } };
+        Assert.IsTrue(DesktopToastService.ResolveActivation(routed, out string tag));
+        Assert.AreEqual("settings", tag);
+        Assert.IsFalse(DesktopToastService.ResolveActivation(
+            new Windows.Foundation.Collections.ValueSet(), out string _));
+        Assert.IsFalse(DesktopToastService.ResolveActivation(new object(), out string _));
+        Assert.IsFalse(DesktopToastService.ResolveActivation(null, out string _));
+    }
+
+    [TestMethod]
+    public void TryExtractRoute_MapsRouteArgument_ToTag()
+    {
+        string uri = ProtocolService.Scheme + "://settings";
+        var args = new Windows.Foundation.Collections.ValueSet { { "route", uri } };
+        Assert.IsTrue(DesktopToastService.TryExtractRoute(args, out string tag));
+        Assert.AreEqual("settings", tag);
+    }
+
+    [TestMethod]
+    public void TryExtractRoute_WithoutRoute_ReturnsFalse()
+    {
+        Assert.IsFalse(DesktopToastService.TryExtractRoute(
+            new Windows.Foundation.Collections.ValueSet(), out string _));
+        Assert.IsFalse(DesktopToastService.TryExtractRoute(null, out string _));
+        Assert.IsFalse(DesktopToastService.TryExtractRoute("not a route", out string _));
+    }
+
+    [TestMethod]
     public void ToastStrings_AreTranslated()
     {
         var loc = LocalizationService.Current;

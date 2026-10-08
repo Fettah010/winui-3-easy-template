@@ -57,6 +57,7 @@ DevTem is not trying to compete with the official blank app as a minimal "hello 
 - 3-language runtime localization (en-US, es-ES, fr-FR; English-only at scaffold time)
 - Logging through one facade (Serilog console + file by default; MEL or none at scaffold time)
 - Optional Sentry crash reporting (DSN-gated; SDK droppable at scaffold time)
+- Optional Entra ID sign-in (MSAL broker-first with loopback fallback, DPAPI cache per distribution; off by default, SDK droppable at scaffold time)
 - SQLite data layer and typed HTTP client (each droppable at scaffold time)
 - MVVM pattern with CommunityToolkit.Mvvm
 - GitHub Actions release pipeline and version tag flow
@@ -68,15 +69,24 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.3.0-beta
+## What's new in 0.4.0-beta
 
-- Pages + data: the content grid closes the last page-shape gap (`add-page.ps1
-  -Kind contentgrid`, `devtem-contentgrid` item template over the in-box WinUI
-  GridView with search + sort + paging, no extra package); sample data is a
-  runnable service (`SampleDataService` + paged/sorted/filtered guidance);
-  WebView2 and EF Core are answered as opt-in guide and documented default
-  (no base-scaffold weight change).
-- No behavior change on the default scaffold.
+- Identity + notifications: opt-in Entra ID sign-in (`--auth true`, Settings
+  account section, broker where packaged with loopback fallback, DPAPI cache
+  under the data dir, zero MSAL weight when off); toast clicks and deep links
+  land identically (routed toasts navigate after foregrounding); file
+  activation stays guide-only until a consumer needs it.
+- No behavior change on the default scaffold (`--auth` defaults off).
+
+| Flag | Default | Use |
+| --- | --- | --- |
+| `--auth` | `false` | Entra ID sign-in behind the veneer (configure a client id to enable) |
+
+![Settings account section — Microsoft account sign-in state](docs/screenshots/auth.png)
+
+![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
+
+## Pages (from 0.3.0)
 
 | Kind | Use | Command |
 | --- | --- | --- |

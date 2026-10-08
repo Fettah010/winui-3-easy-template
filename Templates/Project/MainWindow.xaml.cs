@@ -159,6 +159,24 @@ public sealed partial class MainWindow : Window
             {
                 try { DispatcherQueue.TryEnqueue(() => WindowActivator.ShowAndActivate(this)); } catch { }
             };
+            // Routed toasts land like deep links: foreground first, then the
+            // route (unknown tags no-op inside NavigateTo, never throw).
+            DesktopToastService.Current.RouteActivationRequested += (_, tag) =>
+            {
+                try
+                {
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        try
+                        {
+                            WindowActivator.ShowAndActivate(this);
+                            _nav.NavigateTo(tag);
+                        }
+                        catch { }
+                    });
+                }
+                catch { }
+            };
 #endif
         }
         catch (Exception ex)
@@ -174,6 +192,22 @@ public sealed partial class MainWindow : Window
         catch (Exception ex)
         {
             AppLog.Error(ex, "Deferred update dialog init failed");
+        }
+
+        try
+        {
+            // Identity veneer (no-op without --auth or a client id): silent
+            // resume past the first frame, never on the critical path.
+            AuthService.Current.Initialize(() =>
+            {
+                try { return WinRT.Interop.WindowNative.GetWindowHandle(this); }
+                catch { return IntPtr.Zero; }
+            });
+            _ = AuthService.Current.TryResumeAsync();
+        }
+        catch (Exception ex)
+        {
+            AppLog.Error(ex, "Deferred auth init failed");
         }
 
         try

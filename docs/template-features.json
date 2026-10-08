@@ -19,6 +19,7 @@
     "http": { "default": true, "dependsOn": [], "files": ["Services/ApiService.cs", "Build/Features.Http.props", "Tests/Services/ApiServiceTests.cs"] },
     "health": { "default": true, "dependsOn": [], "files": ["Pages/DiagnosticsPage.xaml", "Pages/DiagnosticsPage.xaml.cs", "ViewModels/DiagnosticsPageViewModel.cs", "Services/Native/CrashDialogNative.cs", "Tests/ViewModels/DiagnosticsPageViewModelTests.cs"] },
     "crash": { "default": true, "dependsOn": [], "files": ["Services/SentryCrashReporter.cs", "Build/Features.Crash.props"] },
+    "auth": { "default": false, "dependsOn": [], "files": ["Services/MsalAuthProvider.cs", "Build/Features.Auth.props", "Tests/Services/MsalAuthProviderTests.cs", "docs/feature-guides/auth.md"] },
     "localization": { "default": true, "dependsOn": [], "files": ["Services/Localization/EsStrings.cs", "Services/Localization/FrStrings.cs", "Tests/Services/LocalizationCoverageTests.cs", "Tests/Services/LocalizationServiceTests.cs"] },
     "tests": { "default": true, "dependsOn": [], "files": [] },
     "logging": { "default": "serilog", "dependsOn": [], "files": ["Services/AppLog.cs", "Services/LoggingService.cs", "Services/Diagnostics/InMemoryLogSink.cs", "Services/Diagnostics/InMemoryLogSinkLoggerProvider.cs", "Services/Diagnostics/LogEntry.cs"], "values": {

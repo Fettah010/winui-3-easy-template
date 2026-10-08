@@ -30,6 +30,29 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.4.0-beta] - 2026-10-08
+
+Identity + notifications: opt-in Entra ID sign-in and one activation road
+for toasts + deep links. No behavior change on the default scaffold
+(`--auth` defaults off; templates `0.4.4`, convergence PATCH toward joint
+`0.5.0`).
+
+### Added
+
+- `--auth` scaffold flag (default off): Entra ID sign-in behind the
+  `AuthService` veneer — MSAL broker-first with loopback fallback
+  (`Services/MsalAuthProvider.cs`, MSAL 4.90.1 + Broker extension), DPAPI
+  cache file under the data dir per distribution, Settings account section
+  (3-language, Polite status, Assertive errors), `docs/feature-guides/auth.md`.
+  Off scaffolds carry zero MSAL refs and hide the section.
+- Toast/deep-link unification: routed toasts (`TryShowRouted` + `route`
+  argument) land through `RouteActivationRequested` exactly like a
+  `devtem://` launch (foreground + navigate); pure `ResolveActivation` /
+  `TryExtractRoute` decisions are headless-tested; `docs/feature-guides/notifications.md`
+  documents the which-API table. File activation stays guide-only (no consumer).
+- Publish weight: 273.8 MB (+2.1% vs 268.2 MB baseline; MSAL + Broker + DPAPI).
+
 ## [0.3.0-beta] - 2026-10-06
 
 Pages + data: every common page is one command; data guidance exists beyond

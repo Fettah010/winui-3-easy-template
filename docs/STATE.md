@@ -5,22 +5,22 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.3.0-beta SHIPPED (`v0.3.0-beta` + `templates-v0.4.3` tagged 2026-10-06, `beta` moved; work order `docs/V0.3.0-ADVANCED-PLAN.md` closed). Next: v0.4.0 planning from `docs/ROADMAP.md` §4 in a new work-order file.
-- **Version:** app `0.3.0-beta` (commit `5c07215`, tag `v0.3.0-beta` pushed — CI release.yml success, beta channel GitHub release published with phase notes + assets; `beta` branch moved to `v0.3.0-beta`). Template package `0.4.3` (tag `templates-v0.4.3` pushed — CI templates-publish success, "Your package was pushed" to NuGet; convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, package scaffold builds 0/0).
+- **Goal:** v0.4.0-beta READY (`0.4.0-beta` code + gates green, uncommitted; work order `docs/V0.4.0-ADVANCED-PLAN.md` implementation-complete). Next: maintainer release handover (commit → push → `v0.4.0-beta` + `templates-v0.4.4` tags → `beta` move).
+- **Version:** app `0.4.0-beta` (bump-version from `0.3.0-beta`; `templates-v0.4.4` planned — convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, `--auth` in help, auth-on/off probe scaffolds build 0/0 + tests green, uninstalled after).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
-- **CI health (this session, local, v0.3.0):** build 0/0, tests 357+1, parity OK (228),
-  FULL 21-combo matrix PASSED (allon incl. all 6 page kinds + duplicate-route rejection;
-  init-template scratch), smoke 9+1 on retry (first run: 2 nav failures under the post-bump
-  whats-new modal — same known flake as v0.2.0, both-attempts evidence kept), `build-msix
-  -Validate` stops at placeholder-publisher guard (by design), nupkg 0.4.3 audit (6 resolve,
-  scaffold builds 0/0, uninstalled after). Screenshots captured via scratch scaffold +
-  throwaway VSTest rig (deleted after): `list-details.png`, `datagrid.png`, `contentgrid.png`
-  (EN dark, pane expanded, protocol cold-start landing), mirrored to the template side.
-  OBSERVATION: datagrid shot shows an empty-looking black header row in dark theme —
-  pre-existing F1 code, filed as contrast follow-up for v0.7.0/v0.9.0, not fixed here.
+- **CI health (this session, local, v0.4.0):** build 0/0, tests 372+1, parity OK (238),
+  FULL 21-combo matrix PASSED (allon `--auth true` + 20 auth-off combos; FEATURES auth row + guide asserts),
+  smoke 9+1 on retry (first run: 1 transient failure under load, name not retained — same known flake class as v0.2.0/v0.3.0),
+  `build-msix -Validate` stops at placeholder-publisher guard (by design), nupkg 0.4.4 audit (6 resolve, `--auth` in help,
+  auth-on 361+1 / auth-off 359+1 green, uninstalled after). Screenshots captured via throwaway VSTest rig (deleted after):
+  `auth.png` (Settings ACCOUNT section, needs-client-id state), `notification.png` (same + live in-app card),
+  EN dark maximized, mirrored to the template side. Weight 273.8 MB (+2.1% vs 268.2 MB baseline; MSAL + Broker + DPAPI).
+- **Cold flame (v0.4.0, Debug dev box 2026-10-08, applog-measured, warm machine):**
+  splash 305/293/293 / window 508/503/513 (3 launches, zero budget breaches).
+  Consistent with the v0.3.0 warm floor (~318/~548); auth init rides deferred past the first frame.
 - **Cold flame (v0.3.0, Debug dev box 2026-10-06, applog-measured, warm machine):**
   splash 318/319/308 / window 548/536/524 (3 launches, zero budget breaches).
   Consistent with the v0.2.0 warm floor (~300/~495); v0.3.0 changes zero hot-path

@@ -264,5 +264,14 @@ internal static class FrStrings
         ["SetupWizardComplete"] = "Terminer",
         ["SetupWizardDoneHeader"] = "C'est prêt",
         ["SetupWizardDoneBody"] = "Les mises à jour sont vérifiées au démarrage. Paramètres peut tout changer ensuite.",
+        ["SettingsAccount"] = "COMPTE",
+        ["SettingsAccountHeader"] = "Compte Microsoft",
+        ["SettingsAccountDesc"] = "Connectez-vous avec votre compte professionnel ou Microsoft.",
+        ["SettingsAccountSignedOut"] = "Non connecté.",
+        ["SettingsAccountSignedIn"] = "Connecté en tant que {0}.",
+        ["SettingsSignIn"] = "Se connecter",
+        ["SettingsSignOut"] = "Se déconnecter",
+        ["SettingsAuthNeedsClientId"] = "La connexion nécessite un id client (voir le guide).",
+        ["SettingsAuthError"] = "La connexion n'a pas abouti.",
     };
 }

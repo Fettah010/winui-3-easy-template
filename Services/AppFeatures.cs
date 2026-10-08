@@ -19,6 +19,7 @@ internal static class AppFeatures
     public static readonly bool Http = true;
     public static readonly bool Health = true;
     public static readonly bool Crash = true;
+    public static readonly bool Auth = true;
     public static readonly bool Localization = true;
     public static readonly bool Tests = true;
     public static readonly string Distribution = "portable";

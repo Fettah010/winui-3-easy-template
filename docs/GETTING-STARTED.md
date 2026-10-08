@@ -127,7 +127,8 @@ renders them from `Logo.png` at pack time.
 ## Scaffold a whole app (dotnet new project template)
 
 `Templates/Project/` is the full app as a project template with identity
-parameters and feature flags (all flags default on):
+parameters and feature flags (all flags default on, except `--auth` which
+defaults off and adds Entra ID sign-in when set to `true`):
 
 ```powershell
 dotnet new install .\Templates\Project     # from this repo, or:
@@ -164,6 +165,7 @@ not by choice.
 | `--repo` | GitHub `org/name` (feeds, links, CI) | `acme/desk-app` |
 | `--scheme` | Deep-link scheme (registered end-to-end: HKCU self-register on first run, manifest for MSIX; `Scripts/register-protocol.ps1` for manual setup) | `acme://` |
 | `--tray/--database/--http/--health/--crash/--localization/--tests` | Feature on/off (`false` drops it) | `--tray false` |
+| `--auth` | Opt-in Entra ID sign-in, off by default (`true` includes the MSAL backend; configure a client id to enable) | `--auth true` |
 | `--updates` | Update mechanism: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX (`--distribution msix`) | `--updates basic` |
 | `--distribution` | Distribution format: `portable` (default, unpackaged) or `msix` (packaged, for Store or sideload) | `--distribution msix` |
 | `--setup` | First-run setup wizard: install location, shortcuts, launch options (`false` drops it; portable only, ignored for msix) | `--setup false` |

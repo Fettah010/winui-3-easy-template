@@ -37,6 +37,7 @@ the template — this README describes your app, not the template.
 - Mica window + system tray + single-instance deep links (`devtem://`)
 - Auto-updates, diagnostics page, 3-language UI, persisted settings
 - Logging facade, SQLite + typed HTTP data layer, crash reporting (opt-in)
+- Entra ID sign-in (opt-in, --auth true at scaffold time)
 
 ### Starter profiles
 

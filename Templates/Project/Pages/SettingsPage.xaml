@@ -151,6 +151,35 @@
                 </ctk:SettingsCard>
             </StackPanel>
 
+            <StackPanel x:Name="AccountSection" Spacing="8" Margin="0,8,0,0" Visibility="{x:Bind ViewModel.AccountSectionVisibility, Mode=OneWay}">
+                <TextBlock
+                    Text="{loc:Loc Key=SettingsAccount}"
+                    Style="{ThemeResource BodyStrongTextBlockStyle}"/>
+
+                <ctk:SettingsCard
+                    x:Name="AccountCard"
+                    Header="{loc:Loc Key=SettingsAccountHeader}"
+                    Description="{loc:Loc Key=SettingsAccountDesc}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <TextBlock
+                            x:Name="AccountStatusText"
+                            Text="{x:Bind ViewModel.AccountStatusText, Mode=OneWay}"
+                            Style="{ThemeResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            VerticalAlignment="Center"
+                            MaxWidth="220"
+                            TextWrapping="Wrap"
+                            AutomationProperties.LiveSetting="Polite"/>
+                        <Button
+                            x:Name="AccountActionButton"
+                            AutomationProperties.AutomationId="AccountActionButton"
+                            Content="{x:Bind ViewModel.AccountActionText, Mode=OneWay}"
+                            Command="{x:Bind ViewModel.ToggleSignInCommand}"
+                            Style="{ThemeResource AccentButtonStyle}"/>
+                    </StackPanel>
+                </ctk:SettingsCard>
+            </StackPanel>
+
             <!-- devtem:optional:settings-notify-test — dev scaffolding for the
                  toast pipeline. Delete from HERE through
                  devtem:end:settings-notify-test to drop it (also delete

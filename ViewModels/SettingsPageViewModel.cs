@@ -76,6 +76,23 @@ public partial class SettingsPageViewModel : ObservableObject
     private string _installButtonText = string.Empty;
 
     /// <summary>
+    /// Account section (Entra ID, v0.4.0). Collapsed when the scaffold was
+    /// built without auth — the veneer below is then a no-op and the section
+    /// would only ever show "not configured".
+    /// </summary>
+    [ObservableProperty]
+    private Visibility _accountSectionVisibility = Visibility.Visible;
+
+    [ObservableProperty]
+    private string _accountStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _accountActionText = string.Empty;
+
+    [ObservableProperty]
+    private bool _isAccountBusy;
+
+    /// <summary>
     /// Both distributions support the toggle: unpackaged runs manage
     /// HKCU Run directly; packaged runs drive the manifest StartupTask
     /// (Windows may show a consent prompt on enable).
@@ -91,6 +108,7 @@ public partial class SettingsPageViewModel : ObservableObject
         _pickers = pickers ?? new FilePickerService();
         RefreshFromServices();
         RefreshUpdateLabels();
+        RefreshAuthLabels();
         _loaded = true;
     }
 
@@ -138,6 +156,88 @@ public partial class SettingsPageViewModel : ObservableObject
                 AutoStart = AutoStartService.Current.IsEnabled();
         }
         catch { }
+    }
+
+    /// <summary>
+    /// Re-reads the account section from the current language + sign-in
+    /// state. Called once at construction and by the page on every language
+    /// change. Never throws.
+    /// </summary>
+    public void RefreshAuthLabels()
+    {
+        try
+        {
+            var loc = LocalizationService.Current;
+            if (!AppFeatures.Auth)
+            {
+                AccountSectionVisibility = Visibility.Collapsed;
+                return;
+            }
+            AccountSectionVisibility = Visibility.Visible;
+            var account = AuthService.Current.CurrentAccount;
+            if (account is not null)
+            {
+                AccountStatusText = loc.GetString("SettingsAccountSignedIn", account.Username);
+                AccountActionText = loc.GetString("SettingsSignOut");
+            }
+            else if (AuthService.Current.IsEnabled)
+            {
+                AccountStatusText = loc.GetString("SettingsAccountSignedOut");
+                AccountActionText = loc.GetString("SettingsSignIn");
+            }
+            else
+            {
+                AccountStatusText = loc.GetString("SettingsAuthNeedsClientId");
+                AccountActionText = loc.GetString("SettingsSignIn");
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Signs out when signed in, signs in otherwise. Failures surface as an
+    /// error toast (Assertive by the card's own rule) and retain the last
+    /// good state — the section never shows a half-signed-in account.
+    /// Never throws.
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleSignInAsync()
+    {
+        if (IsAccountBusy)
+            return;
+        IsAccountBusy = true;
+        try
+        {
+            var auth = AuthService.Current;
+            if (auth.CurrentAccount is not null)
+            {
+                await auth.SignOutAsync();
+            }
+            else if (!auth.IsEnabled)
+            {
+                var loc = LocalizationService.Current;
+                NotificationService.Current.Error(
+                    loc.GetString("SettingsAccountHeader"),
+                    loc.GetString("SettingsAuthNeedsClientId"));
+            }
+            else
+            {
+                var account = await auth.SignInAsync();
+                if (account is null)
+                {
+                    var loc = LocalizationService.Current;
+                    NotificationService.Current.Error(
+                        loc.GetString("SettingsAccountHeader"),
+                        loc.GetString("SettingsAuthError"));
+                }
+            }
+            RefreshAuthLabels();
+        }
+        catch { }
+        finally
+        {
+            IsAccountBusy = false;
+        }
     }
 
     /// <summary>Resets all preferences to defaults and refreshes the UI.</summary>

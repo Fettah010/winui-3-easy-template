@@ -18,7 +18,8 @@ by default; basic checker or none; native AppInstaller / Store updates for
 packaged MSIX), first-run setup wizard, optional SQLite and HTTP services,
 3-language UI (EN/ES/FR; English-only available), persisted settings,
 flexible logging (Serilog by default) + optional Sentry crash reports,
-MSIX packaging script, release pipeline.
+opt-in Entra ID sign-in (MSAL, off by default), MSIX packaging script,
+release pipeline.
 
 ```powershell
 dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
@@ -33,6 +34,7 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--repo` | GitHub `org/name` (feeds, links, CI) |
 | `--scheme` | Deep-link URI scheme (`acme://`) |
 | `--tray` / `--database` / `--http` / `--health` / `--crash` / `--localization` / `--tests` | Feature on/off (`false` drops it; all default on) |
+| `--auth` | Opt-in Entra ID sign-in (`true` includes it; off by default, configure a client id to enable) |
 | `--updates` | Auto-updates: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX |
 | `--distribution` | Distribution format: `portable` (default) or `msix` (Store or sideload) |
 | `--publisher` | MSIX Publisher ID (Partner Center or cert subject; pre-fills manifest + script) |
