@@ -5,7 +5,7 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.4.0-beta READY (`0.4.0-beta` code + gates green, uncommitted; work order `docs/V0.4.0-ADVANCED-PLAN.md` implementation-complete). Next: maintainer release handover (commit → push → `v0.4.0-beta` + `templates-v0.4.4` tags → `beta` move).
+- **Goal:** v0.4.0-beta COMMITTED LOCALLY (`50b9b39`, 63 files) — push/tag blocked: this environment cannot reach github.com:443 (21s connect timeout, twice). Next: run the WB-10 handover below where the network reaches GitHub.
 - **Version:** app `0.4.0-beta` (bump-version from `0.3.0-beta`; `templates-v0.4.4` planned — convergence PATCH toward joint `0.5.0` per DECISIONS; nupkg audit passed locally: 6 templates resolve, `--auth` in help, auth-on/off probe scaffolds build 0/0 + tests green, uninstalled after).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
