@@ -468,3 +468,12 @@ in git history; this file saves the next agent the archaeology.
   stays out of the template via the parity app-only exclusion list (same rule as
   STATE/WORKFLOW/V0.1.0/V0.2.0/V0.3.0 files): product direction ships (`ROADMAP.md`
   mirrored), session machinery does not.
+- **2026-10-09 — v0.5.0 is distribution proof + Store GA, no template-surface change.** Truth-table proof lines, Store listing/WACK/submission receipts, signing docs, nightly ceilings, README table + media. No new `template.json` symbols/values; guards and matrix combos untouched.
+- **2026-10-09 — Templates `0.4.5` is a policy-clean content PATCH.** v0.5.0 adds no template surface, so PATCH (not MINOR) is the standing policy — distinct from the V0.3.0/V0.4.0 convergence holds. The joint-number meet moves to the next surface-shipping version; CI still passes `-p:Version` from `templates-v*` tags; packaging fallback untouched.
+- **2026-10-09 — Per-combo ceilings ride the existing nightly, not the PR path.** Deferred D2 executed as `weight-ceilings.yml` on the 02:00 UTC schedule (sibling file — the matrix job cannot host an 84-minute publish); single-config `-FailOnJump` stays the PR/main gate. Ceilings seeded from measured v0.5.0 numbers x1.15 rounded up (allon 273.7→315 … minimal 260→299); re-baseline = new file + DECISIONS reason. Both gate branches proven live (OK + BREACH paths).
+- **2026-10-09 — Parity skips generated Store drafts.** `new-store-listing.ps1` output (`Store/`, git-ignored) tripped the mirror check on first run; `Store` joined `skipDirs` in both parity copies instead of deleting regenerable drafts.
+- **2026-10-09 — Template-machine hygiene with parallel agents.** `dotnet new install/uninstall` entries are per-path: the ceilings script uninstalls only its own source path, never the `DevTem.Templates` package ID (a sibling worktree holds path installs). Background PowerShell jobs do not survive across sessions here — long measurements run foreground in chunks.
+- **2026-10-09 — V0.5.0 work-order file is repo-only.** `docs/V0.5.0-ADVANCED-PLAN.md`
+  stays out of the template via the parity app-only exclusion list (same rule as
+  STATE/WORKFLOW/V0.1.0–V0.4.0 files): product direction ships (`ROADMAP.md` mirrored),
+  session machinery does not.

@@ -1,0 +1,24 @@
+name: weight-ceilings
+
+# Nightly per-combo publish ceilings (v0.5.0, executes deferred D2).
+# The single-config gate (measure-publish-weight -FailOnJump) stays the
+# PR/main gate in templates.yml; this job owns the ~84-minute full publish
+# across all 21 combos, where it never blocks a PR. A breach fails loudly:
+# re-baseline = new ceilings + reason in docs/DECISIONS.md, never silent.
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  ceilings:
+    runs-on: windows-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Per-combo publish ceilings
+        run: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File Scripts/measure-combo-weights.ps1

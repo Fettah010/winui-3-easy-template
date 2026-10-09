@@ -31,6 +31,29 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.5.0-beta] - 2026-10-09
+
+Distribution + Store GA: every updates × distribution cell is proven, not
+just documented. No behavior change on any scaffold (proof + docs + CI only;
+templates `0.4.5`, content PATCH — no new template surface, convergence
+meet re-planned).
+
+### Added
+
+- Truth-table proof lines in `distribution-dual.md`: matrix evidence per
+  valid cell plus explicit `pending-kit` markers where install rights, a
+  Publisher ID, or a Partner Center account is still required.
+- Store path exercised to the kit boundary: listing draft reviewed,
+  `build-msix -Validate` pre-flight passed, `-DryRun` staging valid; WACK +
+  submission receipt pending-kit (no App Certification Kit / Store account
+  on the dev machine).
+- Signing docs: Azure Trusted Signing path in MAINTAINERS alongside the
+  PFX practice.
+- Nightly per-combo publish ceilings (`weight-ceilings.yml` + 
+  `measure-combo-weights.ps1` + `publish-weight-ceilings.json`).
+- Publish weight: 273.8 MB (+2.1% vs 268.2 MB baseline; unchanged from 0.4.0 — no product-code change).
+
 ## [0.4.0-beta] - 2026-10-08
 
 Identity + notifications: opt-in Entra ID sign-in and one activation road

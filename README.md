@@ -69,22 +69,25 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.4.0-beta
+## What's new in 0.5.0-beta
 
-- Identity + notifications: opt-in Entra ID sign-in (`--auth true`, Settings
-  account section, broker where packaged with loopback fallback, DPAPI cache
-  under the data dir, zero MSAL weight when off); toast clicks and deep links
-  land identically (routed toasts navigate after foregrounding); file
-  activation stays guide-only until a consumer needs it.
-- No behavior change on the default scaffold (`--auth` defaults off).
+- Distribution + Store GA: every updates × distribution cell is proven, not
+  just documented — the truth table below carries a dated proof line per
+  valid cell (matrix runs plus kit-machine installed runs where complete);
+  Store submission runs end-to-end on a real listing (WACK + Partner Center);
+  nightly per-combo publish ceilings guard the weight story.
+- No behavior change on any scaffold (proof + docs + CI only).
 
-| Flag | Default | Use |
+| `--updates` \ `--distribution` | `portable` (default) | `msix` |
 | --- | --- | --- |
-| `--auth` | `false` | Entra ID sign-in behind the veneer (configure a client id to enable) |
+| `velopack` (default) | ✅ Setup.exe + feed, full in-app flow | ❌ Guard (ship Dual tracks instead) |
+| `basic` | ✅ Setup.exe + `.sha256` checker | ❌ Guard |
+| `none` | ✅ No update code | ✅ Slim status surface |
+| `appinstaller` | ❌ Guard (needs package identity) | ✅ `.msix` + `.appinstaller` feed |
+| `store` | ❌ Guard (needs package identity) | ✅ Partner Center submission |
 
-![Settings account section — Microsoft account sign-in state](docs/screenshots/auth.png)
-
-![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
+Full proof lines live in `docs/feature-guides/distribution-dual.md`
+(template: same path in your scaffold).
 
 ## Pages (from 0.3.0)
 

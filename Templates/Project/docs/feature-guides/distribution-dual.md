@@ -21,11 +21,11 @@ the `badupd`/`badupd2` matrix combos). Each valid cell links its guide.
 
 | `--updates` \ `--distribution` | `portable` (default) | `msix` |
 | --- | --- | --- |
-| `velopack` (default) | ✅ Setup.exe + feed, full in-app flow ([guide](updates-velopack.md)) | ❌ Guard: `cannot be combined with --distribution msix` (ship the Dual tracks below instead) |
-| `basic` | ✅ Setup.exe + `.sha256`, zero-dependency checker ([guide](updates-basic.md)) | ❌ Guard: `cannot be combined with --distribution msix` |
-| `none` | ✅ No update code at all (manual distribution) | ✅ Slim status surface, Windows owns updates |
-| `appinstaller` | ❌ Guard: `cannot be combined with --distribution portable` (needs package identity) | ✅ `.msix` + `.appinstaller`, Windows owns updates ([guide](updates-appinstaller.md)) |
-| `store` | ❌ Guard: `cannot be combined with --distribution portable` (needs package identity) | ✅ Partner Center submission ([guide](updates-store.md)) |
+| `velopack` (default) | ✅ Setup.exe + feed, full in-app flow ([guide](updates-velopack.md)). Proof: scaffold matrix green (build 0/0 + tests, `allon`/`production` combos, every push). Installed-app update run (check→download→restart across two releases): pending-kit — needs an installed Setup.exe plus a second published release to check against. | ❌ Guard: `cannot be combined with --distribution msix` (ship the Dual tracks below instead) |
+| `basic` | ✅ Setup.exe + `.sha256`, zero-dependency checker ([guide](updates-basic.md)). Proof: scaffold matrix green (`updbasic` combo). Installed-app checker run: pending-kit (same requirement as Velopack). | ❌ Guard: `cannot be combined with --distribution msix` |
+| `none` | ✅ No update code at all (manual distribution). Proof: scaffold matrix green (`noupd`/`alloff` combos); there is no engine to run, so an installed run proves launch only. | ✅ Slim status surface, Windows owns updates. Proof: scaffold matrix green (`msixnone` combo); packaged install run: pending-kit. |
+| `appinstaller` | ❌ Guard: `cannot be combined with --distribution portable` (needs package identity) | ✅ `.msix` + `.appinstaller`, Windows owns updates ([guide](updates-appinstaller.md)). Proof: scaffold matrix green (`msixapp` combo) + `build-msix.ps1 -DryRun` staging valid (publish + `.appinstaller` XML emission, no SDK). Feed-driven update on an installed package: pending-kit — needs a Publisher ID, signing cert, and HTTPS host. |
+| `store` | ❌ Guard: `cannot be combined with --distribution portable` (needs package identity) | ✅ Partner Center submission ([guide](updates-store.md)). Proof: scaffold matrix green (`msixstore` combo) + `build-msix.ps1 -Validate -Publisher` pre-flight passed (see Store GA notes). Certification + submission receipt: pending-kit — needs a Partner Center account and app listing. |
 
 The Dual profile (Production source + `--publisher`) is not a cell —
 it is two artifacts from one source: the portable Velopack track and
@@ -56,3 +56,11 @@ the Store `.msixupload` at the same version, released together below.
   Store. Version numbers may coincide; the owners stay separate.
 - **One version, two owners.** Never ship different versions per track
   under one tag — diagnostics and the what's-new dialog assume one.
+
+## Proof status (v0.5.0)
+
+`matrix-proven` = scaffold builds 0/0 + tests green in CI (every push).
+`pending-kit` = needs install rights, a Publisher ID / signing cert, or a
+Partner Center account — tracked explicitly per cell above, never implied.
+When a kit run completes, its date + version + outcome replace the pending
+line; log forensics (`Logs/applog-*.log`) backs every installed-app claim.

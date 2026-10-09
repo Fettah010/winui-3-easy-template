@@ -38,6 +38,9 @@ the template — this README describes your app, not the template.
 - Auto-updates, diagnostics page, 3-language UI, persisted settings
 - Logging facade, SQLite + typed HTTP data layer, crash reporting (opt-in)
 - Entra ID sign-in (opt-in, --auth true at scaffold time)
+- Proven updates × distribution matrix — see
+  [`docs/feature-guides/distribution-dual.md`](docs/feature-guides/distribution-dual.md)
+  for which cells exist and how each is proven
 
 ### Starter profiles
 

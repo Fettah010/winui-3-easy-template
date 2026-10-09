@@ -93,6 +93,14 @@ Notes from the Velopack docs (verified against `vpk pack -h`):
   in a GitHub secret, decode it at workflow time, pass password via secret.
 - Alternatives: `--signTemplate "<cmd> {{file}}"` for custom signers, and
   `--azureTrustedSignFile` for Azure Trusted Signing.
+- Azure Trusted Signing (no PFX to store or rotate): create a sign-file JSON
+  describing the Trusted Signing endpoint, account, and certificate profile,
+  then `vpk pack ... --azureTrustedSignFile <path-to-sign-file.json>`.
+  Authenticate with `az login` on your machine; in CI use a federated
+  credential (no client secret to rotate) with the sign-file path in config,
+  never the credential itself. The PFX path above stays for machines without
+  Azure access — the two are alternatives, not layers. MSIX sideload signing
+  still goes through `signtool` + `-CertificatePath` in `build-msix.ps1`.
 - Test locally with a self-signed cert (`New-SelfSignedCertificate`),
   imported into Trusted People so your machine trusts it.
 - Reputation is separate from validity: brand-new certs still SmartScreen-warn
