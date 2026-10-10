@@ -66,7 +66,8 @@ dotnet new devtem-winui -n MyApp --distribution msix --updates store --setup fal
 ```
 
 Presets are documentation, not a `--profile` parameter: explicit flags
-always win. Full flag reference: `dotnet new devtem-winui --help`.
+always win. Add `--slnx true` to any preset for the XML solution file.
+Full flag reference: `dotnet new devtem-winui --help`.
 
 ### Releases
 

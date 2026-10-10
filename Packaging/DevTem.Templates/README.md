@@ -11,6 +11,12 @@ in the terminal or Visual Studio's New Project dialog (same engine).
 dotnet new install DevTem.Templates
 ```
 
+**Requirements:** Windows 10 version 19041+ to run scaffolds · [.NET 10
+SDK](https://dotnet.microsoft.com/download) to build · Visual Studio 2026
+(18.x) recommended for the designer and the New Project dialog.
+
+![DevTem home page — welcome card, status, feature overview](https://raw.githubusercontent.com/Fettah010/winui-3-easy-template/main/docs/screenshots/home.png)
+
 ## `devtem-winui` — full desktop app
 
 Unpackaged WinUI 3 app: Mica window, system tray, auto-updates (Velopack
@@ -41,11 +47,26 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--publisher` | MSIX Publisher ID (Partner Center or cert subject; pre-fills manifest + script) |
 | `--setup` | First-run setup wizard (portable only; `false` drops it) |
 | `--logging` | Logging backend: `serilog` (default), `mel`, `none` |
+| `--attribution` | One-line source comment (`false` omits it) |
 
 Names with spaces work (`-n "My App"` → `My_App` identifiers and files).
 In Visual Studio the parameters render as dialog fields, checkboxes, and
 dropdowns (the choices). Every generated project also includes `docs/FEATURES.md`, which records the
 selected options and next steps; disabled feature guides are omitted.
+
+![DevTem settings page — theme, language, updates, account, tray, backup](https://raw.githubusercontent.com/Fettah010/winui-3-easy-template/main/docs/screenshots/settings.png)
+
+### After scaffolding
+
+Your copy's `README.md` walks through first steps — reset the version,
+rebrand identity/links/license, then prove consistency:
+
+```powershell
+powershell -File Scripts/bump-version.ps1 -Version 0.0.1
+.\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" `
+    -RepoUrl "https://github.com/acme/desk-app" -Scheme "acme://"
+.\Scripts\init-template.ps1 -Validate
+```
 
 ### Profile presets
 
@@ -88,6 +109,10 @@ Or wire any kind in one command inside the app repo:
 dotnet new update --check-only
 dotnet new update
 ```
+
+Template versions ride `templates-v*` tags (currently `0.6.0`, matched with
+the app); per-release notes live on
+[GitHub releases](https://github.com/Fettah010/winui-3-easy-template/releases).
 
 ## Links
 
