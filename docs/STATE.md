@@ -5,22 +5,23 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.5.0-beta SHIPPED (`v0.5.0-beta` + `templates-v0.4.5` tagged 2026-10-09, `beta` moved; work order `docs/V0.5.0-ADVANCED-PLAN.md` closed). CI owns the releases (`release.yml` beta channel; `templates-publish` → NuGet 0.4.5). Kit-gated proofs stay open: WACK + Partner Center submission + installed-app runs + `store-listing.png`/update GIF (tracked pending-kit in `distribution-dual.md`). Next: v0.6.0 planning from `docs/ROADMAP.md` §4 in a new work-order file. Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works (flaky, retry loops).
-- **Version:** app `0.5.0-beta` (commit `d129b77`, tag `v0.5.0-beta` pushed — CI release.yml building the beta-channel GitHub release; `beta` branch moved to `v0.5.0-beta`). Template package `0.4.5` (tag `templates-v0.4.5` pushed — CI templates-publish pushing to NuGet; content PATCH, no new template surface, convergence meet re-planned per DECISIONS; nupkg audit passed locally: 6 templates resolve, probe scaffold builds 0/0, uninstalled after).
+- **Goal:** v0.6.0-beta SHIPPED (`v0.6.0-beta` + `templates-v0.6.0` tagged 2026-10-10, `beta` moved; work order `docs/V0.6.0-ADVANCED-PLAN.md` closed — joint meet, matched from now on). CI owns the releases (`release.yml` beta channel; `templates-publish` → NuGet 0.6.0). Open manuals: E5 VS dialog shots + `vs-dialog.png`/`scaffold-help.png` (VS 2026 18.10 on box, no scripted capture); kit proofs stay pending-kit. Next: v0.7.0 planning from `docs/ROADMAP.md` §4 in a new work-order file. Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works (flaky, retry loops; this time first-try).
+- **Version:** app `0.6.0-beta` (commit `87b2269`, tag `v0.6.0-beta` pushed — CI release.yml building the beta-channel GitHub release; `beta` branch moved to `v0.6.0-beta`). Template package `0.6.0` (tag `templates-v0.6.0` pushed — CI templates-publish pushing to NuGet; joint meet per DECISIONS; nupkg audit passed locally: 6 templates resolve, `--slnx` in help, slnx on/off probes build 0/0, uninstalled after).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
-- **CI health (this session, local, v0.5.0):** build 0/0, tests 372+1, parity OK (239),
-  FULL 21-combo matrix PASSED, smoke 9+1 first-try green,
-  `build-msix -Validate -Publisher CN=Store-Test` PASSED + `-DryRun` staging valid,
-  `new-store-listing.ps1` draft reviewed (Store/ git-ignored), WACK unavailable (no appcert.exe — pending-kit),
-  Partner Center submission pending-kit (needs account), nupkg 0.4.5 audit (6 resolve,
-  probe scaffold builds 0/0, uninstalled, `dotnet new update` clean), ceilings gate proven
-  both branches (OK + BREACH exit 1). Weight 273.8 MB (+2.1%, unchanged — no product-code change).
-- **Cold flame (v0.5.0, Debug dev box 2026-10-09, applog-measured, warm machine):**
-  splash 304/289/314 / window 501/485/524 (3 launches, zero budget breaches).
-  Consistent with the v0.4.0 warm floor (~300/~508); v0.5.0 changes zero hot-path code.
+- **CI health (this session, local, v0.6.0):** build 0/0, tests 380+1 (372 + 8 new TemplateSurfaceTests), parity OK (240),
+  FULL 22-combo matrix PASSED (21 + slnx; scratch + 3 Validate negatives green),
+  smoke 9+1 on retry (first run: 2 transient fails on first-launch UX — same known flake class),
+  presets 3/3 scaffold + build (`full` preset fixed: was invalid velopack+msix),
+  `build-msix -Validate -Publisher CN=Store-Test` PASSED + Velopack-increasing (`0.6.0.0` > `0.5.0.0`),
+  nupkg 0.6.0 audit (6 resolve, slnx probes build 0/0, uninstalled, `dotnet new update` clean; pre-existing path install untouched),
+  weight 273.8 MB carries over (no publish delta — ceilings untouched by design).
+  WACK/Store-kit still pending-kit; E5 VS dialog shots pending-manual.
+- **Cold flame (v0.6.0, Debug dev box 2026-10-10, applog-measured, warm machine):**
+  splash 303/312/292 / window 508/518/501 post-first-run (3 timed launches + 1 quiet repeat, zero budget breaches; first launch 1130 on first-run dialogs, same class every version).
+  Consistent with the v0.5.0 warm floor (~300/~500); v0.6.0 changes zero hot-path code.
 - **CI health (this session, local, v0.4.0):** build 0/0, tests 372+1, parity OK (238),
   FULL 21-combo matrix PASSED (allon `--auth true` + 20 auth-off combos; FEATURES auth row + guide asserts),
   smoke 9+1 on retry (first run: 1 transient failure under load, name not retained — same known flake class as v0.2.0/v0.3.0),
