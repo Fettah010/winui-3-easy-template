@@ -4,6 +4,13 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+## [0.6.1] - 2026-10-10
+
+Template-only PATCH (no app release; app stays `0.6.0-beta`). Refreshes the
+NuGet package face: requirements, `--attribution` row, after-scaffolding
+steps, screenshots, per-release notes text. Template content identical to
+`0.6.0` otherwise.
+
 
 
 
