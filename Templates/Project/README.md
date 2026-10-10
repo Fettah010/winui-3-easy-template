@@ -5,9 +5,12 @@ A local-first Windows app built with WinUI 3 (.NET 10).
 ### Quick start
 
 ```powershell
-dotnet build -c Debug -p:Platform=x64
-dotnet run -c Debug -p:Platform=x64
+dotnet build DevTemWinUi3.sln -c Debug -p:Platform=x64
+dotnet run -c Debug -p:Platform=x64 --project DevTemWinUi3.csproj
 ```
+
+(Scaffolded with `--slnx true`? The `.slnx` is for VS 2026 and newer —
+build with the `.sln`: it alone carries the x86/x64/ARM64 mappings.)
 
 ### First steps in your copy
 
@@ -20,7 +23,9 @@ powershell -File Scripts/bump-version.ps1 -Version 0.0.1
 .\Scripts\init-template.ps1 -AppName "DevTem-WinUI 3" -Company "Fettah" `
     -RepoUrl "https://github.com/Fettah010/winui-3-easy-template" -Scheme "devtem://"
 
-# 2b. Prove the identity is consistent (metadata vs csproj vs manifest):
+# 2b. Prove the identity is consistent (metadata vs csproj vs manifest vs
+#  repo/publisher/scheme — v2 also catches a placeholder Publisher on msix
+#  trees and template-default scheme/repo after a rename):
 .\Scripts\init-template.ps1 -Validate
 
 # 3. Drop the sample cards you do not need (Home feature grid, About panels):

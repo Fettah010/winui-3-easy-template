@@ -1,0 +1,7 @@
+<!-- XML solution file (VS 2026+): scaffolded only when the slnx option is true.
+     The classic DevTemWinUi3.sln stays the default (it alone expresses the
+     x86/x64/ARM64 mappings the XAML build needs). -->
+<Solution>
+  <Project Path="DevTemWinUi3.csproj" />
+  <Project Path="Tests\DevTemWinUi3.Tests.csproj" />
+</Solution>

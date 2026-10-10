@@ -16,6 +16,7 @@ corresponding feature is enabled.
 | Logging backend | __LOGGING__ |
 | Crash reporting | __CRASH__ |
 | Entra ID auth | __AUTH__ |
+| SLNX solution | __SLNX__ |
 | Three-language UI | __LOCALIZATION__ |
 | MSTest suite | __TESTS__ |
 | DevTem attribution | __ATTRIBUTION__ |

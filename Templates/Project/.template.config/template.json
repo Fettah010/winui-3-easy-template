@@ -219,6 +219,14 @@
       "replaces": "__AUTH__",
       "description": "Include Entra ID sign-in behind the veneer (MSAL broker-first with loopback fallback, DPAPI cache per distribution; configure a client id to enable) (--auth true to include)."
     },
+    "slnx": {
+      "type": "parameter",
+      "datatype": "bool",
+      "displayName": "SLNX solution file",
+      "defaultValue": "false",
+      "replaces": "__SLNX__",
+      "description": "Add an XML solution file next to the classic .sln for VS 2026 and newer (--slnx true to include)."
+    },
     "localization": {
       "type": "parameter",
       "datatype": "bool",
@@ -443,6 +451,12 @@
           "condition": "(!health)",
           "exclude": [
             "docs/feature-guides/diagnostics.md"
+          ]
+        },
+        {
+          "condition": "(!slnx)",
+          "exclude": [
+            "__SafeName__.slnx"
           ]
         }
       ]

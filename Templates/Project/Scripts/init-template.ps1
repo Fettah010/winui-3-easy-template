@@ -1,6 +1,6 @@
 # Initializes a new app from this template: rewrites the display name,
 # identifier-safe name, company, and repo URL across code, XAML, scripts,
-# CI workflow, and docs â€” then verifies zero template leftovers.
+# CI workflow, and docs — then verifies zero template leftovers.
 #
 #   .\Scripts\init-template.ps1 -AppName "Acme Desk" -Company "Acme" `
 #       -RepoUrl "https://github.com/acme/desk-app" -Scheme "acme://"
@@ -13,14 +13,18 @@
 # docs/TEMPLATE-GUIDE.md): replace Assets art, re-run create-shortcut.ps1.
 #
 #   .\Scripts\init-template.ps1 -Validate   # no renames: checks the current
-#       tree's identity consistency (metadata vs csproj vs manifest) and
+#       tree's identity consistency (metadata vs csproj vs manifest
+#       vs repo/publisher/scheme) and
 #       fails itemizing problems. The scaffold matrix runs this per combo.
+#       v2 also fails a placeholder Publisher on msix trees (CN=DevTem),
+#       template-default scheme/repo after a rename, and malformed URLs.
 param(
     [string]$AppName = "",
     [string]$Company = "",
     [string]$RepoUrl = "",
     [string]$SafeName = "",
     [string]$Scheme = "",
+    [string]$Publisher = "",
     [string]$LicenseName = "MIT License",
     [string]$LicenseUrl = "",
     [switch]$Validate
@@ -49,7 +53,11 @@ if ($Validate) {
         if ($safe -notmatch "^[A-Za-z_][A-Za-z0-9_]*$") { $problems += "AppMetadata.SafeName '$safe' is not identifier-safe" }
         if ([string]::IsNullOrWhiteSpace($company)) { $problems += "AppMetadata.Company is empty" }
         if ($prefix -notmatch "^[a-z][a-z0-9+.-]*://$") { $problems += "AppMetadata.ProtocolPrefix '$prefix' is not a lowercase scheme:// URI" }
+        if (($prefix -eq "devtem://") -and ($safe -ne "DevTemWinUi3")) { $problems += "AppMetadata.ProtocolPrefix is still the template default 'devtem://' after rename to '$safe'" }
         if ($repo -notmatch "^https://github\.com/[^/]+/[^/]+$") { $problems += "ProductConfiguration.RepoUrl '$repo' is not https://github.com/org/name" }
+        if (($repo -eq "https://github.com/Fettah010/winui-3-easy-template") -and ($safe -ne "DevTemWinUi3")) { $problems += "ProductConfiguration.RepoUrl is still the template default (re-run init-template with your -RepoUrl)" }
+        if (($repo -ne $repo.Trim()) -or $repo.EndsWith("/")) { $problems += "ProductConfiguration.RepoUrl '$repo' has leading/trailing whitespace or a trailing slash" }
+        if (-not [System.Uri]::IsWellFormedUriString($repo, [System.UriKind]::Absolute)) { $problems += "ProductConfiguration.RepoUrl '$repo' is not a well-formed absolute URI" }
         if ([string]::IsNullOrWhiteSpace($license)) { $problems += "ProductConfiguration.LicenseName is empty" }
         if (-not [string]::IsNullOrWhiteSpace($licenseUrl) -and -not [System.Uri]::IsWellFormedUriString($licenseUrl, [System.UriKind]::Absolute)) {
             $problems += "ProductConfiguration.LicenseUrl '$licenseUrl' is not an absolute URI"
@@ -72,6 +80,14 @@ if ($Validate) {
         if (Test-Path -LiteralPath $manifest) {
             $manifestText = [System.IO.File]::ReadAllText($manifest, [System.Text.Encoding]::UTF8)
             $schemeName = $prefix.TrimEnd('/').TrimEnd(':')
+            $publisher = ([regex]::Match($manifestText, 'Publisher="([^"]+)"')).Groups[1].Value
+            $distText = [System.IO.File]::ReadAllText((Join-Path $root "Services\AppFeatures.cs"), [System.Text.Encoding]::UTF8)
+            $dist = ([regex]::Match($distText, 'Distribution = "([^"]+)"')).Groups[1].Value
+            if ([string]::IsNullOrWhiteSpace($publisher)) { $problems += "manifest Publisher is empty" }
+            elseif (($publisher -eq "CN=DevTem") -and ($dist -eq "msix")) { $problems += "manifest Publisher is still the template placeholder 'CN=DevTem' on an msix tree (scaffold with --publisher or edit Packaging/Msix/Package.appxmanifest)" }
+            elseif ($publisher -notmatch "^CN=.+") { $problems += "manifest Publisher '$publisher' is not a CN= subject" }
+            $pubName = ([regex]::Match($manifestText, "<PublisherDisplayName>([^<]+)</PublisherDisplayName>")).Groups[1].Value
+            if (($pubName -eq "Fettah") -and ($safe -ne "DevTemWinUi3")) { $problems += "manifest PublisherDisplayName is still 'Fettah' after rename to '$safe'" }
             if ($manifestText -notmatch [regex]::Escape('Name="' + $schemeName + '"')) {
                 $problems += "manifest protocol Name does not match scheme '$schemeName'"
             }
@@ -113,23 +129,32 @@ if ([string]::IsNullOrWhiteSpace($Scheme)) { $Scheme = $SafeName.ToLowerInvarian
 if ($Scheme -notmatch "^[a-z][a-z0-9+.-]*://$") {
     throw "Scheme '$Scheme' must use a lowercase URI scheme followed by ://, for example acme://."
 }
-$SchemeName = $Scheme.TrimEnd('/').TrimEnd(':')
+$SchemeName = $Scheme.Substring(0, $Scheme.Length - 3)
+if ([string]::IsNullOrWhiteSpace($Publisher)) { $Publisher = "CN=" + $Company }
+$q = [char]34
+if ([string]::IsNullOrEmpty($SchemeName)) { throw "SchemeName derived empty (internal error)." }
+$protoOld = "Name=" + $q + "devtem" + $q
+$protoNew = "Name=" + $q + $SchemeName + $q
+$dispOld = ">" + "Fettah" + "<"
+$dispNew = ">" + $Company + "<"
 
 $replacements = @(
+    @("CN=DevTem", $Publisher),
     # Order matters: longest/most-specific first; bare DevTem (prose) last.
     @("Fettah010/winui-3-easy-template", $RepoPath),
     @("Fettah010", $Company),
     @("DevTem-WinUI 3", $AppName),
     @("DevTemWinUi3", $SafeName),
     @("DevTemWinUi3Tray_", $SafeName + "Tray_"),
-    @('Name="devtem"', 'Name="' + $SchemeName + '"'),
+    @($protoOld, $protoNew),
     @("devtem://", $Scheme),
     @("winui-3-easy-template", $RepoSlug),
     @('"Fettah"', "`"$Company`""),
+    @($dispOld, $dispNew),
     @("DevTem", $AppName)
 )
 
-$extensions = @("*.cs", "*.xaml", "*.ps1", "*.yml", "*.md", "*.csproj", "*.manifest", "*.vbs", "*.bat", "*.sln", "*.cff")
+$extensions = @("*.cs", "*.xaml", "*.ps1", "*.yml", "*.md", "*.csproj", "*.manifest", "*.vbs", "*.bat", "*.sln", "*.slnx", "*.appxmanifest", "*.cff")
 # docs/archive is frozen reference; everything else (incl. README/AGENTS) is rewritten.
 $skipDirs = @(".git", "bin", "obj", "docs\archive")
 $selfName = Split-Path $PSCommandPath -Leaf

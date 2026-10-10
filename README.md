@@ -69,25 +69,29 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.5.0-beta
+## What's new in 0.6.0-beta
 
-- Distribution + Store GA: every updates × distribution cell is proven, not
-  just documented — the truth table below carries a dated proof line per
-  valid cell (matrix runs plus kit-machine installed runs where complete);
-  Store submission runs end-to-end on a real listing (WACK + Partner Center);
-  nightly per-combo publish ceilings guard the weight story.
-- No behavior change on any scaffold (proof + docs + CI only).
+- DevEx + packaging ergonomics: opt-in `--slnx` adds an XML solution file
+  next to the classic `.sln` (VS 2026 and newer; the `.sln` stays the
+  default — it alone expresses the x86/x64/ARM64 mappings);
+  `init-template -Validate` v2 checks repo/publisher/scheme/URL consistency
+  (placeholder Publisher on msix trees, template-default scheme/repo after
+  a rename, malformed URLs); NuGet face GA (per-release notes, verified
+  icon/tags).
+- Evaluated and declined on record: a `--framework` selector (each TF value
+  multiplies the scaffold matrix — net10 stays the default, retarget is a
+  documented 3-line edit) and `--cpm` central package management (no XML
+  conditional path keeps default scaffolds pristine). Reasons in
+  `docs/DECISIONS.md`.
+- No behavior change on any scaffold default (scaffold surface + docs + CI only).
 
-| `--updates` \ `--distribution` | `portable` (default) | `msix` |
-| --- | --- | --- |
-| `velopack` (default) | ✅ Setup.exe + feed, full in-app flow | ❌ Guard (ship Dual tracks instead) |
-| `basic` | ✅ Setup.exe + `.sha256` checker | ❌ Guard |
-| `none` | ✅ No update code | ✅ Slim status surface |
-| `appinstaller` | ❌ Guard (needs package identity) | ✅ `.msix` + `.appinstaller` feed |
-| `store` | ❌ Guard (needs package identity) | ✅ Partner Center submission |
-
-Full proof lines live in `docs/feature-guides/distribution-dual.md`
-(template: same path in your scaffold).
+Presets re-verified: `minimal` (leanest) / `recommended` (everything on,
+portable + Velopack) / `full` (everything on except the portable-only setup
+wizard, MSIX) via `Scripts/init-profile.ps1 -Preset`. "Everything on" means product surface —
+identity (`--auth`, needs a tenant) and editor ergonomics (`--slnx`) stay
+opt-in by design. In Visual Studio the template parameters render as dialog
+fields, checkboxes, and dropdowns; `dotnet new devtem-winui --help` lists
+every flag.
 
 ## Pages (from 0.3.0)
 

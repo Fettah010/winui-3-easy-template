@@ -233,6 +233,7 @@ runs no post-actions, so the reset is one documented command, not magic.)
    resurrect it into `Pages/`; treat it as a reading reference only.
 10. **Classic `.sln`, not `.slnx`.** slnx cannot express the x86/x64/ARM64
     mapping WinUI needs (`dotnet build slnx -p:Platform=x64` → MSB4126).
+    `--slnx true` scaffolds one alongside for VS 2026+; the `.sln` stays default.
 
 ## Conventions
 

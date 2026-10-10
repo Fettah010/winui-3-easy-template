@@ -35,6 +35,7 @@ dotnet new devtem-winui -n AcmeDesk --displayName "Acme Desk" --company "Acme" `
 | `--scheme` | Deep-link URI scheme (`acme://`) |
 | `--tray` / `--database` / `--http` / `--health` / `--crash` / `--localization` / `--tests` | Feature on/off (`false` drops it; all default on) |
 | `--auth` | Opt-in Entra ID sign-in (`true` includes it; off by default, configure a client id to enable) |
+| `--slnx` | Opt-in XML solution file (`true` adds `Safe.slnx` next to the classic `.sln`; off by default — the `.sln` alone expresses the x86/x64/ARM64 mappings) |
 | `--updates` | Auto-updates: `velopack` (default), `basic` (checker), `none` — or `appinstaller` / `store` for packaged MSIX |
 | `--distribution` | Distribution format: `portable` (default) or `msix` (Store or sideload) |
 | `--publisher` | MSIX Publisher ID (Partner Center or cert subject; pre-fills manifest + script) |

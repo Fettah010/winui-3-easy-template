@@ -32,6 +32,37 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [0.6.0-beta] - 2026-10-10
+
+DevEx + packaging ergonomics; app + templates meet at joint `0.6.0`
+(matched from now on). No behavior change on any scaffold default.
+
+### Added
+
+- `--slnx` scaffold flag: opt-in XML solution file (`Safe.slnx`) next to the
+  classic `.sln` (VS 2026+; the `.sln` stays the default).
+- `init-template -Validate` v2: repo/publisher/scheme/URL checks
+  (placeholder Publisher on msix trees, template-default scheme/repo after
+  a rename, malformed URLs) + negative-case coverage in the matrix; rename
+  now also rewrites `Package.appxmanifest` (identity, protocol, publisher)
+  with an optional `-Publisher`.
+- NuGet face GA: per-release notes, slnx/description words, verified
+  icon/tags.
+
+### Changed
+
+- `init-profile.ps1` presets re-verified (`minimal`/`recommended`/`full`);
+  "everything on" = product surface, `--auth`/`--slnx` stay opt-in.
+- Templates `0.6.0` (MINOR: new `slnx` surface; `--framework`/`--cpm`
+  evaluated and declined with reasons, see DECISIONS).
+
+### Fixed
+
+- `full` preset now pairs MSIX with AppInstaller updates and drops the
+  portable-only setup wizard (it shipped an invalid velopack+msix combo
+  that tripped the build guard).
+
 ## [0.5.0-beta] - 2026-10-09
 
 Distribution + Store GA: every updates × distribution cell is proven, not
