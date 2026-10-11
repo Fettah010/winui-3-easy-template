@@ -28,7 +28,7 @@
         <Grid>
         <StackPanel x:Name="SettingsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="1024" HorizontalAlignment="Stretch">
 
-            <TextBlock AutomationProperties.AutomationId="SettingsTitleText" Text="{loc:Loc Key=SettingsTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <TextBlock AutomationProperties.AutomationId="SettingsTitleText" AutomationProperties.HeadingLevel="Level1" Text="{loc:Loc Key=SettingsTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
             <TextBlock
                 Text="{loc:Loc Key=SettingsDescription}"
                 Style="{ThemeResource BodyTextBlockStyle}"
@@ -38,6 +38,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsAppearance}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
@@ -46,6 +47,7 @@
                     <ComboBox
                         x:Name="ThemeComboBox"
                         AutomationProperties.AutomationId="ThemeComboBox"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsTheme}"
                         SelectedIndex="{x:Bind ViewModel.SelectedThemeIndex, Mode=TwoWay}"
                         HorizontalAlignment="Right"
                         MinWidth="120">
@@ -59,12 +61,14 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsLanguage}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard x:Name="LanguageCard" Header="{loc:Loc Key=SettingsLanguage}" Description="{loc:Loc Key=SettingsLanguageDesc}">
                     <ComboBox
                         x:Name="LanguageComboBox"
                         AutomationProperties.AutomationId="LanguageComboBox"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsLanguage}"
                         HorizontalAlignment="Right"
                         MinWidth="140"
                         SelectionChanged="LanguageComboBox_SelectionChanged"/>
@@ -74,6 +78,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsUpdates}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
@@ -82,6 +87,7 @@
                     Visibility="{x:Bind ViewModel.UpdateCheckCardVisibility, Mode=OneWay}">
                     <ctk:Segmented
                         x:Name="ChannelSegment"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsChannelHeader}"
                         SelectedIndex="{x:Bind ViewModel.SelectedChannelIndex, Mode=TwoWay}"
                         HorizontalAlignment="Right">
                         <ctk:SegmentedItem Content="Stable"/>
@@ -113,6 +119,7 @@
                     <ToggleSwitch
                         x:Name="AutoInstallToggle"
                         AutomationProperties.AutomationId="AutoInstallToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsAutoInstall}"
                         IsOn="{x:Bind ViewModel.AutoInstallUpdates, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -122,6 +129,7 @@
                     Description="{loc:Loc Key=SettingsAutoCheckDesc}">
                     <ToggleSwitch
                         x:Name="AutoCheckToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsAutoCheckHeader}"
                         IsOn="{x:Bind ViewModel.AutoCheckOnStartup, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -154,6 +162,7 @@
             <StackPanel x:Name="AccountSection" Spacing="8" Margin="0,8,0,0" Visibility="{x:Bind ViewModel.AccountSectionVisibility, Mode=OneWay}">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsAccount}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
@@ -188,6 +197,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsNotifications}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
@@ -206,6 +216,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsSystemTray}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
@@ -213,6 +224,7 @@
                     Description="{loc:Loc Key=SettingsTrayMinimizeDesc}">
                     <ToggleSwitch
                         x:Name="MinimizeToTrayToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsMinimizeToTray}"
                         IsOn="{x:Bind ViewModel.MinimizeToTray, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -223,6 +235,7 @@
                     Description="{loc:Loc Key=SettingsTrayAutoStartDesc}">
                     <ToggleSwitch
                         x:Name="AutoStartToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SettingsAutoStart}"
                         IsOn="{x:Bind ViewModel.AutoStart, Mode=TwoWay}"
                         IsEnabled="{x:Bind ViewModel.AutoStartAvailable, Mode=OneWay}"
                         HorizontalAlignment="Right"/>
@@ -232,6 +245,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsBackup}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard
@@ -258,6 +272,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=SettingsAbout}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource BodyStrongTextBlockStyle}"/>
 
                 <ctk:SettingsCard Header="{loc:Loc Key=SettingsAppVersion}">

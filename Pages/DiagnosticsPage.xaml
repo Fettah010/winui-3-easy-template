@@ -40,7 +40,7 @@
         <Grid>
         <StackPanel x:Name="DiagnosticsPanel" Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Stretch">
 
-            <TextBlock AutomationProperties.AutomationId="DiagnosticsTitleText" Text="{loc:Loc Key=DiagnosticsTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <TextBlock AutomationProperties.AutomationId="DiagnosticsTitleText" AutomationProperties.HeadingLevel="Level1" Text="{loc:Loc Key=DiagnosticsTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
             <TextBlock
                 Text="{loc:Loc Key=DiagnosticsDesc}"
                 Style="{ThemeResource BodyTextBlockStyle}"
@@ -50,6 +50,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=DiagnosticsStatus}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
@@ -73,6 +74,7 @@
                     <ToggleSwitch
                         x:Name="VerboseToggle"
                         AutomationProperties.AutomationId="DiagnosticsVerboseToggle"
+                        AutomationProperties.Name="{loc:Loc Key=DiagnosticsVerbose}"
                         IsOn="{x:Bind ViewModel.VerboseLogging, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -84,6 +86,7 @@
                     <ToggleSwitch
                         x:Name="CrashReportsToggle"
                         AutomationProperties.AutomationId="DiagnosticsCrashReportsToggle"
+                        AutomationProperties.Name="{loc:Loc Key=DiagnosticsCrashReports}"
                         IsOn="{x:Bind ViewModel.CrashReportingEnabled, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -92,6 +95,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=DiagnosticsMetrics}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
@@ -113,6 +117,7 @@
             <StackPanel Spacing="8" Margin="0,8,0,0">
                 <TextBlock
                     Text="{loc:Loc Key=DiagnosticsLogs}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
@@ -121,6 +126,7 @@
                     <ctk:Segmented
                         x:Name="ViewSegment"
                         AutomationProperties.AutomationId="DiagnosticsViewSegment"
+                        AutomationProperties.Name="{loc:Loc Key=DiagnosticsViewLabel}"
                         SelectedIndex="{x:Bind ViewModel.SelectedViewIndex, Mode=TwoWay}"
                         HorizontalAlignment="Right">
                         <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewFile}"/>
@@ -137,6 +143,7 @@
                         <ComboBox
                             x:Name="LogFileComboBox"
                             AutomationProperties.AutomationId="LogFileComboBox"
+                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsLogFiles}"
                             ItemsSource="{x:Bind ViewModel.LogFiles, Mode=OneWay}"
                             SelectedItem="{x:Bind ViewModel.SelectedLogFile, Mode=TwoWay}"
                             MinWidth="180"/>
@@ -159,6 +166,7 @@
                         <TextBox
                             x:Name="SourceBox"
                             AutomationProperties.AutomationId="DiagnosticsSourceBox"
+                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
                             PlaceholderText="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
                             Text="{x:Bind ViewModel.LiveSourceFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             MinWidth="180"/>
@@ -184,12 +192,14 @@
                         <TextBox
                             x:Name="SearchBox"
                             AutomationProperties.AutomationId="DiagnosticsSearchBox"
+                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
                             PlaceholderText="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
                             Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             MinWidth="180"/>
                         <ComboBox
                             x:Name="LevelComboBox"
                             AutomationProperties.AutomationId="DiagnosticsLevelCombo"
+                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsLogLevel}"
                             SelectedIndex="{x:Bind ViewModel.SelectedLevelIndex, Mode=TwoWay}"
                             Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}"
                             MinWidth="140">
@@ -214,6 +224,7 @@
                 <TextBlock
                     x:Name="LogCountText"
                     AutomationProperties.AutomationId="DiagnosticsLogCountText"
+                    AutomationProperties.LiveSetting="Polite"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
 
@@ -274,6 +285,7 @@
                         <ListView
                             x:Name="LiveList"
                             AutomationProperties.AutomationId="DiagnosticsLiveList"
+                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsBuffered}"
                             ItemsSource="{x:Bind ViewModel.LiveEvents, Mode=OneWay}"
                             SelectionMode="None"
                             IsItemClickEnabled="True"

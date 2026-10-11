@@ -27,7 +27,7 @@
             <StackPanel Spacing="8">
                 <!-- Labels bind live ({loc:Loc}); the title parameter seeds
                      the en-US strings in the snippet (wire-up step 2). -->
-                <TextBlock AutomationProperties.AutomationId="SampleTitleText" Text="{loc:Loc Key=SampleTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock AutomationProperties.AutomationId="SampleTitleText" AutomationProperties.HeadingLevel="Level1" Text="{loc:Loc Key=SampleTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                 <TextBlock Text="{loc:Loc Key=SampleDescription}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
             </StackPanel>
 
@@ -51,6 +51,7 @@
                         <ListView
                             x:Name="SampleListView"
                             AutomationProperties.AutomationId="SampleListView"
+                            AutomationProperties.Name="{loc:Loc Key=SampleTitle}"
                             ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}"
                             SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"
                             SelectionMode="Single"
@@ -90,7 +91,7 @@
                             x:Name="SampleDetailsContent"
                             Spacing="8"
                             x:Load="{x:Bind ViewModel.HasSelection, Mode=OneWay}">
-                            <TextBlock Text="{x:Bind ViewModel.SelectedItem.Title, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{x:Bind ViewModel.SelectedItem.Title, Mode=OneWay}" AutomationProperties.HeadingLevel="Level2" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                             <TextBlock Text="{x:Bind ViewModel.SelectedItem.Detail, Mode=OneWay}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
                         </StackPanel>
                         <TextBlock

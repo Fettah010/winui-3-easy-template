@@ -100,21 +100,27 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.6.0-beta
+## What's new in 0.7.0-beta
 
-- DevEx + packaging ergonomics: opt-in `--slnx` adds an XML solution file
-  next to the classic `.sln` (VS 2026 and newer; the `.sln` stays the
-  default — it alone expresses the x86/x64/ARM64 mappings);
-  `init-template -Validate` v2 checks repo/publisher/scheme/URL consistency
-  (placeholder Publisher on msix trees, template-default scheme/repo after
-  a rename, malformed URLs); NuGet face GA (per-release notes, verified
-  icon/tags).
-- Evaluated and declined on record: a `--framework` selector (each TF value
-  multiplies the scaffold matrix — net10 stays the default, retarget is a
-  documented 3-line edit) and `--cpm` central package management (no XML
-  conditional path keeps default scaffolds pristine). Reasons in
-  `docs/DECISIONS.md`.
-- No behavior change on any scaffold default (scaffold surface + docs + CI only).
+- Quality + accessibility RC: every button/link/input in the app carries an
+  accessible name (loc-bound, so it follows language switches), decorative
+  icons are hidden from the UI tree, page titles and section captions expose
+  heading levels, status text announces politely while validation errors
+  interrupt assertively (toast errors escalate the same way in code). The
+  contract is enforced headlessly by `Tests/Services/A11yAuditTests.cs`; the
+  keyboard map, live-region contract, and Narrator protocol live in
+  [`docs/accessibility.md`](docs/accessibility.md).
+- No color-only status anywhere: the Home status card changes text + glyph +
+  brush together, and every page demonstrates its empty/error/loading states
+  (Diagnostics empty + invalid-pattern shots below are captured from the
+  running 0.7.0 app, EN dark).
+- Perf re-proven, not asserted: cold flame re-recorded inside budgets, publish
+  weight unchanged at 273.8 MB, ARM64 build spot green (run deferred — no
+  ARM64 hardware here).
+
+![Diagnostics empty state — no lines match the filter](docs/screenshots/empty-state.png)
+
+![Diagnostics error state — invalid regex pattern](docs/screenshots/error-state.png)
 
 Presets re-verified: `minimal` (leanest) / `recommended` (everything on,
 portable + Velopack) / `full` (everything on except the portable-only setup

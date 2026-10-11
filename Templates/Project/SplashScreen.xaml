@@ -32,7 +32,8 @@
                 <Image
                     Source="ms-appx:///Assets/Logo.png"
                     Width="88" Height="88"
-                    Stretch="UniformToFill"/>
+                    Stretch="UniformToFill"
+                    AutomationProperties.AccessibilityView="Raw"/>
             </Border>
 
             <StackPanel Spacing="6" HorizontalAlignment="Center">

@@ -2,7 +2,8 @@
 <UserControl
     x:Class="DevTemWinUi3.Controls.NotificationCard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:DevTemWinUi3.Controls">
 
     <!-- Toast card layout (data applied once in code-behind: toasts are
          immutable). Fixed width: the host measures with unbounded width,
@@ -42,7 +43,8 @@
                     FontSize="14"
                     Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center"/>
+                    VerticalAlignment="Center"
+                    AutomationProperties.AccessibilityView="Raw"/>
             </Grid>
 
             <StackPanel
@@ -73,6 +75,7 @@
             <Button
                 Grid.Column="2"
                 Content="&#x2715;"
+                AutomationProperties.Name="{loc:Loc Key=UpdateClose}"
                 FontSize="12"
                 Background="Transparent"
                 BorderThickness="0"

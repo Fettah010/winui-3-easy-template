@@ -187,6 +187,7 @@ internal static class EnStrings
         ["DiagnosticsDatabase"] = "Database",
         ["DiagnosticsViewFile"] = "File",
         ["DiagnosticsViewLive"] = "Live",
+        ["DiagnosticsViewLabel"] = "View",
         ["DiagnosticsSourcePlaceholder"] = "Filter by source…",
         ["DiagnosticsExceptionsOnly"] = "Exceptions only",
         ["DiagnosticsUseRegex"] = "Regex",

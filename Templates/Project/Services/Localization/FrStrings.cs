@@ -187,6 +187,7 @@ internal static class FrStrings
         ["DiagnosticsDatabase"] = "Base de données",
         ["DiagnosticsViewFile"] = "Fichier",
         ["DiagnosticsViewLive"] = "En direct",
+        ["DiagnosticsViewLabel"] = "Vue",
         ["DiagnosticsSourcePlaceholder"] = "Filtrer par source…",
         ["DiagnosticsExceptionsOnly"] = "Exceptions uniquement",
         ["DiagnosticsUseRegex"] = "Regex",

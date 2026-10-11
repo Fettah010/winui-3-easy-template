@@ -4,6 +4,31 @@ All notable changes to DevTem-WinUI 3. `release.yml` sources the GitHub
 release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
+
+## [0.7.0-beta] - 2026-10-11
+
+Quality + accessibility RC (ROADMAP v0.7.0). Templates `0.6.2` PATCH —
+content-only, no new scaffold flags, so the joint-number meet defers one
+cycle with reason (see `docs/DECISIONS.md`).
+
+### Added
+
+- Accessibility contract, enforced headlessly by `Tests/Services/A11yAuditTests.cs`:
+  every button/link/input named (loc-bound), decorative icons Raw, page
+  titles `Level1` + section captions `Level2`, Polite statuses with Assertive
+  errors (wizard validation, toast error cards, diagnostics invalid-pattern
+  filter errors). Keyboard map + live-region contract + Narrator protocol in
+  `docs/accessibility.md`.
+- New loc key `DiagnosticsViewLabel` (EN/ES/FR + coverage asserts) for the
+  Diagnostics view switcher.
+
+### Fixed
+
+- Diagnostics live-empty urgency follows content in code (Assertive on
+  invalid-pattern errors, Polite on empty/no-match).
+- Tray button name/tooltip and toast close button are loc-bound (were
+  hardcoded English / a bare glyph).
+
 ## [0.6.1] - 2026-10-10
 
 Template-only PATCH (no app release; app stays `0.6.0-beta`). Refreshes the

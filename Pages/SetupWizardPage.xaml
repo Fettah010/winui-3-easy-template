@@ -13,11 +13,12 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Padding="32,24,32,32" Spacing="16" MaxWidth="820" HorizontalAlignment="Stretch">
 
-            <TextBlock AutomationProperties.AutomationId="SetupWizardTitleText" Text="{loc:Loc Key=SetupWizardTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
+            <TextBlock AutomationProperties.AutomationId="SetupWizardTitleText" AutomationProperties.HeadingLevel="Level1" Text="{loc:Loc Key=SetupWizardTitle}" Style="{ThemeResource TitleTextBlockStyle}" FontWeight="SemiBold"/>
 
             <PipsPager
                 x:Name="SetupWizardPips"
                 AutomationProperties.AutomationId="SetupWizardPips"
+                AutomationProperties.Name="{loc:Loc Key=SetupWizardTitle}"
                 NumberOfPages="5"
                 SelectedPageIndex="{x:Bind ViewModel.SelectedStepIndex, Mode=TwoWay}"
                 HorizontalAlignment="Center"/>
@@ -32,6 +33,7 @@
                         <TextBox
                             x:Name="SetupDataFolderBox"
                             AutomationProperties.AutomationId="SetupDataFolderBox"
+                            AutomationProperties.Name="{loc:Loc Key=SetupWizardLocationHeader}"
                             Text="{x:Bind ViewModel.DataFolder, Mode=TwoWay}"
                             MinWidth="260"
                             IsReadOnly="True"/>
@@ -48,6 +50,7 @@
                 <TextBlock
                     x:Name="LocationErrorText"
                     AutomationProperties.AutomationId="SetupLocationErrorText"
+                    AutomationProperties.LiveSetting="Assertive"
                     Text="{x:Bind ViewModel.LocationError, Mode=OneWay}"
                     x:Load="{x:Bind ViewModel.HasLocationError, Mode=OneWay}"
                     Foreground="{ThemeResource SystemFillColorCriticalBrush}"
@@ -61,6 +64,7 @@
                     <ToggleSwitch
                         x:Name="SetupDesktopToggle"
                         AutomationProperties.AutomationId="SetupDesktopToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SetupWizardDesktopShortcut}"
                         IsOn="{x:Bind ViewModel.CreateDesktopShortcut, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -68,6 +72,7 @@
                     <ToggleSwitch
                         x:Name="SetupStartToggle"
                         AutomationProperties.AutomationId="SetupStartToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SetupWizardStartShortcut}"
                         IsOn="{x:Bind ViewModel.CreateStartShortcut, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -78,6 +83,7 @@
                     <ToggleSwitch
                         x:Name="SetupLaunchToggle"
                         AutomationProperties.AutomationId="SetupLaunchToggle"
+                        AutomationProperties.Name="{loc:Loc Key=SetupWizardLaunchHeader}"
                         IsOn="{x:Bind ViewModel.LaunchAtLogin, Mode=TwoWay}"
                         HorizontalAlignment="Right"/>
                 </ctk:SettingsCard>
@@ -88,6 +94,7 @@
                 <ctk:SettingsCard Header="{loc:Loc Key=SetupWizardDoneHeader}" Description="{loc:Loc Key=SetupWizardDoneBody}">
                     <FontIcon
                         AutomationProperties.AutomationId="SetupDoneGlyph"
+                        AutomationProperties.AccessibilityView="Raw"
                         Glyph="&#xE73E;"
                         FontSize="24"
                         HorizontalAlignment="Right"/>

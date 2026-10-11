@@ -5,12 +5,23 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.6.0-beta SHIPPED (`v0.6.0-beta` + `templates-v0.6.0` tagged 2026-10-10, `beta` moved; work order `docs/V0.6.0-ADVANCED-PLAN.md` closed — joint meet, matched from now on). CI owns the releases (`release.yml` beta channel; `templates-publish` → NuGet 0.6.0). Open manuals: E5 VS dialog shots + `vs-dialog.png`/`scaffold-help.png` (VS 2026 18.10 on box, no scripted capture); kit proofs stay pending-kit. Next: v0.7.0 planning from `docs/ROADMAP.md` §4 in a new work-order file. Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works (flaky, retry loops; this time first-try).
-- **Version:** app `0.6.0-beta` (commit `87b2269`, tag `v0.6.0-beta` pushed — CI release.yml building the beta-channel GitHub release; `beta` branch moved to `v0.6.0-beta`). Template package `0.6.0` (tag `templates-v0.6.0` pushed — CI templates-publish pushing to NuGet; joint meet per DECISIONS; nupkg audit passed locally: 6 templates resolve, `--slnx` in help, slnx on/off probes build 0/0, uninstalled after).
+- **Goal:** v0.7.0-beta IMPLEMENTED, uncommitted (work order `docs/V0.7.0-ADVANCED-PLAN.md` DRAFT with full §6 log — WB-01…WB-07 done, WB-08 prepared for the maintainer: commit + push + `v0.7.0-beta` + `templates-v0.6.2` + `beta` move). §1.3 verdict: PATCH fallback (no new template surface — a11y is default-on content), so templates ride `0.6.2`, not `0.7.0`. Open manuals: Narrator run + `hc-light`/`hc-dark`/`scaling-200.png` (E5 `vs-dialog.png`/`scaffold-help.png` still open too); kit proofs stay pending-kit. Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works (flaky, retry loops).
+- **Version:** app `0.7.0-beta` (uncommitted: csproj quartets + CITATION + filled CHANGELOG `0.7.0-beta`). Template package `0.6.2` prepared (packaging notes filled; nupkg audit passed locally: 6 templates resolve, `--slnx` in help, default + slnx probes build 0/0, uninstalled, `dotnet new update` clean). Last shipped: app `0.6.0-beta` (tag `v0.6.0-beta` pushed; `beta` branch at `v0.6.0-beta`); templates `0.6.0` + `0.6.1` (tags pushed).
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
+- **CI health (this session, local, v0.7.0):** build 0/0, tests 385+1 (380 + 5 new A11yAuditTests), parity OK (245),
+  FULL 22-combo matrix PASSED (sample-pages a11y + add-page SortLabel + LiveRegions flag-tolerance fixed two real catches; one transient allon failure unreproduced 3/3, recorded),
+  smoke 9+1 first-try green, presets untouched (matrix equivalence stands),
+  `build-msix -Validate -Publisher CN=Store-Test` PASSED + Velopack-increasing (`0.7.0.0` > `0.6.0.0`),
+  nupkg 0.6.2 audit (6 resolve, default + slnx probes build 0/0, uninstalled, `dotnet new update` clean),
+  weight 273.8 MB carries over (no publish delta — ceilings untouched by design).
+  WACK/Store-kit still pending-kit; Narrator + HC/200% shots pending-manual; E5 VS dialog shots pending-manual.
+- **Cold flame (v0.7.0, Debug dev box 2026-10-11, applog-measured):**
+  splash 809/357/640 / window 1193/581/913 (3 launches, zero budget breaches;
+  run-1 inflation is the post-bump what's-new dialog, same class every version).
+  Budgets hold (splash 1600, window 2500). ARM64 builds 0/0, run deferred (no ARM64 hardware).
 - **CI health (this session, local, v0.6.0):** build 0/0, tests 380+1 (372 + 8 new TemplateSurfaceTests), parity OK (240),
   FULL 22-combo matrix PASSED (21 + slnx; scratch + 3 Validate negatives green),
   smoke 9+1 on retry (first run: 2 transient fails on first-launch UX — same known flake class),

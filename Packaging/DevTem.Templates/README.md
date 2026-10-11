@@ -86,6 +86,14 @@ Apply a preset by copying its flags into the scaffold command, then change
 any individual flag as needed. Individual flags are authoritative; there is
 no separate `--profile` parameter.
 
+### Accessibility
+
+Every scaffold ships with accessible names on all controls (localized, so
+they follow language switches), heading levels on titles and section
+captions, polite status announcements with assertive error interruptions,
+and a keyboard map — all enforced by `Tests/Services/A11yAuditTests.cs` in
+your copy. Details: `docs/accessibility.md`.
+
 ## `devtem-page` — content pages
 
 XAML + code-behind (`INavigationAware`, localization, responsive) +

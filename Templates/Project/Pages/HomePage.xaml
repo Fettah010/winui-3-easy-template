@@ -54,12 +54,13 @@
                             Width="72" Height="72"
                             Stretch="Uniform"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center"/>
+                            VerticalAlignment="Center"
+                            AutomationProperties.AccessibilityView="Raw"/>
                     </Border>
 
                     <StackPanel x:Name="HeroText" Grid.Column="1" Grid.Row="0" Spacing="8" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <TextBlock AutomationProperties.AutomationId="HomeTitleText" Text="{loc:Loc Key=HomeTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                            <TextBlock AutomationProperties.AutomationId="HomeTitleText" AutomationProperties.HeadingLevel="Level1" Text="{loc:Loc Key=HomeTitle}" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             <Border
                                 VerticalAlignment="Center"
                                 CornerRadius="10"
@@ -125,7 +126,8 @@
                             Glyph="&#xE930;"
                             FontSize="24"
                             Foreground="{ThemeResource SystemFillColorSuccessBrush}"
-                            VerticalAlignment="Center"/>
+                            VerticalAlignment="Center"
+                            AutomationProperties.AccessibilityView="Raw"/>
 
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                             <!-- Text is set in code (ok vs failed-check states);
@@ -149,7 +151,8 @@
                         <Grid
                             Grid.Column="2"
                             Width="22" Height="22"
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            AutomationProperties.AccessibilityView="Raw">
                             <Ellipse
                                 x:Name="StatusRing"
                                 Width="22" Height="22"
@@ -160,7 +163,8 @@
                                 FontSize="12"
                                 Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
                                 HorizontalAlignment="Center"
-                                VerticalAlignment="Center"/>
+                                VerticalAlignment="Center"
+                                AutomationProperties.AccessibilityView="Raw"/>
                         </Grid>
                     </Grid>
                 </Border>
@@ -176,6 +180,7 @@
                     <StackPanel Spacing="8" VerticalAlignment="Center">
                         <TextBlock
                             Text="{loc:Loc Key=HomeQuickActions}"
+                            AutomationProperties.HeadingLevel="Level2"
                             Style="{ThemeResource CaptionTextBlockStyle}"
                             FontWeight="SemiBold"
                             Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
@@ -196,6 +201,7 @@
             <StackPanel Spacing="8">
                 <TextBlock
                     Text="{loc:Loc Key=HomeIncluded}"
+                    AutomationProperties.HeadingLevel="Level2"
                     Style="{ThemeResource CaptionTextBlockStyle}"
                     FontWeight="SemiBold"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
@@ -220,8 +226,8 @@
                         CornerRadius="8"
                         Padding="16">
                         <StackPanel Spacing="8">
-                            <FontIcon Glyph="&#xE74E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="{loc:Loc Key=HomeFeatUpdatesTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <FontIcon Glyph="&#xE74E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left" AutomationProperties.AccessibilityView="Raw"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatUpdatesTitle}" AutomationProperties.HeadingLevel="Level2" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="{loc:Loc Key=HomeFeatUpdatesDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -239,8 +245,8 @@
                         CornerRadius="8"
                         Padding="16">
                         <StackPanel Spacing="8">
-                            <FontIcon Glyph="&#xE771;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="{loc:Loc Key=HomeFeatSettingsTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <FontIcon Glyph="&#xE771;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left" AutomationProperties.AccessibilityView="Raw"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatSettingsTitle}" AutomationProperties.HeadingLevel="Level2" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="{loc:Loc Key=HomeFeatSettingsDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -258,8 +264,8 @@
                         CornerRadius="8"
                         Padding="16">
                         <StackPanel Spacing="8">
-                            <FontIcon Glyph="&#xEADF;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="{loc:Loc Key=HomeFeatDiagnosticsTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <FontIcon Glyph="&#xEADF;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left" AutomationProperties.AccessibilityView="Raw"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatDiagnosticsTitle}" AutomationProperties.HeadingLevel="Level2" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="{loc:Loc Key=HomeFeatDiagnosticsDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"
@@ -277,8 +283,8 @@
                         CornerRadius="8"
                         Padding="16">
                         <StackPanel Spacing="8">
-                            <FontIcon Glyph="&#xE96E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left"/>
-                            <TextBlock Text="{loc:Loc Key=HomeFeatTrayTitle}" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
+                            <FontIcon Glyph="&#xE96E;" FontSize="20" Foreground="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Left" AutomationProperties.AccessibilityView="Raw"/>
+                            <TextBlock Text="{loc:Loc Key=HomeFeatTrayTitle}" AutomationProperties.HeadingLevel="Level2" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap"/>
                             <TextBlock
                                 Text="{loc:Loc Key=HomeFeatTrayDesc}"
                                 Style="{ThemeResource CaptionTextBlockStyle}"

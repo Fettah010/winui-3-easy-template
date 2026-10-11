@@ -34,12 +34,14 @@
                 <TextBlock
                     x:Name="TitleText"
                     AutomationProperties.AutomationId="UpdatePopupTitle"
+                    AutomationProperties.HeadingLevel="Level1"
                     Style="{ThemeResource SubtitleTextBlockStyle}"
                     FontWeight="SemiBold"
                     TextWrapping="Wrap"/>
                 <TextBlock
                     x:Name="StatusText"
                     AutomationProperties.AutomationId="UpdatePopupStatus"
+                    AutomationProperties.LiveSetting="Polite"
                     Style="{ThemeResource BodyTextBlockStyle}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     TextWrapping="Wrap"/>

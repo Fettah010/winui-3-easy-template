@@ -42,7 +42,8 @@
                     <Image
                         Source="ms-appx:///Assets/Logo-32.png"
                         Width="20" Height="20"
-                        Stretch="UniformToFill"/>
+                        Stretch="UniformToFill"
+                        AutomationProperties.AccessibilityView="Raw"/>
                 </Border>
                 <TextBlock
                     Text="{loc:Loc Key=AppName}"
@@ -54,17 +55,17 @@
             <!-- Tray button: minimize to system tray (kept clear of the caption buttons) -->
             <Button
                 x:Name="TrayButton"
-                AutomationProperties.Name="Minimize to tray"
+                AutomationProperties.Name="{loc:Loc Key=SettingsMinimizeToTray}"
                 Grid.Column="2"
                 Width="46"
                 Height="32"
                 Margin="0,0,166,0"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
-                ToolTipService.ToolTip="Minimize to tray"
+                ToolTipService.ToolTip="{loc:Loc Key=SettingsMinimizeToTray}"
                 Click="TrayButton_Click"
                 Background="Transparent">
-                <FontIcon Glyph="&#xE96E;" FontSize="14"/>
+                <FontIcon Glyph="&#xE96E;" FontSize="14" AutomationProperties.AccessibilityView="Raw"/>
             </Button>
         </Grid>
 

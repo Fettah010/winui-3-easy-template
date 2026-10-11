@@ -336,6 +336,15 @@ public sealed partial class DiagnosticsPage : Page, INavigationAware
                 : ViewModel.LiveTotalCount == 0
                     ? loc.GetString("DiagnosticsNoLogs")
                     : loc.GetString("DiagnosticsNoMatch");
+            // Screen-reader urgency follows the content: an invalid pattern
+            // is an error (Assertive); empty/no-match is status (Polite).
+            try
+            {
+                AutomationProperties.SetLiveSetting(LiveEmptyText, ViewModel.HasLiveFilterError
+                    ? Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Assertive
+                    : Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
+            }
+            catch { }
         }
         LiveEmptyText.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
         LiveList.Visibility = empty ? Visibility.Collapsed : Visibility.Visible;

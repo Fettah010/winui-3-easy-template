@@ -187,6 +187,7 @@ internal static class EsStrings
         ["DiagnosticsDatabase"] = "Base de datos",
         ["DiagnosticsViewFile"] = "Archivo",
         ["DiagnosticsViewLive"] = "En vivo",
+        ["DiagnosticsViewLabel"] = "Vista",
         ["DiagnosticsSourcePlaceholder"] = "Filtrar por origen…",
         ["DiagnosticsExceptionsOnly"] = "Solo excepciones",
         ["DiagnosticsUseRegex"] = "Regex",

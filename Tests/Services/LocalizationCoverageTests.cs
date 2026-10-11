@@ -192,6 +192,7 @@ public class LocalizationCoverageTests
         loc.SetLanguage("en-US");
         Assert.AreEqual("File", loc.GetString("DiagnosticsViewFile"));
         Assert.AreEqual("Live", loc.GetString("DiagnosticsViewLive"));
+        Assert.AreEqual("View", loc.GetString("DiagnosticsViewLabel"));
         Assert.AreEqual("Export bundle", loc.GetString("DiagnosticsExportBundle"));
         Assert.AreEqual("Close", loc.GetString("DiagnosticsClose"));
         Assert.AreEqual("None", loc.GetString("DiagnosticsNone"));
@@ -202,11 +203,13 @@ public class LocalizationCoverageTests
         loc.SetLanguage("es-ES");
         Assert.AreEqual("Archivo", loc.GetString("DiagnosticsViewFile"));
         Assert.AreEqual("En vivo", loc.GetString("DiagnosticsViewLive"));
+        Assert.AreEqual("Vista", loc.GetString("DiagnosticsViewLabel"));
         Assert.AreEqual("Cerrar", loc.GetString("DiagnosticsClose"));
 
         loc.SetLanguage("fr-FR");
         Assert.AreEqual("Fichier", loc.GetString("DiagnosticsViewFile"));
         Assert.AreEqual("En direct", loc.GetString("DiagnosticsViewLive"));
+        Assert.AreEqual("Vue", loc.GetString("DiagnosticsViewLabel"));
         Assert.AreEqual("Fermer", loc.GetString("DiagnosticsClose"));
     }
 
