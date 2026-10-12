@@ -9,8 +9,8 @@ the version is missing, and fails when the tag disagrees with the csproj).
 ## [0.8.0-beta] - 2026-10-12
 
 Ecosystem + control polish, cherry-picked not cloned (ROADMAP v0.8.0).
-Templates `0.6.3` PATCH — content-only, no new scaffold flags, so the
-joint-number meet defers one cycle with reason (see `docs/DECISIONS.md`).
+Templates `0.8.0` — app and template numbers always match (maintainer rule;
+see `docs/DECISIONS.md`).
 
 ### Added
 

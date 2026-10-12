@@ -1,8 +1,10 @@
 # Bumps the app version across every file the release pipeline reads:
 # the WinExe csproj pair (app + template mirror, keeps mirror parity
 # green), CITATION.cff, and a CHANGELOG.md stub when the section is
-# missing. The NuGet template package version stays independent
-# (CI passes -p:Version from templates-v* tags).
+# missing. The NuGet template package version always matches the app version
+# (maintainer rule: vX.Y.Z(-beta) app ships with templates-vX.Y.Z — CI passes
+# -p:Version from templates-v* tags, so the number is shared and only the
+# mechanism is separate).
 #
 #   powershell -File Scripts/bump-version.ps1 -Version 0.0.6-beta
 #   powershell -File Scripts/bump-version.ps1 -Version 0.0.6-beta -WhatIf

@@ -242,7 +242,7 @@ Screenshot discipline (carried forward): ABA (before/after) captures, EN/ES for 
 1. One version at a time, top-down. Phases overlap only when blocked (note the blocker on the box, like B5).
 2. Verification per `docs/WORKFLOW.md` tiers; `Templates/**` changes always run parity + matrix subset (full nightly/pre-tag).
 3. Check the box in the same commit as the work; refresh `docs/STATE.md` at session end; append to `docs/DECISIONS.md` (append-only).
-4. Template MINOR for new symbols/values, PATCH for content (standing policy); app follows patch/beta (Velopack must keep increasing).
+4. App and template versions always match (maintainer rule, 2026-10-12 — the independent-template-PATCH fallback is retired): every release tags `vX.Y.Z(-beta)` + `templates-vX.Y.Z`, even for content-only template changes; Velopack and NuGet must each keep increasing.
 5. Never commit/push/tag without a direct human request (AGENTS.md rule). Releases are prepared + handed over as exact commands.
 6. Encoding discipline: UTF-16LE CRLF for `.ps1`/`.csproj`/`.xaml`/`.json`; UTF-8 for `.md`; convert back + probe-scaffold after touching UTF-16.
 

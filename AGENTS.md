@@ -206,6 +206,10 @@ Current version: see `<Version>`, `<AssemblyVersion>`, `<FileVersion>`
 in `DevTemWinUi3.csproj` — keep all four in sync, plus `<InformationalVersion>`:
 beta releases carry the `-beta` suffix so fresh installs
 default to the beta channel; stable releases use the plain version.
+App and template versions always match (`0.8.0-beta` app ↔
+`templates-v0.8.0` → NuGet `0.8.0`): the old independent-template-PATCH
+fallback is retired — every release ships both numbers identical, even when
+the template change is content-only (see `docs/DECISIONS.md`).
 (Scaffolded apps start from the template's version: run
 `Scripts/bump-version.ps1 -Version 0.0.1` as the first step — dotnet-new
 runs no post-actions, so the reset is one documented command, not magic.)
