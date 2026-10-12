@@ -114,220 +114,217 @@
                 </ctk:SettingsCard>
             </StackPanel>
 
-            <StackPanel Spacing="8" Margin="0,8,0,0">
-                <TextBlock
-                    Text="{loc:Loc Key=DiagnosticsLogs}"
-                    AutomationProperties.HeadingLevel="Level2"
-                    Style="{ThemeResource CaptionTextBlockStyle}"
-                    FontWeight="SemiBold"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
-
-                <ctk:SettingsCard>
-                    <ctk:Segmented
-                        x:Name="ViewSegment"
-                        AutomationProperties.AutomationId="DiagnosticsViewSegment"
-                        AutomationProperties.Name="{loc:Loc Key=DiagnosticsViewLabel}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedViewIndex, Mode=TwoWay}"
-                        HorizontalAlignment="Right">
-                        <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewFile}"/>
-                        <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewLive}"/>
-                    </ctk:Segmented>
-                </ctk:SettingsCard>
-
-                <ctk:SettingsCard
-                    Header="{loc:Loc Key=DiagnosticsLogs}"
-                    Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
-                    <!-- WrapPanel (not StackPanel): longer translations wrap
-                         instead of clipping on narrow windows. -->
-                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
-                        <ComboBox
-                            x:Name="LogFileComboBox"
-                            AutomationProperties.AutomationId="LogFileComboBox"
-                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsLogFiles}"
-                            ItemsSource="{x:Bind ViewModel.LogFiles, Mode=OneWay}"
-                            SelectedItem="{x:Bind ViewModel.SelectedLogFile, Mode=TwoWay}"
-                            MinWidth="180"/>
-                        <Button
-                            AutomationProperties.AutomationId="RefreshLogsButton"
-                            Content="{loc:Loc Key=DiagnosticsRefresh}"
-                            Click="RefreshLogsButton_Click"/>
-                        <Button
-                            AutomationProperties.AutomationId="OpenLogFolderButton"
-                            Content="{loc:Loc Key=DiagnosticsOpenFolder}"
-                            Click="OpenLogFolderButton_Click"
-                            Style="{ThemeResource AccentButtonStyle}"/>
-                    </ctrl:WrapPanel>
-                </ctk:SettingsCard>
-
-                <!-- Live toolbar: source filter + exception/regex toggles. -->
-                <ctk:SettingsCard
-                    Visibility="{x:Bind ViewModel.LiveViewVisibility, Mode=OneWay}">
-                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Stretch">
-                        <TextBox
-                            x:Name="SourceBox"
-                            AutomationProperties.AutomationId="DiagnosticsSourceBox"
-                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
-                            PlaceholderText="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
-                            Text="{x:Bind ViewModel.LiveSourceFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            MinWidth="180"/>
-                        <CheckBox
-                            x:Name="ExceptionsCheck"
-                            AutomationProperties.AutomationId="DiagnosticsExceptionsCheck"
-                            Content="{loc:Loc Key=DiagnosticsExceptionsOnly}"
-                            IsChecked="{x:Bind ViewModel.ExceptionsOnly, Mode=TwoWay}"
-                            VerticalAlignment="Center"/>
-                        <CheckBox
-                            x:Name="RegexCheck"
-                            AutomationProperties.AutomationId="DiagnosticsRegexCheck"
-                            Content="{loc:Loc Key=DiagnosticsUseRegex}"
-                            IsChecked="{x:Bind ViewModel.UseRegex, Mode=TwoWay}"
-                            VerticalAlignment="Center"/>
-                    </ctrl:WrapPanel>
-                </ctk:SettingsCard>
-
-                <!-- Filter row: search + level + copy/clear. Plain card so the
-                     viewer below stays the visual focus. -->
-                <ctk:SettingsCard>
-                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Stretch">
-                        <TextBox
-                            x:Name="SearchBox"
-                            AutomationProperties.AutomationId="DiagnosticsSearchBox"
-                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
-                            PlaceholderText="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
-                            Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            MinWidth="180"/>
-                        <ComboBox
-                            x:Name="LevelComboBox"
-                            AutomationProperties.AutomationId="DiagnosticsLevelCombo"
-                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsLogLevel}"
-                            SelectedIndex="{x:Bind ViewModel.SelectedLevelIndex, Mode=TwoWay}"
-                            Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}"
-                            MinWidth="140">
-                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelAll}"/>
-                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelDebug}"/>
-                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelInfo}"/>
-                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelWarning}"/>
-                            <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelError}"/>
-                        </ComboBox>
-                        <Button
-                            x:Name="CopyButton"
-                            AutomationProperties.AutomationId="DiagnosticsCopyButton"
-                            Content="{loc:Loc Key=DiagnosticsCopy}"
-                            Click="CopyButton_Click"/>
-                        <Button
-                            AutomationProperties.AutomationId="DiagnosticsClearButton"
-                            Content="{loc:Loc Key=DiagnosticsClear}"
-                            Click="ClearButton_Click"/>
-                    </ctrl:WrapPanel>
-                </ctk:SettingsCard>
-
+            <!-- LOGS in a SettingsExpander (v0.8.0): the log section collapses
+                 for a quieter page. The header carries the section name, the
+                 count line rides as header content, and the grouped cards live
+                 in Items (the collapsible part — Content alone never collapses).
+                 Default expanded preserves the current visible UX. -->
+            <ctk:SettingsExpander
+                Margin="0,8,0,0"
+                Header="{loc:Loc Key=DiagnosticsLogs}"
+                IsExpanded="True">
                 <TextBlock
                     x:Name="LogCountText"
                     AutomationProperties.AutomationId="DiagnosticsLogCountText"
                     AutomationProperties.LiveSetting="Polite"
                     Style="{ThemeResource CaptionTextBlockStyle}"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    VerticalAlignment="Center"/>
+                <ctk:SettingsExpander.Items>
+                    <ctk:SettingsCard>
+                        <ctk:Segmented
+                            x:Name="ViewSegment"
+                            AutomationProperties.AutomationId="DiagnosticsViewSegment"
+                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsViewLabel}"
+                            SelectedIndex="{x:Bind ViewModel.SelectedViewIndex, Mode=TwoWay}"
+                            HorizontalAlignment="Right">
+                            <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewFile}"/>
+                            <ctk:SegmentedItem Content="{loc:Loc Key=DiagnosticsViewLive}"/>
+                        </ctk:Segmented>
+                    </ctk:SettingsCard>
 
-                <Border
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="12"
-                    Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
-                    <ScrollViewer x:Name="FileScrollViewer" MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <Grid>
-                            <TextBlock
-                                x:Name="LogText"
-                                AutomationProperties.AutomationId="DiagnosticsLogText"
-                                Text="{x:Bind ViewModel.LogText, Mode=OneWay}"
-                                FontFamily="Consolas"
-                                FontSize="12"
-                                TextWrapping="NoWrap"
-                                IsTextSelectionEnabled="True"/>
-                            <!-- Empty state is a SEPARATE element: writing the
-                                 placeholder into LogText would clobber the
-                                 compiled binding above. -->
-                            <TextBlock
-                                x:Name="EmptyStateText"
-                                AutomationProperties.AutomationId="DiagnosticsEmptyText"
-                                Style="{ThemeResource BodyTextBlockStyle}"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                TextWrapping="Wrap"
-                                Visibility="Collapsed"/>
-                        </Grid>
-                    </ScrollViewer>
-                </Border>
+                    <ctk:SettingsCard
+                        Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
+                        <!-- WrapPanel (not StackPanel): longer translations wrap
+                             instead of clipping on narrow windows. -->
+                        <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
+                            <ComboBox
+                                x:Name="LogFileComboBox"
+                                AutomationProperties.AutomationId="LogFileComboBox"
+                                AutomationProperties.Name="{loc:Loc Key=DiagnosticsLogFiles}"
+                                ItemsSource="{x:Bind ViewModel.LogFiles, Mode=OneWay}"
+                                SelectedItem="{x:Bind ViewModel.SelectedLogFile, Mode=TwoWay}"
+                                MinWidth="180"/>
+                            <Button
+                                AutomationProperties.AutomationId="RefreshLogsButton"
+                                Content="{loc:Loc Key=DiagnosticsRefresh}"
+                                Click="RefreshLogsButton_Click"/>
+                            <Button
+                                AutomationProperties.AutomationId="OpenLogFolderButton"
+                                Content="{loc:Loc Key=DiagnosticsOpenFolder}"
+                                Click="OpenLogFolderButton_Click"
+                                Style="{ThemeResource AccentButtonStyle}"/>
+                        </ctrl:WrapPanel>
+                    </ctk:SettingsCard>
 
-                <!-- Live view: virtualized event list fed by the ring buffer. -->
-                <StackPanel
-                    Spacing="8"
-                    Visibility="{x:Bind ViewModel.LiveViewVisibility, Mode=OneWay}">
-                    <Button
-                        x:Name="NewEventsButton"
-                        AutomationProperties.AutomationId="DiagnosticsNewEventsButton"
-                        HorizontalAlignment="Right"
-                        Click="NewEventsButton_Click"
-                        Visibility="Collapsed"/>
-                    <TextBlock
-                        x:Name="LiveEmptyText"
-                        AutomationProperties.AutomationId="DiagnosticsLiveEmptyText"
-                        Style="{ThemeResource BodyTextBlockStyle}"
-                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                        TextWrapping="Wrap"
-                        Visibility="Collapsed"/>
-                    <Border
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="12">
-                        <ListView
-                            x:Name="LiveList"
-                            AutomationProperties.AutomationId="DiagnosticsLiveList"
-                            AutomationProperties.Name="{loc:Loc Key=DiagnosticsBuffered}"
-                            ItemsSource="{x:Bind ViewModel.LiveEvents, Mode=OneWay}"
-                            SelectionMode="None"
-                            IsItemClickEnabled="True"
-                            ItemClick="LiveList_ItemClick"
-                            MaxHeight="320"
-                            FontFamily="Consolas"
-                            FontSize="12">
-                            <ListView.ItemTemplate>
-                                <!-- Compiled bindings (x:DataType): mistyped row
-                                     paths fail the build. BufferedLogEvent is
-                                     top-level in DevTemWinUi3.Services exactly
-                                     so this can name it. -->
-                                <DataTemplate x:DataType="svc:BufferedLogEvent">
-                                    <StackPanel Spacing="2" Padding="0,4">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Text="{x:Bind DisplayTime, Mode=OneTime}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
-                                            <TextBlock Text="{x:Bind Level, Mode=OneTime}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{x:Bind SourceContext, Mode=OneTime}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                                        </StackPanel>
-                                        <TextBlock Text="{x:Bind Message, Mode=OneTime}" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
-                    </Border>
-                </StackPanel>
+                    <!-- Live toolbar: source filter + exception/regex toggles. -->
+                    <ctk:SettingsCard
+                        Visibility="{x:Bind ViewModel.LiveViewVisibility, Mode=OneWay}">
+                        <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Stretch">
+                            <TextBox
+                                x:Name="SourceBox"
+                                AutomationProperties.AutomationId="DiagnosticsSourceBox"
+                                AutomationProperties.Name="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
+                                PlaceholderText="{loc:Loc Key=DiagnosticsSourcePlaceholder}"
+                                Text="{x:Bind ViewModel.LiveSourceFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                MinWidth="180"/>
+                            <CheckBox
+                                x:Name="ExceptionsCheck"
+                                AutomationProperties.AutomationId="DiagnosticsExceptionsCheck"
+                                Content="{loc:Loc Key=DiagnosticsExceptionsOnly}"
+                                IsChecked="{x:Bind ViewModel.ExceptionsOnly, Mode=TwoWay}"
+                                VerticalAlignment="Center"/>
+                            <CheckBox
+                                x:Name="RegexCheck"
+                                AutomationProperties.AutomationId="DiagnosticsRegexCheck"
+                                Content="{loc:Loc Key=DiagnosticsUseRegex}"
+                                IsChecked="{x:Bind ViewModel.UseRegex, Mode=TwoWay}"
+                                VerticalAlignment="Center"/>
+                        </ctrl:WrapPanel>
+                    </ctk:SettingsCard>
 
-                <ctk:SettingsCard
-                    Header="{loc:Loc Key=DiagnosticsExport}">
-                    <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
-                        <Button
-                            AutomationProperties.AutomationId="DiagnosticsSaveViewButton"
-                            Content="{loc:Loc Key=DiagnosticsSaveView}"
-                            Click="SaveViewButton_Click"/>
-                        <Button
-                            AutomationProperties.AutomationId="DiagnosticsExportBundleButton"
-                            Content="{loc:Loc Key=DiagnosticsExportBundle}"
-                            Click="ExportBundleButton_Click"
-                            Style="{ThemeResource AccentButtonStyle}"/>
-                    </ctrl:WrapPanel>
-                </ctk:SettingsCard>
-            </StackPanel>
+                    <!-- Filter row: search + level + copy/clear. Plain card so the
+                         viewer below stays the visual focus. -->
+                    <ctk:SettingsCard>
+                        <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Stretch">
+                            <TextBox
+                                x:Name="SearchBox"
+                                AutomationProperties.AutomationId="DiagnosticsSearchBox"
+                                AutomationProperties.Name="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
+                                PlaceholderText="{loc:Loc Key=DiagnosticsSearchPlaceholder}"
+                                Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                MinWidth="180"/>
+                            <ComboBox
+                                x:Name="LevelComboBox"
+                                AutomationProperties.AutomationId="DiagnosticsLevelCombo"
+                                AutomationProperties.Name="{loc:Loc Key=DiagnosticsLogLevel}"
+                                SelectedIndex="{x:Bind ViewModel.SelectedLevelIndex, Mode=TwoWay}"
+                                Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}"
+                                MinWidth="140">
+                                <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelAll}"/>
+                                <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelDebug}"/>
+                                <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelInfo}"/>
+                                <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelWarning}"/>
+                                <ComboBoxItem Content="{loc:Loc Key=DiagnosticsLevelError}"/>
+                            </ComboBox>
+                            <Button
+                                x:Name="CopyButton"
+                                AutomationProperties.AutomationId="DiagnosticsCopyButton"
+                                Content="{loc:Loc Key=DiagnosticsCopy}"
+                                Click="CopyButton_Click"/>
+                            <Button
+                                AutomationProperties.AutomationId="DiagnosticsClearButton"
+                                Content="{loc:Loc Key=DiagnosticsClear}"
+                                Click="ClearButton_Click"/>
+                        </ctrl:WrapPanel>
+                    </ctk:SettingsCard>
+
+                    <!-- Viewer card: file and live viewers share one card so the
+                         section collapses as a unit. Empty states are SEPARATE
+                         elements: writing placeholders into LogText would
+                         clobber the compiled binding. -->
+                    <ctk:SettingsCard>
+                        <StackPanel Spacing="8">
+                            <!-- File viewer (gated as a unit: the empty text is
+                                 code-shown, so the gate lives on the wrapper,
+                                 never on the text itself). -->
+                            <StackPanel
+                                Spacing="8"
+                                Visibility="{x:Bind ViewModel.FileViewVisibility, Mode=OneWay}">
+                                <TextBlock
+                                    x:Name="EmptyStateText"
+                                    AutomationProperties.AutomationId="DiagnosticsEmptyText"
+                                    Style="{ThemeResource BodyTextBlockStyle}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    TextWrapping="Wrap"
+                                    Visibility="Collapsed"/>
+                                <ScrollViewer x:Name="FileScrollViewer" MaxHeight="320" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                                    <Grid>
+                                        <TextBlock
+                                            x:Name="LogText"
+                                            AutomationProperties.AutomationId="DiagnosticsLogText"
+                                            Text="{x:Bind ViewModel.LogText, Mode=OneWay}"
+                                            FontFamily="Consolas"
+                                            FontSize="12"
+                                            TextWrapping="NoWrap"
+                                            IsTextSelectionEnabled="True"/>
+                                    </Grid>
+                                </ScrollViewer>
+                            </StackPanel>
+                            <StackPanel
+                                Spacing="8"
+                                Visibility="{x:Bind ViewModel.LiveViewVisibility, Mode=OneWay}">
+                                <Button
+                                    x:Name="NewEventsButton"
+                                    AutomationProperties.AutomationId="DiagnosticsNewEventsButton"
+                                    HorizontalAlignment="Right"
+                                    Click="NewEventsButton_Click"
+                                    Visibility="Collapsed"/>
+                                <TextBlock
+                                    x:Name="LiveEmptyText"
+                                    AutomationProperties.AutomationId="DiagnosticsLiveEmptyText"
+                                    Style="{ThemeResource BodyTextBlockStyle}"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    TextWrapping="Wrap"
+                                    Visibility="Collapsed"/>
+                                <ListView
+                                    x:Name="LiveList"
+                                    AutomationProperties.AutomationId="DiagnosticsLiveList"
+                                    AutomationProperties.Name="{loc:Loc Key=DiagnosticsBuffered}"
+                                    ItemsSource="{x:Bind ViewModel.LiveEvents, Mode=OneWay}"
+                                    SelectionMode="None"
+                                    IsItemClickEnabled="True"
+                                    ItemClick="LiveList_ItemClick"
+                                    MaxHeight="320"
+                                    FontFamily="Consolas"
+                                    FontSize="12">
+                                    <ListView.ItemTemplate>
+                                        <!-- Compiled bindings (x:DataType): mistyped row
+                                             paths fail the build. BufferedLogEvent is
+                                             top-level in DevTemWinUi3.Services exactly
+                                             so this can name it. -->
+                                        <DataTemplate x:DataType="svc:BufferedLogEvent">
+                                            <StackPanel Spacing="2" Padding="0,4">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{x:Bind DisplayTime, Mode=OneTime}" Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                                                    <TextBlock Text="{x:Bind Level, Mode=OneTime}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{x:Bind SourceContext, Mode=OneTime}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{x:Bind Message, Mode=OneTime}" MaxLines="2" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+                        </StackPanel>
+                    </ctk:SettingsCard>
+
+                    <ctk:SettingsCard
+                        Header="{loc:Loc Key=DiagnosticsExport}">
+                        <ctrl:WrapPanel HorizontalSpacing="8" VerticalSpacing="8" HorizontalAlignment="Right">
+                            <Button
+                                AutomationProperties.AutomationId="DiagnosticsSaveViewButton"
+                                Content="{loc:Loc Key=DiagnosticsSaveView}"
+                                Click="SaveViewButton_Click"/>
+                            <Button
+                                AutomationProperties.AutomationId="DiagnosticsExportBundleButton"
+                                Content="{loc:Loc Key=DiagnosticsExportBundle}"
+                                Click="ExportBundleButton_Click"
+                                Style="{ThemeResource AccentButtonStyle}"/>
+                        </ctrl:WrapPanel>
+                    </ctk:SettingsCard>
+                </ctk:SettingsExpander.Items>
+            </ctk:SettingsExpander>
 
         </StackPanel>
         </Grid>

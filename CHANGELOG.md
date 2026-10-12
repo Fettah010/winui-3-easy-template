@@ -5,6 +5,37 @@ release notes from the matching section below (falls back to a stub when
 the version is missing, and fails when the tag disagrees with the csproj).
 
 
+
+## [0.8.0-beta] - 2026-10-12
+
+Ecosystem + control polish, cherry-picked not cloned (ROADMAP v0.8.0).
+Templates `0.6.3` PATCH — content-only, no new scaffold flags, so the
+joint-number meet defers one cycle with reason (see `docs/DECISIONS.md`).
+
+### Added
+
+- Diagnostics log section in a `SettingsExpander` (header + live count,
+  collapsible content): zero new dependencies (already-referenced Toolkit
+  SettingsControls assembly), weight-neutral by construction, a11y contract
+  held (ExpandCollapse + named header, audit suite green).
+- Telemetry opt-in sample (`docs/feature-guides/telemetry-sample.md`,
+  scaffold-time doc): Sentry envelope (AppCenter retired 2025-03-31),
+  toggle-gated, no keys/endpoints/calls by default.
+
+### Fixed
+
+- Smoke harness whats-new dismiss now clicks the dialog primary
+  (`UpdateClose` "Close") instead of searching a nonexistent "OK" —
+  post-bump runs stalled on the modal.
+
+### Evaluated and declined
+
+- Standalone `Expander` package (covered with zero new deps),
+  `WinUICommunity.LandingPages` (third-party, Win2D native dep, 7.1.0
+  predates the graph), Win2D splash/icon work (no consumer).
+- AOT annual check: line hasn't moved (unpackaged XAML + NativeAOT still
+  broken upstream, WinAppSDK #6394) — track stays due 2027-09.
+
 ## [0.7.0-beta] - 2026-10-11
 
 Quality + accessibility RC (ROADMAP v0.7.0). Templates `0.6.2` PATCH —

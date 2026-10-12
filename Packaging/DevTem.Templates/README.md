@@ -94,6 +94,13 @@ captions, polite status announcements with assertive error interruptions,
 and a keyboard map — all enforced by `Tests/Services/A11yAuditTests.cs` in
 your copy. Details: `docs/accessibility.md`.
 
+### Telemetry
+
+Zero usage telemetry ships. If you want product analytics, the envelope
+choice is Sentry (already in your graph via crash reporting): see
+`docs/feature-guides/telemetry-sample.md` for the privacy posture and a
+drop-in, toggle-gated sample. No keys, endpoints, or calls by default.
+
 ## `devtem-page` — content pages
 
 XAML + code-behind (`INavigationAware`, localization, responsive) +

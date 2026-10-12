@@ -698,9 +698,13 @@ public sealed class AppSmokeTests
     }
 
     /// <summary>
-    /// Clicks the what's-new dialog's OK button when a version bump left it
-    /// open. Located by dialog title (version-agnostic prefix), never by a
-    /// bare "OK" (too generic to click blindly).
+    /// Clicks the what's-new dialog's dismiss button when a version bump left
+    /// it open. Located by dialog title (version-agnostic prefix), never by a
+    /// bare button name (too generic to click blindly). The button is the
+    /// dialog's primary (AutomationId PrimaryButton — currently "Close" from
+    /// the UpdateClose loc key); "OK" is kept as a fallback for older builds.
+    /// v0.8.0 catch: the OK-only search never matched, so post-bump runs
+    /// stalled on the modal until an update-flow test happened to clear it.
     /// </summary>
     private static void DismissWhatsNewDialogIfPresent(TimeSpan timeout)
     {
@@ -721,7 +725,8 @@ public sealed class AppSmokeTests
                     });
                 if (title is null)
                     return null;
-                return window.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button).And(cf.ByName("OK")));
+                return window.FindFirstDescendant(cf => cf.ByAutomationId("PrimaryButton"))
+                    ?? window.FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button).And(cf.ByName("OK")));
             },
             timeout,
             TimeSpan.FromMilliseconds(500)).Result;

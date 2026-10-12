@@ -100,23 +100,24 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.7.0-beta
+## What's new in 0.8.0-beta
 
-- Quality + accessibility RC: every button/link/input in the app carries an
-  accessible name (loc-bound, so it follows language switches), decorative
-  icons are hidden from the UI tree, page titles and section captions expose
-  heading levels, status text announces politely while validation errors
-  interrupt assertively (toast errors escalate the same way in code). The
-  contract is enforced headlessly by `Tests/Services/A11yAuditTests.cs`; the
-  keyboard map, live-region contract, and Narrator protocol live in
-  [`docs/accessibility.md`](docs/accessibility.md).
-- No color-only status anywhere: the Home status card changes text + glyph +
-  brush together, and every page demonstrates its empty/error/loading states
-  (Diagnostics empty + invalid-pattern shots below are captured from the
-  running 0.7.0 app, EN dark).
-- Perf re-proven, not asserted: cold flame re-recorded inside budgets, publish
-  weight unchanged at 273.8 MB, ARM64 build spot green (run deferred — no
-  ARM64 hardware here).
+- Ecosystem + control polish, cherry-picked not cloned: the Diagnostics log
+  section now collapses into a `SettingsExpander` (header + live count,
+  content hidden until opened) — adopted because it rides the already-referenced
+  Toolkit SettingsControls assembly (zero new dependencies, weight-neutral by
+  construction) with the a11y contract held (expand/collapse exposed to
+  assistive tech, names/headings/live-regions green).
+- Evaluated and declined on record: standalone `Expander` package (covered
+  with zero new deps), `WinUICommunity.LandingPages` (third-party, Win2D
+  native dep, 7.1.0 predates the .NET 10 graph), Win2D splash/icon work (no
+  consumer — PNG + vector pipeline serves). Reasons in `docs/DECISIONS.md`.
+- Telemetry, answered without shipping any: opt-in Sentry-envelope sample in
+  `docs/feature-guides/telemetry-sample.md` (AppCenter retired 2025-03-31);
+  defaults still phone home never. AOT annual check: line hasn't moved
+  (unpackaged XAML + NativeAOT still broken upstream) — track stays due 2027-09.
+
+![Diagnostics log section collapsed — header with live count](docs/screenshots/controls.png)
 
 ![Diagnostics empty state — no lines match the filter](docs/screenshots/empty-state.png)
 
