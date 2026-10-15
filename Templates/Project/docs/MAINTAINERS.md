@@ -44,10 +44,18 @@ scaffold matrix, PRs the Fast subset (`-Profile` — see
 The whole flow is automated; the maintainer only cuts a tag:
 
 ```powershell
-git tag templates-v0.2.0
-git push origin templates-v0.2.0
-# CI (templates-publish.yml): dotnet pack -p:Version=0.2.0, push to NuGet
+git tag templates-vX.Y.Z
+git push origin templates-vX.Y.Z
+# CI (templates-publish.yml): dotnet pack -p:Version=X.Y.Z, push to NuGet
 ```
+
+App and template versions always match (maintainer rule, 2026-10-12 — the
+old MINOR-for-symbols / PATCH-for-content split is retired): every release
+tags `vX.Y.Z(-beta)` + `templates-vX.Y.Z`, even for content-only template
+changes. Velopack and NuGet versions must each keep increasing — one version
+per channel. Pushes from this machine go over SSH (`git@github.com:…`;
+HTTPS egress is blocked, port 22 is flaky — retry loops) and tags are what
+trigger CI; verify with `git ls-remote origin`.
 
 Prerequisites (one time, no secrets): on nuget.org go to your account →
 Trusted Publishing → Create, and register a policy for package
@@ -145,5 +153,7 @@ powershell -File Scripts/build-msix.ps1 -Publisher "CN=Acme" -CertificatePath C:
   scaffold; a UTF-8 `.ps1` fails `dotnet new` with exit 100 (seen 2026-09-23:
   `test-mirror-parity.ps1`). The `read` tool cannot open UTF-16 files
   ("binary") — use `Select-String` to inspect and patch scripts to edit.
-- Releases: version policy (template MINOR for symbols, PATCH for
-  content) and the runbook — see `docs/WORKFLOW.md`.
+- Releases: app and template versions always match (maintainer rule,
+  2026-10-12 — every release tags `vX.Y.Z(-beta)` + `templates-vX.Y.Z`;
+  Velopack and NuGet must each keep increasing) and the runbook — see
+  `docs/WORKFLOW.md`.

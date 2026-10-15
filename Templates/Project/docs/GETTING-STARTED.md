@@ -170,6 +170,7 @@ not by choice.
 | `--distribution` | Distribution format: `portable` (default, unpackaged) or `msix` (packaged, for Store or sideload) | `--distribution msix` |
 | `--setup` | First-run setup wizard: install location, shortcuts, launch options (`false` drops it; portable only, ignored for msix) | `--setup false` |
 | `--publisher` | MSIX Publisher ID: Partner Center ID (Store) or cert subject (sideload); pre-fills the manifest + `build-msix.ps1` | `--publisher "CN=Acme"` |
+| `--slnx` | Opt-in `.slnx` solution file alongside the classic `.sln` (VS 2026+; the `.sln` stays default — slnx cannot express the x86/x64/ARM64 mapping) | `--slnx true` |
 | `--attribution` | Keep the one-line DevTem source comment in generated `DevTemAttribution.cs` | `true` |
 
 Names with spaces work: `-n "My App"` produces `My_App` identifiers and

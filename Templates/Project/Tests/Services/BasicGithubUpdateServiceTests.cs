@@ -288,4 +288,94 @@ public class BasicGithubUpdateServiceTests
             BasicGithubUpdateService.DownloadTimeout = old;
         }
     }
+
+    [TestMethod]
+    public void DefaultTimeouts_AreThirtySecondsAndThirtyMinutes()
+    {
+        // Shipped budgets (Phase A): the check fails fast, the download may
+        // take a while. Pin the defaults so any change is deliberate (a
+        // silent edit here changes retail timeout behavior).
+        Assert.AreEqual(TimeSpan.FromSeconds(30), BasicGithubUpdateService.CheckTimeout);
+        Assert.AreEqual(TimeSpan.FromMinutes(30), BasicGithubUpdateService.DownloadTimeout);
+    }
+
+    [TestMethod]
+    public async Task Check_TimesOut_InsteadOfHanging()
+    {
+        var stub = new StubHandler
+        {
+            ReleasesJson = Feed(Release("v99.0.0")),
+            DelayMs = 30_000,
+        };
+        using var svc = new BasicGithubUpdateService(stub);
+        TimeSpan old = BasicGithubUpdateService.CheckTimeout;
+        BasicGithubUpdateService.CheckTimeout = TimeSpan.FromMilliseconds(100);
+        try
+        {
+            await Assert.ThrowsAsync<OperationCanceledException>(() => svc.CheckAsync());
+        }
+        finally
+        {
+            BasicGithubUpdateService.CheckTimeout = old;
+        }
+        Assert.IsFalse(svc.HasPendingUpdate);
+    }
+
+    [TestMethod]
+    public async Task ChecksumFetch_TimesOut_InsteadOfHanging()
+    {
+        var stub = new StubHandler { ReleasesJson = Feed(Release("v99.0.0")) };
+        using var svc = new BasicGithubUpdateService(stub);
+        var check = await svc.CheckAsync();
+        Assert.IsTrue(check.HasUpdate);
+
+        stub.DelayMs = 30_000;
+        TimeSpan old = BasicGithubUpdateService.CheckTimeout;
+        BasicGithubUpdateService.CheckTimeout = TimeSpan.FromMilliseconds(100);
+        try
+        {
+            var ex = await Assert.ThrowsAsync<TimeoutException>(() => svc.DownloadPendingUpdateAsync());
+            Assert.Contains("Checksum fetch", ex.Message);
+        }
+        finally
+        {
+            BasicGithubUpdateService.CheckTimeout = old;
+        }
+        Assert.IsFalse(File.Exists(Path.Combine(UpdatesDir(), "v99.0.0", "AcmeSetup.exe")));
+    }
+
+    [TestMethod]
+    public async Task Download_RefusesMissingChecksumAsset()
+    {
+        // The release lists the .exe and the .sha256 URL 404s (tampered or
+        // mirrored release): fail closed with no staged executable. Distinct
+        // from "no checksum asset listed", which refuses earlier.
+        var stub = new StubHandler
+        {
+            ReleasesJson = Feed(Release("v99.0.0")),
+            ChecksumText = "MISSING",
+        };
+        using var svc = new BasicGithubUpdateService(stub);
+        var check = await svc.CheckAsync();
+        Assert.IsTrue(check.HasUpdate);
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => svc.DownloadPendingUpdateAsync());
+        Assert.IsFalse(File.Exists(Path.Combine(UpdatesDir(), "v99.0.0", "AcmeSetup.exe")));
+    }
+
+    [TestMethod]
+    public void ParseChecksum_AcceptsProducerFormat()
+    {
+        // Producer/consumer convention: Scripts/publish-basic.ps1 writes
+        // "<lower-hex><two spaces><filename>" (coreutils format). The
+        // consumer must accept the exact producer output, not just the
+        // single-space fixture above.
+        string good = "ABCDEF0123456789abcdef0123456789ABCDEF0123456789abcdef0123456789";
+        Assert.AreEqual(
+            good.ToUpperInvariant(),
+            BasicGithubUpdateService.ParseChecksum(good.ToLowerInvariant() + "  AcmeSetup.exe"));
+        Assert.AreEqual(
+            good.ToUpperInvariant(),
+            BasicGithubUpdateService.ParseChecksum(good.ToUpperInvariant() + "  AcmeSetup.exe" + System.Environment.NewLine));
+    }
 }

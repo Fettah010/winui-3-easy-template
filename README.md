@@ -100,22 +100,25 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.8.0-beta
+## What's new in 0.9.0-beta
 
-- Ecosystem + control polish, cherry-picked not cloned: the Diagnostics log
-  section now collapses into a `SettingsExpander` (header + live count,
-  content hidden until opened) — adopted because it rides the already-referenced
-  Toolkit SettingsControls assembly (zero new dependencies, weight-neutral by
-  construction) with the a11y contract held (expand/collapse exposed to
-  assistive tech, names/headings/live-regions green).
-- Evaluated and declined on record: standalone `Expander` package (covered
-  with zero new deps), `WinUICommunity.LandingPages` (third-party, Win2D
-  native dep, 7.1.0 predates the .NET 10 graph), Win2D splash/icon work (no
-  consumer — PNG + vector pipeline serves). Reasons in `docs/DECISIONS.md`.
-- Telemetry, answered without shipping any: opt-in Sentry-envelope sample in
-  `docs/feature-guides/telemetry-sample.md` (AppCenter retired 2025-03-31);
-  defaults still phone home never. AOT annual check: line hasn't moved
-  (unpackaged XAML + NativeAOT still broken upstream) — track stays due 2027-09.
+- Hardening, release-candidate grade: the update/backup/registry/PII posture
+  is now pinned by fixtures, not just implemented — basic-updater check and
+  checksum-fetch timeouts, checksum-404 refusal, shipped-budget pins (30s
+  check / 30min download), and the producer-format checksum convention.
+  No new behavior; every gate that ships is now a test that fails when moved.
+- Docs IA v2: `GETTING-STARTED.md` re-verified end to end (15-minute path,
+  `--slnx` row added), `MAINTAINERS.md` states the matched-number rule
+  (app and templates always ship the same number), `why-devtem.md` argues
+  from the peer head-to-head table, and `docs/wiki-draft.md` fixes the v1.0
+  wiki structure (draft, unpublished).
+- Smoke-flake hunt filed: 7+1 with 2 transient fails → 9+1 green on retry
+  (occupied-desktop class, both-attempts evidence). Weight 273.8 MB and the
+  v0.8.0 startup flame carry — v0.9.0 changes no product code.
+
+![Diagnostics page - status, metrics, live log tail, export bundle](docs/screenshots/diagnostics.png)
+
+![Demo - launch, theme switch, update check, toast, diagnostics tour](docs/screenshots/demo.gif)
 
 ![Diagnostics log section collapsed — header with live count](docs/screenshots/controls.png)
 

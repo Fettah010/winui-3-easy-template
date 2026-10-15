@@ -6,6 +6,36 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
+
+## [1.0.0] - DRAFT (not yet tagged — v0.9.0 drafts the shape, v1.0 fills it)
+
+Stable: the best WinUI 3 template for .NET 10 devs (ROADMAP v1.0).
+Templates `1.0.0` on NuGet + app `1.0.0` stable channel. API/flag freeze,
+announcement kit, showcase. Proof: install-from-NuGet → all presets →
+build/test/matrix/smoke green on a clean VM; 6 screenshots + GIF current.
+
+## [0.9.0-beta] - 2026-10-15
+
+Hardening + docs IA v2, release candidate (ROADMAP v0.9.0). Templates
+`0.9.0` — app and template numbers always match (maintainer rule;
+see `docs/DECISIONS.md`).
+
+### Added
+
+- Security fixtures (no new behavior): basic-updater check/checksum-fetch
+  timeouts, checksum-404 refusal, shipped-budget pins (30s check / 30min
+  download), producer-format checksum convention (`publish-basic.ps1`
+  two-space output parses).
+- Docs IA v2: `--slnx` row in GETTING-STARTED, timeless tag examples +
+  matched-number rule in MAINTAINERS, `why-devtem.md` rewritten from the
+  peer head-to-head, `docs/wiki-draft.md` (unpublished structure for v1.0).
+
+### Proven
+
+- Smoke 7+1 with 2 transient fails → 9+1 green on retry (occupied-desktop
+  flake class, both-attempts evidence); backup/restore round-trips green;
+  weight 273.8 MB + v0.8.0 flame carried (no product-code change).
+
 ## [0.8.0-beta] - 2026-10-12
 
 Ecosystem + control polish, cherry-picked not cloned (ROADMAP v0.8.0).
