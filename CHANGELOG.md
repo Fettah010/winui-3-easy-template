@@ -7,12 +7,28 @@ the version is missing, and fails when the tag disagrees with the csproj).
 
 
 
-## [1.0.0] - DRAFT (not yet tagged — v0.9.0 drafts the shape, v1.0 fills it)
+## [1.0.0] - 2026-10-15
 
 Stable: the best WinUI 3 template for .NET 10 devs (ROADMAP v1.0).
-Templates `1.0.0` on NuGet + app `1.0.0` stable channel. API/flag freeze,
-announcement kit, showcase. Proof: install-from-NuGet → all presets →
-build/test/matrix/smoke green on a clean VM; 6 screenshots + GIF current.
+Templates `1.0.0` on NuGet + app `1.0.0` stable channel (first plain release;
+fresh installs default to the stable channel). API/flag freeze: all template
+symbols and values frozen (renames arrive as new values only); invalid
+distribution/updates pairs still fail at build time via MSBuild guards.
+
+### Added
+
+- Stable release mechanics: `stable` branch pointer moves to `v1.0.0`
+  (`beta` stays for the next cycle); Velopack stable feed starts at `1.0.0`.
+- Announcement kit: stable README banner + badges + showcase, `why-devtem.md`
+  head-to-head, version-text screenshots re-captured at `1.0.0`, marketplace
+  + awesome-winui drafts, video shot-list (`demo.gif` is the motion asset).
+
+### Proven
+
+- Freeze: `TemplateSurfaceTests` + full 22-combo matrix green; version-reset
+  stays one command (`bump-version -Version 0.0.1`).
+- Presets: minimal/desktop/production/store/dual scaffold + build 0/0,
+  production tests green; smoke 9+1 green; weight 273.8 MB carries.
 
 ## [0.9.0-beta] - 2026-10-15
 

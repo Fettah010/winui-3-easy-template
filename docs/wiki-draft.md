@@ -1,4 +1,4 @@
-# Wiki / site draft (v0.9.0 — DRAFT, unpublished)
+# Wiki / site draft (v1.0 — publish checklist, unpublished until v1.0 ships)
 
 > Status: **draft for v1.0**. Nothing here is published — no wiki enabled,
 > no site DNS, no announcement. v1.0 owns the publish; this file only fixes
@@ -26,6 +26,7 @@
 
 - [ ] Enable the wiki (or reserve the site path) + link from README.
 - [ ] One page per structure item above (link, don't copy).
-- [ ] Screenshots: the frozen v0.9.0 six + `demo.gif`, re-verified at v1.0.
+- [x] Screenshots: the six re-verified at 1.0.0 (about/settings/diagnostics
+  re-captured with 1.0.0 version text, rest carried) + `demo-tour.png` strip.
 - [ ] Announcement kit stays separate (marketplace post, awesome-winui PR,
       video) — the wiki is documentation, not launch.

@@ -65,19 +65,22 @@ public class ChannelResolverTests
     }
 
     [TestMethod]
-    public void EnsureChannelForCurrentBuild_MigratesStaleStableOnBetaBuild()
+    public void EnsureChannelForCurrentBuild_MigratesOncePerVersion()
     {
-        // The app assembly under test is a beta build (InformationalVersion
-        // carries -beta), so migration applies here.
-        Assert.IsTrue(AppInfo.Current.IsBetaBuild);
+        // Channel-aware, never channel-assuming: the stale-stable migration
+        // fires on beta builds only (stable hosts return early by design —
+        // v1.0 proved the old beta-assuming shape red on a stable host).
+        // Both paths assert here, so the suite stays green on either channel.
+        string other = AppInfo.Current.IsBetaBuild ? ChannelResolver.Stable : ChannelResolver.Beta;
+        string expected = AppInfo.Current.IsBetaBuild ? ChannelResolver.Beta : other;
 
-        SettingsService.Current.Channel = ChannelResolver.Stable;
+        SettingsService.Current.Channel = other;
         SettingsService.Current.EnsureChannelForCurrentBuild();
-        Assert.AreEqual(ChannelResolver.Beta, SettingsService.Current.Channel);
+        Assert.AreEqual(expected, SettingsService.Current.Channel);
 
         // Second run is a no-op (once per version).
         SettingsService.Current.EnsureChannelForCurrentBuild();
-        Assert.AreEqual(ChannelResolver.Beta, SettingsService.Current.Channel);
+        Assert.AreEqual(expected, SettingsService.Current.Channel);
     }
 
     [TestMethod]

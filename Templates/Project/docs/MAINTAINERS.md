@@ -77,10 +77,16 @@ dotnet new update                     # update all template packages
 ## 5. Releases
 
 Bump `<Version>`/`<AssemblyVersion>`/`<FileVersion>` (keep in sync) plus
-`<InformationalVersion>` (`-beta` suffix on beta releases so fresh installs
-default to the beta channel). Commit, push, tag (`v0.0.1-beta`), push the tag
-(CI builds/packs/uploads), then move the `beta`/`stable` pointer. Full flow
-is in `AGENTS.md` ("Branches & releases").
+`<InformationalVersion>`: beta releases carry the `-beta` suffix so fresh
+installs default to the beta channel; **stable releases use the plain version**
+so fresh installs default to stable (`ChannelResolver` + `AppInfo.DefaultChannel`,
+pinned by `AppInfo_DefaultChannelMatchesBuild`). Commit, push, tag
+(`v0.0.1-beta` for beta, `v1.0.0` for stable — the tag name decides the
+release channel), push the tag (CI builds/packs/uploads), then move the
+channel pointer: `beta` for beta releases, **`stable` for stable releases**
+(the other pointer stays where it is). Full flow is in `AGENTS.md`
+("Branches & releases"). Post-publish: verify the NuGet listing + README face
+and probe-install from NuGet (record version + timestamp).
 
 ### Code signing (do this before distributing)
 

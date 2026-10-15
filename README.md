@@ -1,5 +1,11 @@
 # DevTem WinUI 3 starter
 
+> **1.0 stable** — API and template flags are frozen (new options arrive as new
+> values, never renames). Install with `dotnet new install DevTem.Templates`
+> (this package IS the Visual Studio channel — File → New → Project, no VSIX),
+> scaffold with `dotnet new devtem-winui`, and ship. Showcase: the screenshots
+> below + the 8-panel tour (`docs/screenshots/demo-tour.png`).
+
 <p align="center">
   <img src="Assets/Logo.png" alt="DevTem logo" width="120" />
 </p>
@@ -17,7 +23,7 @@ It is built for teams that want a real app shell instead of a blank canvas: **MV
 ## Contents
 
 - [Install the template](#install-the-template) · [Requirements](#requirements) · [Screenshots](#screenshots)
-- [Why DevTem](#why-devtem) · [What ships out of the box](#what-ships-out-of-the-box) · [What's new](#whats-new-in-060-beta)
+- [Why DevTem](#why-devtem) · [What ships out of the box](#what-ships-out-of-the-box) · [What's new](#whats-new-in-100)
 - [Starter presets](#starter-presets) · [Pages](#pages-from-030) · [Ship it](#ship-it) · [Identity & notifications](#identity--notifications)
 - [Run this repo locally](#run-this-repo-locally) · [FAQ](#faq) · [Repository layout](#repository-layout)
 
@@ -100,25 +106,24 @@ the flags, and each scaffold records its picks in a generated
 
 ![Settings page — theme, language, update channel, test toast, tray](docs/screenshots/settings.png)
 
-## What's new in 0.9.0-beta
+## What's new in 1.0.0
 
-- Hardening, release-candidate grade: the update/backup/registry/PII posture
-  is now pinned by fixtures, not just implemented — basic-updater check and
-  checksum-fetch timeouts, checksum-404 refusal, shipped-budget pins (30s
-  check / 30min download), and the producer-format checksum convention.
-  No new behavior; every gate that ships is now a test that fails when moved.
-- Docs IA v2: `GETTING-STARTED.md` re-verified end to end (15-minute path,
-  `--slnx` row added), `MAINTAINERS.md` states the matched-number rule
-  (app and templates always ship the same number), `why-devtem.md` argues
-  from the peer head-to-head table, and `docs/wiki-draft.md` fixes the v1.0
-  wiki structure (draft, unpublished).
-- Smoke-flake hunt filed: 7+1 with 2 transient fails → 9+1 green on retry
-  (occupied-desktop class, both-attempts evidence). Weight 273.8 MB and the
-  v0.8.0 startup flame carry — v0.9.0 changes no product code.
+- Stable: template symbols and values are frozen (see `docs/V1.0-ADVANCED-PLAN.md`
+  §1.2 for the inventory) — future options arrive as new values, never renames,
+  so scaffold scripts keep working. Invalid distribution/updates pairs still fail
+  at build time with a headline MSBuild error.
+- Stable channel: fresh installs default to stable updates
+  (`ChannelResolver` + `AppInfo.DefaultChannel`, pinned headlessly); the `stable`
+  branch tracks this release while `beta` stays for the next cycle.
+- Proof, not promises: all five presets scaffold + build clean, production tests
+  green, full 22-combo matrix + smoke green, weight 273.8 MB carries. Version-text
+  screenshots re-captured at `1.0.0`; `why-devtem.md` argues from the peer
+  head-to-head; announcement drafts (marketplace, awesome-winui, video shot-list)
+  ship in `docs/`.
 
 ![Diagnostics page - status, metrics, live log tail, export bundle](docs/screenshots/diagnostics.png)
 
-![Demo - launch, theme switch, update check, toast, diagnostics tour](docs/screenshots/demo.gif)
+![Tour - launch, settings, dark theme, update check, toast, diagnostics, about](docs/screenshots/demo-tour.png)
 
 ![Diagnostics log section collapsed — header with live count](docs/screenshots/controls.png)
 

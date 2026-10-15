@@ -5,12 +5,21 @@
 > the session (goal, tree, CI, next). Conventions live in `AGENTS.md`;
 > this file holds only **current facts**.
 
-- **Goal:** v0.9.0 fully SHIPPED, numbers matched (`v0.9.0-beta` app + `templates-v0.9.0` → NuGet 0.9.0; work order closed). CI owns the releases (`release.yml` beta channel; `templates-publish` → NuGet 0.9.0). Open manuals: Narrator run + `hc-light`/`hc-dark`/`scaling-200.png` (E5 `vs-dialog.png`/`scaffold-help.png` still open too); kit proofs stay pending-kit. Next: v1.0 planning from `docs/ROADMAP.md` §4 in a new work-order file. Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works (flaky, retry loops; first-try throughout this release).
-- **Version:** app `0.9.0-beta` (commit `980871a`, tag `v0.9.0-beta` pushed; `beta` branch at `v0.9.0-beta`). Template package `0.9.0` (tag `templates-v0.9.0` pushed on the same commit — NuGet chain increasing, latest matches the app per the matched-number rule). Last shipped: app `0.8.0-beta`; templates `0.8.0`.
+- **Goal:** v1.0 fully PREPARED, awaiting maintainer tag/push (`v1.0.0` app + `templates-v1.0.0` → NuGet 1.0.0, matched, STABLE channel; work order DRAFT until tags land, then `stable` moves and `beta` stays). Freeze proven, 5 presets green, version-text shots re-captured at `1.0.0`, tour strip replaces `demo.gif` (correction logged), kit drafts unpublished. Open manuals unchanged: Narrator run + HC/200% shots + E5 VS dialog shots; kit proofs stay pending-kit (MP4 deferred — no encoder). Note: remote URL is SSH (`git@github.com:…`) — HTTPS egress is blocked from this machine, port 22 works (flaky, retry loops).
+- **Version:** app `1.0.0` (uncommitted: csproj quartet PLAIN `1.0.0` + CITATION + finalized CHANGELOG, bumped from `0.9.0-beta` via `bump-version.ps1`). Template package `1.0.0` rides `templates-v1.0.0` at release (CI `-p:Version`). Last shipped: app `0.9.0-beta`; templates `0.9.0`.
 - **Tags (pushed):** `v0.0.28-beta` (release.yml -> beta channel, GitHub release published with phase notes + assets); `templates-v0.4.0` (templates-publish -> NuGet 0.4.0 live, GitHub release with template notes); `beta` branch moved to `v0.0.28-beta`.
 - **CI health (release):** Release workflow success, templates-publish success, tag-triggered full matrix success (17m40s) on the release commit.
 - **Tags (pushed):** `v0.0.27-beta` (release.yml -> beta channel, CI building); `templates-v0.3.12` (templates-publish -> NuGet, CI publishing); `beta` branch moved to `v0.0.27-beta`.
 - **Branches:** `main` (to push); `beta` tracks v0.0.26-beta until release moves it.
+- **CI health (this session, local, v1.0):** build 0/0, tests 390+1 (incl. channel-agnostic migration test + stable-default assert at `1.0.0`), parity OK (249: V1.0 + 3 kit-draft exclusions both copies, 3 shots overwritten + tour strip mirrored, `demo.gif` deleted both trees),
+  FULL 22-combo matrix PASSED (guards + auth + slnx axes; init-template Validate negatives),
+  presets 5/5 scaffold + build 0/0 + production tests 364+9 green + version-reset re-proven (local pack, temp cleaned),
+  smoke 9+1 green x2 after 3 transient fails (2 unnamed + `TestToast_ProducesCard` toast-timing — occupied-desktop class),
+  media via throwaway rigs (deleted after): about/settings/diagnostics re-captured maximized EN dark at `1.0.0` (visually verified), `demo-tour.png` composed 2x4 216KB (visually verified; banker's-rounding composer bug caught + fixed),
+  `build-msix -Validate -Publisher CN=Store-Test` PASSED + Velopack-increasing (`1.0.0.0` > `0.9.0.0`),
+  nupkg 1.0.0 audit (6 resolve, freeze surfaces in help, default probe build 0/0, uninstalled, `dotnet new update` clean),
+  weight 273.8 MB carries over (+2.1%, gate passes; no product-code change).
+  WACK/Store-kit still pending-kit; Narrator + HC/200% shots pending-manual; E5 VS dialog shots pending-manual; MP4 deferred (no encoder).
 - **CI health (this session, local, v0.9.0):** build 0/0, tests 390+1 (385 + 5 new basic-updater fixtures, mirrored),
   parity OK (249: V0.9.0 + wiki-draft exclusions both copies, diagnostics.png overwrite + demo.gif mirrored),
   FULL 22-combo matrix PASSED (guards + auth + slnx axes; init-template Validate negatives),
@@ -21,6 +30,8 @@
   nupkg 0.9.0 audit (6 resolve, default probe build 0/0 + tests 364+9 green, uninstalled, `dotnet new update` clean),
   weight 273.8 MB carries over (+2.1%, gate passes; test/docs/version-only diff).
   WACK/Store-kit still pending-kit; Narrator + HC/200% shots pending-manual; E5 VS dialog shots pending-manual.
+- **Cold flame (v1.0): carried from v0.8.0 by design (no product-code change — git status proves test/docs/version/media-only diff).**
+  v0.8.0 numbers: splash 347/321/300 / window 579/546/504. Budgets hold (splash 1600, window 2500). No re-measurement theater.
 - **Cold flame (v0.9.0): carried from v0.8.0 by design (no product-code change — git status proves test/docs/version-only diff).**
   v0.8.0 numbers: splash 347/321/300 / window 579/546/504. Budgets hold (splash 1600, window 2500). No re-measurement theater.
 - **CI health (this session, local, v0.8.0):** build 0/0, tests 385+1 (a11y suite green on the expander restructure), parity OK (248),
